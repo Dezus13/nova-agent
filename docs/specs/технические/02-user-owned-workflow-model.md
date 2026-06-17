@@ -196,7 +196,7 @@ Checked Source Mark фиксирует, что пользователь отме
 
 Эти сущности могут быть контекстом пользовательского workflow, но не становятся пользовательскими сущностями.
 
-## Workflow Ownership Rules
+## Правила владения workflow
 
 User-owned workflow принадлежит пользователю.
 
@@ -302,7 +302,7 @@ Selected Life Situation context нужен, чтобы сохранить пол
 
 `not_created` не является persisted state. Если пользователь только просматривает сценарий, Action Plan не существует.
 
-## Action Plan Open Lifecycle Decisions
+## Открытые решения по lifecycle Action Plan
 
 Следующие состояния не являются утверждёнными MVP states:
 
@@ -664,7 +664,7 @@ User Note должна оставаться коротким supporting context.
 
 User Note не должна превращаться в личный дневник или хранилище пользовательских данных.
 
-## User Note Open Lifecycle Decisions
+## Открытые решения по lifecycle User Note
 
 Следующие lifecycle decisions не утверждены этим документом как обязательное MVP-поведение:
 
@@ -840,92 +840,92 @@ Admin content action не создаёт user-owned History Event.
 
 Stable Scenario identity может использоваться для группировки и uniqueness, но не заменяет Scenario Version как источник смыслового и исторического контекста.
 
-## Forbidden Relationships
+## Запрещённые связи
 
 Запрещённые связи:
 
-- Action Plan -> live Scenario only;
-- Action Plan -> mutable live content without Scenario Version;
-- Progress -> live Step Template only;
+- Action Plan -> только live Scenario;
+- Action Plan -> mutable live content без Scenario Version;
+- Progress -> только live Step Template;
 - User Open Question -> live Template Open Question;
-- User-Owned Workflow Entity -> mutable live content without Scenario Version context;
-- mandatory cycle History Event <-> User Note;
-- User Note -> Source as source of truth;
-- User Note -> Document Requirement as user document;
-- User Open Question -> professional answer;
-- Progress -> official external status;
-- Checked Source Mark -> Source mutation;
-- History Event -> current state authority;
-- Admin Content -> user-owned workflow write access.
+- User-Owned Workflow Entity -> mutable live content без контекста Scenario Version;
+- обязательный цикл History Event <-> User Note;
+- User Note -> Source как источник истины;
+- User Note -> Document Requirement как пользовательский документ;
+- User Open Question -> профессиональный ответ;
+- Progress -> официальный внешний статус;
+- Checked Source Mark -> изменение Source;
+- History Event -> источник текущего состояния;
+- Admin Content -> права записи в user-owned workflow.
 
-## Scenario Version Context Requirements
+## Требования к контексту Scenario Version
 
-Every Action Plan must preserve Scenario Version context.
+Каждый Action Plan должен сохранять контекст Scenario Version.
 
-Every Progress state must be interpretable in the context of the Scenario Version used by the Action Plan.
+Каждое состояние Progress должно быть понятно в контексте Scenario Version, использованной Action Plan.
 
-Every History Event must preserve Scenario Version context.
+Каждый History Event должен сохранять контекст Scenario Version.
 
-Every User Open Question must preserve Scenario Version context.
+Каждый User Open Question должен сохранять контекст Scenario Version.
 
-Every User Note must preserve Scenario Version context through History Event and Action Plan.
+Каждый User Note должен сохранять контекст Scenario Version через History Event и Action Plan.
 
-Every Checked Source Mark must preserve Scenario Version and source revision or source snapshot context.
+Каждый Checked Source Mark должен сохранять Scenario Version и контекст source revision или source snapshot.
 
-User-owned workflow must not bypass Scenario Version by linking only to mutable live content.
+User-owned workflow не должен обходить Scenario Version через ссылку только на mutable live content.
 
-## Privacy And Minimal Data Constraints
+## Privacy-границы и минимизация данных
 
-User-owned workflow data must be minimal.
+Данные user-owned workflow должны быть минимальными.
 
-Action Plan stores only the user context needed to restore workflow state.
+Action Plan хранит только пользовательский контекст, необходимый для восстановления состояния workflow.
 
-Progress stores only user progress status and related context.
+Progress хранит только пользовательский статус прогресса и связанный контекст.
 
-History Event stores only minimal event context.
+History Event хранит только минимальный контекст события.
 
-User Open Question stores only a question for external verification, not an answer.
+User Open Question хранит только вопрос для внешней проверки, а не ответ.
 
-User Note stores only short supporting context near an event.
+User Note хранит только короткий supporting context рядом с событием.
 
-Checked Source Mark stores only the user mark that a source was checked in the plan context.
+Checked Source Mark хранит только пользовательскую отметку о том, что Source был проверен в контексте плана.
 
-User-owned workflow must not store:
+User-owned workflow не должен хранить:
 
-- user files;
-- uploaded documents;
-- scans;
-- attachments;
-- filled official forms;
-- structured personal values;
-- official correspondence;
-- official answers as product-confirmed facts;
-- professional conclusions.
+- пользовательские файлы;
+- загруженные документы;
+- сканы;
+- вложения;
+- заполненные официальные формы;
+- структурированные персональные значения;
+- официальную переписку;
+- официальные ответы как подтверждённые продуктом факты;
+- профессиональные заключения.
 
-## Forbidden Task Manager Patterns
+## Запрещённые паттерны task manager
 
-User-owned workflow must not become a task manager.
+User-owned workflow не должен превращаться в task manager.
 
-Forbidden patterns:
+Запрещённые паттерны:
 
-- arbitrary user-created steps;
-- subtasks outside Scenario Version;
+- произвольные пользовательские шаги;
+- подзадачи вне Scenario Version;
 - priorities;
-- due dates;
+- сроки выполнения;
 - reminders;
 - assignees;
-- team workflow;
-- task ownership transfer;
-- blocked-by-team states;
+- командный workflow;
+- передача владения task;
+- состояния blocked-by-team;
 - kanban-like workflow states.
 
-Action Plan remains a user-owned instance of Scenario Version, not an open-ended task system.
+Action Plan остаётся пользовательским экземпляром Scenario Version, а не открытой task-системой.
 
-## Forbidden Official Status Patterns
+## Запрещённые паттерны официальных статусов
 
-Nova Agent must not represent user-owned workflow states as official external statuses.
+Nova Agent не должен представлять состояния user-owned workflow как официальные внешние статусы.
 
-Forbidden patterns:
+Запрещённые паттерны:
 
 - approved;
 - rejected;
@@ -939,122 +939,122 @@ Forbidden patterns:
 - automatically determined;
 - official answer received as product fact.
 
-External outcomes remain outside Nova Agent.
+Внешние результаты остаются вне Nova Agent.
 
-User may record limited personal context, but Nova Agent must not turn it into an official fact.
+Пользователь может фиксировать ограниченный личный контекст, но Nova Agent не должен превращать его в официальный факт.
 
 ## Invariants
 
-The following invariants must not be violated:
+Следующие инварианты нельзя нарушать:
 
-- User-Owned Workflow Model lives on top of a specific Scenario Version.
-- Action Plan is the root user-owned workflow.
-- Viewing a scenario does not create Action Plan.
-- The first stateful action creates Action Plan.
-- Action Plan is always linked to User, Scenario Version and selected Life Situation context.
-- Action Plan does not link only to live Scenario.
-- User-owned workflow does not link directly to mutable live content.
-- Content update does not change Action Plan, Progress, History, User Open Question, User Note or Checked Source Mark.
-- Progress is the current state of a step inside Action Plan.
-- History Event is an append-only historical record, not current state.
-- User Open Question is not consultation, answer or official decision.
-- User Note is not Source, Document, Open Question, diary or data storage.
-- Checked Source Mark is a user-owned mark inside Action Plan, not confirmation of source actuality.
-- Admin content does not manage user-owned workflow.
-- One user cannot have more than one active Action Plan per Scenario in MVP.
-- Action Plan completion does not mean completion of an external process.
-- User Open Question state changes do not automatically change Progress.
-- Progress changes do not automatically close User Open Question.
-- History Event changes do not recalculate Progress.
-- User Note does not create a mandatory cycle with History Event.
+- User-Owned Workflow Model живёт поверх конкретной Scenario Version.
+- Action Plan является root user-owned workflow.
+- Просмотр сценария не создаёт Action Plan.
+- Первое stateful-действие создаёт Action Plan.
+- Action Plan всегда связан с User, Scenario Version и selected Life Situation context.
+- Action Plan не ссылается только на live Scenario.
+- User-owned workflow не ссылается напрямую на mutable live content.
+- Обновление контента не меняет Action Plan, Progress, History, User Open Question, User Note или Checked Source Mark.
+- Progress является текущим состоянием шага внутри Action Plan.
+- History Event является append-only historical record, а не current state.
+- User Open Question не является консультацией, ответом или официальным решением.
+- User Note не является Source, Document, Open Question, дневником или хранилищем данных.
+- Checked Source Mark является пользовательской отметкой внутри Action Plan, а не подтверждением актуальности источника.
+- Admin content не управляет user-owned workflow.
+- В MVP один User не может иметь больше одного active Action Plan на Scenario.
+- Завершение Action Plan не означает завершение внешнего процесса.
+- Изменения состояния User Open Question не меняют Progress автоматически.
+- Изменения Progress не закрывают User Open Question автоматически.
+- Изменения History Event не пересчитывают Progress.
+- User Note не создаёт обязательный цикл с History Event.
 
-## Decisions Required Before Logical Data Model
+## Решения перед Logical Data Model
 
-Before Logical Data Model, the project must decide:
+Перед Logical Data Model проект должен решить:
 
-- whether one active plan rule applies by Scenario or by Scenario Version;
-- whether completed Action Plan can be reopened;
-- whether completed Action Plan can be archived;
-- whether Action Plan can be hidden;
-- whether Action Plan can have user-visible deletion;
-- whether hidden or archived Action Plan can be restored;
-- whether a user can create a new Action Plan after completing a previous one for the same Scenario;
-- whether Progress can reset to `not_started`;
-- whether initial Progress states are created when Action Plan is created or only after first status change;
-- full History Event type enum for MVP;
-- minimal History Event payload for each event type;
-- whether every state transition always creates History Event;
-- whether User Note can be edited;
-- whether User Note can be hidden;
-- whether User Note can be deleted;
-- whether one History Event can have multiple User Notes;
-- maximum allowed size of User Note;
-- whether User Open Question can transition from `irrelevant` back to an active state;
-- exact user actions that change User Open Question state;
-- how Checked Source Mark relates to History Event;
-- how selected Life Situation context is preserved.
+- применяется ли правило one active plan по Scenario или по Scenario Version;
+- может ли completed Action Plan быть reopened;
+- может ли completed Action Plan быть archived;
+- может ли Action Plan быть hidden;
+- может ли Action Plan иметь user-visible deletion;
+- может ли hidden или archived Action Plan быть restored;
+- может ли пользователь создать новый Action Plan после завершения предыдущего по тому же Scenario;
+- может ли Progress вернуться в `not_started`;
+- создаются ли initial Progress states при создании Action Plan или только после первого изменения статуса;
+- полный enum History Event type для MVP;
+- минимальный payload History Event для каждого event type;
+- всегда ли каждый state transition создаёт History Event;
+- можно ли редактировать User Note;
+- можно ли скрывать User Note;
+- можно ли удалять User Note;
+- может ли один History Event иметь несколько User Notes;
+- максимальный допустимый размер User Note;
+- может ли User Open Question переходить из `irrelevant` обратно в активное состояние;
+- точные пользовательские действия, которые меняют состояние User Open Question;
+- как Checked Source Mark связан с History Event;
+- как сохраняется selected Life Situation context.
 
-## Questions Deferred To Technical Spec 03
+## Вопросы, отложенные до Technical Spec 03
 
-Technical Spec 03 should decide Logical Data Model details after this workflow model is accepted.
+Technical Spec 03 должен определить детали Logical Data Model после принятия этой workflow-модели.
 
-Deferred questions:
+Отложенные вопросы:
 
-- logical entity attributes;
-- logical relationship cardinality;
-- logical identity strategy;
-- exact enum naming;
-- exact required or optional fields;
+- атрибуты logical entities;
+- cardinality логических связей;
+- стратегия logical identity;
+- точное именование enum;
+- точные required и optional fields;
 - uniqueness constraints;
-- ordering rules;
-- representation of hidden, deleted or archived states if approved;
-- source revision or source snapshot logical model;
-- versioned content reference representation;
-- logical separation between content-owned and user-owned groups.
+- правила сортировки;
+- представление hidden, deleted или archived states, если они будут утверждены;
+- логическая модель source revision или source snapshot;
+- представление versioned content reference;
+- логическое разделение content-owned и user-owned групп.
 
-Technical Spec 03 must not use these deferred questions to change the lifecycle decisions made in Technical Spec 02.
+Technical Spec 03 не должен использовать эти отложенные вопросы, чтобы менять lifecycle-решения, принятые в Technical Spec 02.
 
-## Risks Of Incorrect Implementation
+## Риски неправильной реализации
 
-Main risks:
+Главные риски:
 
-- Action Plan becomes a task manager.
-- User creates arbitrary steps outside Scenario Version.
-- Progress becomes an official external status.
-- History Event becomes the source of current state.
-- History Event is edited or deleted in a way that rewrites past context.
-- User Note becomes a diary or data storage.
-- User Open Question becomes consultation or answer.
-- Checked Source Mark becomes confirmation of source actuality.
-- Content update changes active user workflow.
-- New Scenario Version automatically migrates active Action Plan.
-- Admin content edits user-owned workflow.
-- User Open Question links to live Template Open Question.
-- User-owned workflow links to mutable live content.
-- Action Plan completion is interpreted as completion of an external process.
-- History Event and User Note form a mandatory cyclic dependency.
+- Action Plan превращается в task manager.
+- Пользователь создаёт произвольные шаги вне Scenario Version.
+- Progress становится официальным внешним статусом.
+- History Event становится источником текущего состояния.
+- History Event редактируется или удаляется так, что переписывает прошлый контекст.
+- User Note превращается в дневник или хранилище данных.
+- User Open Question становится консультацией или ответом.
+- Checked Source Mark становится подтверждением актуальности источника.
+- Обновление контента меняет активный user workflow.
+- Новая Scenario Version автоматически мигрирует active Action Plan.
+- Admin content редактирует user-owned workflow.
+- User Open Question ссылается на live Template Open Question.
+- User-owned workflow ссылается на mutable live content.
+- Завершение Action Plan трактуется как завершение внешнего процесса.
+- History Event и User Note образуют обязательную циклическую зависимость.
 
-## Acceptance Criteria
+## Критерии приёмки
 
-Technical Spec 02 is ready if:
+Technical Spec 02 готов, если:
 
-- User-Owned Workflow Model is defined as living on top of a specific Scenario Version;
-- Action Plan is defined as root user-owned workflow;
-- viewing a scenario does not create Action Plan;
-- first stateful action creates Action Plan;
-- Action Plan is always linked to User, Scenario Version and selected Life Situation context;
-- Action Plan does not link only to live Scenario;
-- user-owned workflow does not link directly to mutable live content;
-- content update does not change Action Plan, Progress, History, User Open Question, User Note or Checked Source Mark;
-- Action Plan MVP states are limited to `active` and `completed`;
-- `archived`, `hidden`, `deleted_by_user`, `reopened` and `restored` are not presented as approved MVP states;
-- Progress states use only the approved MVP set;
-- User Open Question states use only the approved MVP set;
-- User Note hidden/delete behavior is marked as open lifecycle decision;
-- History Event is append-only historical record;
-- `event_type` is conceptually required for History Event;
-- Checked Source Mark is described as supporting workflow entity, not source verification;
-- mandatory relationships are listed;
-- forbidden relationships are listed;
-- decisions before Logical Data Model are listed;
-- document does not describe Supabase, SQL, tables, API, RLS, UI or code.
+- User-Owned Workflow Model определена как модель, живущая поверх конкретной Scenario Version;
+- Action Plan определён как root user-owned workflow;
+- просмотр сценария не создаёт Action Plan;
+- первое stateful-действие создаёт Action Plan;
+- Action Plan всегда связан с User, Scenario Version и selected Life Situation context;
+- Action Plan не ссылается только на live Scenario;
+- user-owned workflow не ссылается напрямую на mutable live content;
+- обновление контента не меняет Action Plan, Progress, History, User Open Question, User Note или Checked Source Mark;
+- MVP-состояния Action Plan ограничены `active` и `completed`;
+- `archived`, `hidden`, `deleted_by_user`, `reopened` и `restored` не представлены как утверждённые MVP states;
+- Progress states используют только утверждённый MVP-набор;
+- User Open Question states используют только утверждённый MVP-набор;
+- поведение User Note hidden/delete отмечено как открытое lifecycle-решение;
+- History Event является append-only historical record;
+- `event_type` концептуально обязателен для History Event;
+- Checked Source Mark описан как supporting workflow entity, а не проверка источника;
+- обязательные связи перечислены;
+- запрещённые связи перечислены;
+- решения перед Logical Data Model перечислены;
+- документ не описывает Supabase, SQL, таблицы, API, RLS, UI или код.

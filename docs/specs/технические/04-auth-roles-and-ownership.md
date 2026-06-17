@@ -270,26 +270,26 @@ User-Owned Data не является частью Content Model.
 
 User-Owned Data не управляется Content Admin.
 
-## Ownership Boundaries
+## Границы ownership
 
-Ownership boundaries:
+Границы ownership:
 
 - Content Admin управляет Content Model, но не user-owned workflow.
 - User управляет собственным user-owned workflow, но не Content Model.
-- Action Plan always belongs to User.
-- Progress belongs to Action Plan and therefore to the owning User.
-- History Event belongs to Action Plan and therefore to the owning User.
-- User Open Question belongs to Action Plan and therefore to the owning User.
-- User Note belongs to User and Action Plan.
-- Checked Source Mark belongs to Action Plan and therefore to the owning User.
-- Scenario Version is shared content context, not user-owned state.
-- Published Scenario Version is immutable.
+- Action Plan всегда принадлежит User.
+- Progress принадлежит Action Plan и через него owning User.
+- History Event принадлежит Action Plan и через него owning User.
+- User Open Question принадлежит Action Plan и через него owning User.
+- User Note принадлежит User и Action Plan.
+- Checked Source Mark принадлежит Action Plan и через него owning User.
+- Scenario Version является общим content context, а не user-owned state.
+- Published Scenario Version является immutable.
 
-User-Owned Data может ссылаться на Scenario Version and versioned content context, но эта ссылка не передаёт ownership над Content Model.
+User-Owned Data может ссылаться на Scenario Version и versioned content context, но эта ссылка не передаёт ownership над Content Model.
 
 Content Admin может обновлять Content Model только через правила версионности, не изменяя User-Owned Data.
 
-## Privacy Boundaries
+## Privacy-границы
 
 User-Owned Data может содержать чувствительный пользовательский контекст.
 
@@ -311,120 +311,120 @@ History Event должен оставаться минимальным historica
 
 Content Admin не должен использовать User-Owned Data как материал для обновления Content Model.
 
-Additional processing of User-Owned Data for analytics, profiling, support, moderation, search across users, export or shared access requires separate specs.
+Дополнительная обработка User-Owned Data для analytics, profiling, support, moderation, поиска по данным разных пользователей, export или shared access требует отдельных specs.
 
-## Access Rules For User
+## Правила доступа для User
 
-User can:
+User может:
 
-- read published Content Model;
-- view published Scenario Version without creating Action Plan;
-- create Action Plan through stateful action;
-- read own Action Plans;
-- update own Action Plan lifecycle within approved MVP states;
-- create and update own Progress;
-- create and update own User Open Questions;
-- create, edit, hide and delete own User Notes;
-- create own Checked Source Marks inside own Action Plan;
-- read own History Events;
-- create History Events through approved user actions;
-- complete own Action Plan.
+- читать published Content Model;
+- просматривать published Scenario Version без создания Action Plan;
+- создавать Action Plan через stateful action;
+- читать собственные Action Plans;
+- обновлять lifecycle собственного Action Plan в рамках утверждённых MVP states;
+- создавать и обновлять собственный Progress;
+- создавать и обновлять собственные User Open Questions;
+- создавать, редактировать, скрывать и удалять собственные User Notes;
+- создавать собственные Checked Source Marks внутри собственного Action Plan;
+- читать собственные History Events;
+- создавать History Events через утверждённые пользовательские действия;
+- завершать собственный Action Plan.
 
-User cannot:
+User не может:
 
-- write Content Model;
-- publish Scenario Version;
-- mutate published Scenario Version;
-- update Source or Source Revision;
-- create Template Open Question;
-- edit another User's Action Plan;
-- read another User's User-Owned Data;
-- edit another User's Progress;
-- edit another User's History Events;
-- edit another User's User Open Questions;
-- edit another User's User Notes;
-- edit another User's Checked Source Marks;
-- escalate own role;
-- act as Content Admin without assigned `content_admin` role.
+- записывать Content Model;
+- публиковать Scenario Version;
+- мутировать published Scenario Version;
+- обновлять Source или Source Revision;
+- создавать Template Open Question;
+- редактировать Action Plan другого User;
+- читать User-Owned Data другого User;
+- редактировать Progress другого User;
+- редактировать History Events другого User;
+- редактировать User Open Questions другого User;
+- редактировать User Notes другого User;
+- редактировать Checked Source Marks другого User;
+- повышать собственную role;
+- действовать как Content Admin без назначенной роли `content_admin`.
 
-User Note edit, hide and delete rights do not choose physical implementation.
+Права на edit, hide и delete для User Note не выбирают физическую реализацию.
 
-User Note hide/delete must not destroy historical context.
+User Note hide/delete не должны разрушать historical context.
 
-## Access Rules For Content Admin
+## Правила доступа для Content Admin
 
-Content Admin can:
+Content Admin может:
 
-- read Content Model;
-- create and update content drafts;
-- manage Life Situations;
-- manage Scenarios before publication;
-- manage Steps before publication;
-- manage Document Requirements before publication;
-- manage Data Requirements before publication;
-- manage Sources and Source Revisions;
-- manage Template Open Questions;
-- manage Warnings;
-- manage Restrictions;
-- manage Applicability Conditions;
-- manage content relationships;
-- prepare content for publication;
-- publish or supersede content only within approved publishing boundaries.
+- читать Content Model;
+- создавать и обновлять content drafts;
+- управлять Life Situations;
+- управлять Scenarios до публикации;
+- управлять Steps до публикации;
+- управлять Document Requirements до публикации;
+- управлять Data Requirements до публикации;
+- управлять Sources и Source Revisions;
+- управлять Template Open Questions;
+- управлять Warnings;
+- управлять Restrictions;
+- управлять Applicability Conditions;
+- управлять content relationships;
+- готовить контент к публикации;
+- публиковать или supersede контент только в рамках утверждённых publishing boundaries.
 
-Content Admin cannot:
+Content Admin не может:
 
-- create Action Plan for User;
-- read User-Owned Data by default;
-- write User-Owned Data;
-- change User Progress;
-- rewrite History Event;
-- create, edit, close or delete User Open Question;
-- create, edit, hide or delete User Note;
-- create or update Checked Source Mark;
-- move active Action Plan to a new Scenario Version;
-- use User Note as Source;
-- use User Open Question as consultation answer;
-- act as specialist, authority or support role;
-- make official decisions for User;
-- confirm that external requirement is fulfilled for User.
+- создавать Action Plan для User;
+- читать User-Owned Data по умолчанию;
+- записывать User-Owned Data;
+- менять Progress пользователя;
+- переписывать History Event;
+- создавать, редактировать, закрывать или удалять User Open Question;
+- создавать, редактировать, скрывать или удалять User Note;
+- создавать или обновлять Checked Source Mark;
+- переносить active Action Plan на новую Scenario Version;
+- использовать User Note как Source;
+- использовать User Open Question как consultation answer;
+- действовать как specialist, authority или support role;
+- принимать официальные решения за User;
+- подтверждать, что внешнее требование выполнено для User.
 
-Content Admin has no write access to User-Owned Data.
+Content Admin не имеет права записи в User-Owned Data.
 
-Content Admin has no default read access to User-Owned Data.
+Content Admin не имеет права чтения User-Owned Data по умолчанию.
 
-Any future exception to Content Admin read access must require separate privacy, support and security specs before implementation.
+Любое будущее исключение для права чтения Content Admin должно требовать отдельных privacy, support и security specs до реализации.
 
-## Account With Multiple MVP Roles
+## Account с несколькими MVP roles
 
-Decision for MVP: one account may have both `user` and `content_admin` roles.
+Решение для MVP: один account может иметь роли `user` и `content_admin`.
 
-Reason:
+Причина:
 
-- Content Admin may also need to use Nova Agent as a normal user.
-- Preventing a content admin from using user-facing workflows would create an artificial account split.
-- The key security boundary is not account exclusivity, but action-scoped permissions and ownership.
+- Content Admin может также использовать Nova Agent как обычный user.
+- Запрет на user-facing workflows для content admin создал бы искусственное разделение account.
+- Ключевая security boundary — не эксклюзивность account, а action-scoped permissions и ownership.
 
-Consequences:
+Следствия:
 
-- When account acts as `user`, it can access only its own User-Owned Data.
-- When account acts as `content_admin`, it can manage Content Model only.
-- `content_admin` role does not grant access to other users' User-Owned Data.
-- User-Owned Data created by a dual-role account remains owned by that account as a User, not by Content Admin role.
-- Content publishing actions must not be able to mutate the account's own Action Plans.
-- Role context must be explicit enough in future specs to prevent accidental privilege mixing.
+- Когда account действует как `user`, он может получать доступ только к собственным User-Owned Data.
+- Когда account действует как `content_admin`, он может управлять только Content Model.
+- Роль `content_admin` не даёт доступ к User-Owned Data других пользователей.
+- User-Owned Data, созданные dual-role account, остаются данными этого account как User, а не данными роли Content Admin.
+- Content publishing actions не должны мутировать собственные Action Plans этого account.
+- Role context должен быть достаточно явным в будущих specs, чтобы предотвратить случайное смешение привилегий.
 
-This decision does not introduce `super_admin`, support, moderation or organization roles.
+Это решение не вводит роли `super_admin`, support, moderation или organization roles.
 
-## Forbidden Access Patterns
+## Запрещённые паттерны доступа
 
-Forbidden access patterns:
+Запрещённые паттерны доступа:
 
-- User -> Content Model write.
-- User -> published Scenario Version mutation.
-- User -> another User's User-Owned Data.
-- User -> role self-escalation.
-- Content Admin -> User-Owned Data write.
-- Content Admin -> default User-Owned Data read.
+- User -> запись в Content Model.
+- User -> мутация published Scenario Version.
+- User -> User-Owned Data другого User.
+- User -> self-escalation роли.
+- Content Admin -> запись в User-Owned Data.
+- Content Admin -> default read User-Owned Data.
 - Content Admin -> User Note as content source.
 - Content Admin -> User Open Question as consultation answer.
 - Content Admin -> Progress mutation.
@@ -435,60 +435,60 @@ Forbidden access patterns:
 - External Actor -> User-Owned Data access.
 - Role -> ownership bypass.
 - Permission -> Scenario Version context bypass.
-- Any actor -> mutable live content as source of historical user context.
+- Любой actor -> mutable live content как источник исторического пользовательского контекста.
 
-## Security Invariants
+## Security-инварианты
 
-Security invariants:
+Security-инварианты:
 
-- Content Admin has no write access to User-Owned Data.
-- Content Admin has no default read access to User-Owned Data.
-- User has no write access to Content Model.
-- Published Scenario Version is immutable.
-- Role escalation is forbidden.
-- User-Owned Data is scoped to owning User.
-- User-Owned Data must preserve Scenario Version context.
-- User-Owned Data must not reference mutable live content as source of historical meaning.
-- User Note is private user-owned workflow context, not Content Model.
-- User Open Question is user-owned workflow context, not Template Open Question.
-- History Event is append-only by meaning and cannot be rewritten by role changes.
-- Checked Source Mark is user-owned mark, not Source validity confirmation.
-- External Actors are not MVP roles.
-- A dual-role account must not mix user-owned permissions with content-admin permissions.
-- Future implementation must enforce ownership checks before any user-owned action.
+- Content Admin не имеет права записи в User-Owned Data.
+- Content Admin не имеет права чтения User-Owned Data по умолчанию.
+- User не имеет права записи в Content Model.
+- Published Scenario Version является immutable.
+- Role escalation запрещён.
+- User-Owned Data scoped to owning User.
+- User-Owned Data должны сохранять контекст Scenario Version.
+- User-Owned Data не должны ссылаться на mutable live content как источник исторического смысла.
+- User Note является приватным user-owned workflow context, а не Content Model.
+- User Open Question является user-owned workflow context, а не Template Open Question.
+- History Event является append-only по смыслу и не может быть переписан из-за изменений роли.
+- Checked Source Mark является user-owned mark, а не подтверждением валидности Source.
+- External Actors не являются MVP roles.
+- Dual-role account не должен смешивать user-owned permissions и content-admin permissions.
+- Будущая реализация должна enforce ownership checks перед любым user-owned action.
 
-## Role Assignment Principles
+## Принципы назначения ролей
 
-Role assignment principles:
+Принципы назначения ролей:
 
-- Every authenticated account with product access may have `user` role.
-- `content_admin` role must be assigned through a controlled administrative process defined in a future spec.
-- A User cannot grant itself `content_admin`.
-- User-owned workflow actions cannot change role assignment.
-- Content Model actions cannot change role assignment.
-- Role assignment is not part of Content Model.
-- Role assignment is not part of User-Owned Workflow Model.
-- Role assignment must be auditable in future specs if admin operations become operationally sensitive.
-- Removing `content_admin` role must not delete content history.
-- Removing `user` access must not rewrite historical user-owned workflow by itself.
+- Каждый authenticated account с product access может иметь роль `user`.
+- Роль `content_admin` должна назначаться через контролируемый административный процесс, определённый в будущей spec.
+- User не может выдать себе `content_admin`.
+- Действия user-owned workflow не могут менять role assignment.
+- Действия Content Model не могут менять role assignment.
+- Role assignment не является частью Content Model.
+- Role assignment не является частью User-Owned Workflow Model.
+- Role assignment должен быть auditable в будущих specs, если admin operations станут операционно чувствительными.
+- Удаление роли `content_admin` не должно удалять content history.
+- Удаление `user` access само по себе не должно переписывать historical user-owned workflow.
 
-This document does not choose how roles are stored or technically enforced.
+Этот документ не выбирает, как роли хранятся или технически enforce.
 
-## Content Publishing Authorization Boundaries
+## Границы авторизации публикации контента
 
-Content publishing is a Content Model action.
+Content publishing является действием Content Model.
 
-Only Content Admin role may be authorized to prepare, publish, deprecate or supersede content within approved specs.
+Только роль Content Admin может быть авторизована на подготовку, публикацию, deprecate или supersede контента в рамках утверждённых specs.
 
-Content publishing must respect:
+Content publishing должен соблюдать:
 
 - published Scenario Version immutability;
 - Source Revision historical context;
 - Scenario Version links to versioned content context;
 - active Action Plan stability;
-- no automatic mutation of User-Owned Data.
+- отсутствие автоматической мутации User-Owned Data.
 
-Publishing a new Scenario Version must not:
+Публикация новой Scenario Version не должна:
 
 - migrate active Action Plans automatically;
 - change Progress;
@@ -496,29 +496,29 @@ Publishing a new Scenario Version must not:
 - edit User Open Questions;
 - edit User Notes;
 - change Checked Source Marks;
-- create user actions on behalf of User.
+- создавать пользовательские действия от имени User.
 
-This document does not define review workflow, approval workflow or publication implementation.
+Этот документ не определяет review workflow, approval workflow или реализацию публикации.
 
-## User-Owned Data Protection Rules
+## Правила защиты User-Owned Data
 
-User-Owned Data protection rules:
+Правила защиты User-Owned Data:
 
-- User-Owned Data can be created only by the owning User's action or by product behavior explicitly caused by that User action.
-- Viewing content does not create User-Owned Data.
-- First stateful action creates Action Plan if one does not already exist.
-- User-Owned Data cannot be changed by Content Admin.
-- Content update cannot change User-Owned Data.
-- User-Owned Data must preserve historical context after content update.
-- User-Owned Data cannot be used as Content Model source of truth.
-- User Note cannot be used as Source, document, consultation, official fact or data store.
-- User Open Question cannot be used as professional answer or official decision.
-- History Event cannot be deleted or rewritten as a side effect of role changes.
-- Checked Source Mark cannot update Source or Source Revision.
+- User-Owned Data могут быть созданы только действием owning User или поведением продукта, явно вызванным этим действием User.
+- Просмотр контента не создаёт User-Owned Data.
+- Первое stateful action создаёт Action Plan, если он ещё не существует.
+- User-Owned Data не могут изменяться Content Admin.
+- Content update не может менять User-Owned Data.
+- User-Owned Data должны сохранять historical context после content update.
+- User-Owned Data нельзя использовать как source of truth для Content Model.
+- User Note нельзя использовать как Source, документ, консультацию, официальный факт или data store.
+- User Open Question нельзя использовать как professional answer или official decision.
+- History Event нельзя удалять или переписывать как side effect изменений роли.
+- Checked Source Mark не может обновлять Source или Source Revision.
 
-User has the right to create, edit, hide and delete own User Notes within the approved lifecycle.
+User имеет право создавать, редактировать, скрывать и удалять собственные User Notes в рамках утверждённого lifecycle.
 
-The following decisions are not chosen in this document:
+Следующие решения в этом документе не выбираются:
 
 - soft delete;
 - hard delete;
@@ -526,11 +526,11 @@ The following decisions are not chosen in this document:
 - restore implementation;
 - physical retention model for hidden or deleted User Notes.
 
-Any User Note edit, hide or delete must preserve History Event context and must not rewrite historical meaning.
+Любое edit, hide или delete действие для User Note должно сохранять контекст History Event и не должно переписывать historical meaning.
 
 ## External Actor Boundaries
 
-External Actors may be referenced in content as:
+External Actors могут упоминаться в контенте как:
 
 - official source;
 - institution;
@@ -538,97 +538,97 @@ External Actors may be referenced in content as:
 - specialist;
 - direction for external verification.
 
-External Actors do not:
+External Actors не:
 
-- authenticate into Nova Agent in MVP;
-- create User-Owned Data;
-- answer User Open Questions inside Nova Agent;
-- confirm Progress;
-- validate documents;
-- publish content;
-- receive access to User Notes or Action Plans.
+- проходят аутентификацию в Nova Agent в MVP;
+- создают User-Owned Data;
+- отвечают на User Open Questions внутри Nova Agent;
+- подтверждают Progress;
+- валидируют документы;
+- публикуют контент;
+- получают доступ к User Notes или Action Plans.
 
-## Decisions Required Before Technical Spec 05
+## Решения перед Technical Spec 05
 
-Before Technical Spec 05, the project must decide:
+Перед Technical Spec 05 проект должен решить:
 
-- exact physical representation of account-role assignment;
-- whether `user` role is implicit for every account or explicitly assigned;
-- how dual-role account actions are separated by role context;
-- whether published content is readable before account creation;
-- whether draft content is visible only to Content Admin;
-- who can publish Scenario Version among Content Admin accounts;
-- who can deprecate or supersede content;
-- whether content admin actions require separate review in MVP;
-- how role changes preserve historical content and user-owned context;
-- exact ownership check rules for every User-Owned Entity;
-- exact privacy handling for User Notes and User Open Questions;
-- exact handling of User Note hide/delete without losing History Event context;
-- whether role assignment changes need an admin action history;
-- whether content publishing needs an admin action history;
-- how to prevent self-escalation.
+- точное физическое представление account-role assignment;
+- является ли роль `user` implicit для каждого account или назначается явно;
+- как действия dual-role account разделяются по role context;
+- доступен ли published content до создания account;
+- виден ли draft content только Content Admin;
+- кто среди Content Admin accounts может публиковать Scenario Version;
+- кто может deprecate или supersede контент;
+- требуют ли content admin actions отдельного review в MVP;
+- как изменения роли сохраняют historical content и user-owned context;
+- точные правила ownership check для каждой User-Owned Entity;
+- точная privacy-обработка User Notes и User Open Questions;
+- точная обработка User Note hide/delete без потери контекста History Event;
+- нужна ли история admin actions для изменений role assignment;
+- нужна ли история admin actions для content publishing;
+- как предотвратить self-escalation.
 
-## Deferred To Technical Spec 05
+## Отложено до Technical Spec 05
 
-Technical Spec 05 may define:
+Technical Spec 05 может определить:
 
-- physical representation of roles;
-- physical enforcement of access rules;
-- physical enforcement of ownership rules;
-- physical representation of account-role relationship;
-- physical representation of dual-role account behavior;
-- physical representation of content admin actions;
-- physical representation of User Note hide/delete;
-- physical protection of immutable published content;
-- physical protection of append-only History Events;
-- physical protection of User-Owned Data from Content Admin access;
-- physical prevention of role escalation.
+- физическое представление roles;
+- физическое enforcement правил доступа;
+- физическое enforcement ownership rules;
+- физическое представление account-role relationship;
+- физическое представление поведения dual-role account;
+- физическое представление content admin actions;
+- физическое представление User Note hide/delete;
+- физическую защиту immutable published content;
+- физическую защиту append-only History Events;
+- физическую защиту User-Owned Data от доступа Content Admin;
+- физическое предотвращение role escalation.
 
-Technical Spec 05 must not weaken the invariants of this document.
+Technical Spec 05 не должен ослаблять инварианты этого документа.
 
-## Risks
+## Риски
 
-Main risks:
+Главные риски:
 
-- Content Admin gets access to User Notes by default.
-- Content Admin starts using User-Owned Data as content feedback.
-- Content Admin becomes support, moderator or super admin.
-- User can write Content Model.
-- User can access another user's Action Plan.
-- Role assignment allows self-escalation.
-- Published Scenario Version becomes mutable through admin permissions.
-- Dual-role account mixes Content Admin permissions with personal user workflow.
-- User Note hide/delete destroys History Event context.
-- User Open Question becomes a consultation answer.
-- External Actor becomes hidden MVP role.
-- Future implementation grants broad administrative access for convenience.
+- Content Admin получает доступ к User Notes по умолчанию.
+- Content Admin начинает использовать User-Owned Data как content feedback.
+- Content Admin превращается в support, moderator или super admin.
+- User может записывать Content Model.
+- User может получить доступ к Action Plan другого User.
+- Role assignment допускает self-escalation.
+- Published Scenario Version становится mutable через admin permissions.
+- Dual-role account смешивает Content Admin permissions с personal user workflow.
+- User Note hide/delete разрушает контекст History Event.
+- User Open Question становится консультационным ответом.
+- External Actor становится скрытой MVP role.
+- Будущая реализация выдаёт широкий административный доступ ради удобства.
 
-## Acceptance Criteria
+## Критерии приёмки
 
-Technical Spec 04 is acceptable if:
+Technical Spec 04 приемлем, если:
 
-- Actor Types are defined: User, Content Admin and External Actors.
-- MVP roles are defined: `user` and `content_admin`.
-- Excluded roles are listed and explicitly outside MVP.
-- Actor, Role, Ownership and Permission are defined separately.
-- Content Model ownership is defined.
-- User-Owned Data ownership is defined.
-- Ownership boundaries are defined.
-- Privacy boundaries are defined.
-- User access rules are defined.
-- Content Admin access rules are defined.
-- Content Admin has no write access to User-Owned Data.
-- Content Admin has no default read access to User-Owned Data.
-- User has no write access to Content Model.
-- Published Scenario Version is immutable.
-- Role escalation is forbidden.
-- Dual-role account decision is documented.
-- User Note create/edit/hide/delete rights are documented without choosing physical implementation.
-- Forbidden access patterns are listed.
-- Security invariants are listed.
-- Role Assignment Principles are defined.
-- Content Publishing Authorization Boundaries are defined.
-- User-Owned Data Protection Rules are defined.
-- Decisions Required Before Technical Spec 05 are listed.
-- Deferred To Technical Spec 05 is listed.
-- Document does not describe forbidden implementation details.
+- Actor Types определены: User, Content Admin и External Actors.
+- MVP roles определены: `user` и `content_admin`.
+- Excluded roles перечислены и явно находятся вне MVP.
+- Actor, Role, Ownership и Permission определены отдельно.
+- Ownership Content Model определён.
+- Ownership User-Owned Data определён.
+- Ownership boundaries определены.
+- Privacy boundaries определены.
+- Правила доступа User определены.
+- Правила доступа Content Admin определены.
+- Content Admin не имеет права записи в User-Owned Data.
+- Content Admin не имеет права чтения User-Owned Data по умолчанию.
+- User не имеет права записи в Content Model.
+- Published Scenario Version является immutable.
+- Role escalation запрещён.
+- Решение о dual-role account задокументировано.
+- Права User Note create/edit/hide/delete задокументированы без выбора физической реализации.
+- Forbidden access patterns перечислены.
+- Security invariants перечислены.
+- Role Assignment Principles определены.
+- Content Publishing Authorization Boundaries определены.
+- User-Owned Data Protection Rules определены.
+- Decisions Required Before Technical Spec 05 перечислены.
+- Deferred To Technical Spec 05 перечислены.
+- Документ не описывает запрещённые детали реализации.
