@@ -175,18 +175,40 @@ Technical Spec 05 не создаёт новые продуктовые функ
 
 Фиксируемые события:
 
-- publish Scenario Version;
-- deprecate Scenario Version;
-- supersede Scenario Version.
+- scenario_version_published;
+- scenario_version_deprecated;
+- scenario_version_superseded.
+
+Conceptual payload (минимальный обязательный):
+
+- event identifier — уникальный идентификатор записи;
+- event_type — тип admin action из утверждённого enum;
+- admin_actor_id — кто выполнил action (FK → app_users);
+- scenario_version_id — какая Scenario Version затронута (FK → scenario_versions);
+- scenario_id — stable Scenario identity (FK → scenarios, для индексации);
+- previous_publication_state — publication_state до action;
+- new_publication_state — publication_state после action;
+- successor_version_id — версия-преемник для supersede events (nullable FK → scenario_versions; NULL для publish и deprecate);
+- created_at — timestamp выполнения action.
 
 Правила:
 
 - эта таблица фиксирует действия администратора контента, а не пользовательские History Events;
 - она не должна содержать User-Owned Data;
 - она не должна давать Content Admin доступ к User-Owned Data;
-- она не должна мутировать published Scenario Version rows.
+- она не должна мутировать published Scenario Version rows;
+- admin_actor_id должен принадлежать account с ролью content_admin;
+- successor_version_id обязателен только для scenario_version_superseded; для остальных событий — NULL;
+- previous_publication_state должен соответствовать фактическому publication_state до transition.
 
-Точные требования к retention и operational audit остаются решением перед написанием SQL.
+Что нельзя хранить:
+
+- идентификаторы Action Plans или Users;
+- счётчики Action Plans на затронутой версии;
+- Progress, History Event или любые User-Owned Data;
+- персональные данные пользователей.
+
+Точные требования к retention остаются решением перед написанием SQL.
 
 ## Content Model Tables
 
@@ -231,7 +253,10 @@ Technical Spec 05 не создаёт новые продуктовые функ
 - publishing action не мигрирует active Action Plans автоматически;
 - user-owned workflow должен ссылаться на Scenario Version, а не только на live Scenario;
 - published content доступен для чтения authenticated users;
-- public-read находится вне MVP.
+- public-read находится вне MVP;
+- publication_state может изменяться только по утверждённому Publication State Transition Graph;
+- self-transition publication_state запрещён;
+- superseded является финальным состоянием Scenario Version.
 
 ### `steps`
 
@@ -283,7 +308,11 @@ Technical Spec 05 не создаёт новые продуктовые функ
 - один Source может иметь много Source Revisions;
 - Scenario Version links to Source Revision через Versioned Source Context;
 - Checked Source Mark ссылается на Source Revision;
-- Source Revision, на которую ссылается published Scenario Version или Checked Source Mark, нельзя удалять способом, который разрушает historical context.
+- Source Revision, на которую ссылается published Scenario Version или Checked Source Mark, нельзя удалять способом, который разрушает historical context;
+- Source Revision, не referenced ни одной published Scenario Version и ни одним Checked Source Mark, является mutable до первого publication reference;
+- после первого reference published Scenario Version или Checked Source Mark — immutable;
+- любое изменение published Source Revision требует создания новой Source Revision;
+- editorial правки допустимы только для Source Revisions, не referenced ни одной published Scenario Version или Checked Source Mark.
 
 ### `template_open_questions`
 
@@ -302,6 +331,10 @@ Technical Spec 05 не создаёт новые продуктовые функ
 Правила:
 
 - warning context, использованный published Scenario Version, должен быть immutable после публикации;
+- Warning row, referenced by any published scenario_version_warning_context, является immutable;
+- изменение Warning после первого published использования требует создания нового Warning entity;
+- draft Warning, не referenced ни одной published Scenario Version, остаётся mutable;
+- Warning не имеет отдельного revision layer; новый Warning entity является самостоятельным объектом с новым identity;
 - warning ничего не решает о конкретном user.
 
 ### `restrictions`
@@ -311,6 +344,10 @@ Technical Spec 05 не создаёт новые продуктовые функ
 Правила:
 
 - restriction context, использованный published Scenario Version, должен быть immutable после публикации;
+- Restriction row, referenced by any published scenario_version_restriction_context, является immutable;
+- изменение Restriction после первого published использования требует создания нового Restriction entity;
+- draft Restriction, не referenced ни одной published Scenario Version, остаётся mutable;
+- Restriction не имеет отдельного revision layer; новый Restriction entity является самостоятельным объектом с новым identity;
 - restriction не становится user-specific official decision.
 
 ### `applicability_conditions`
@@ -320,7 +357,69 @@ Technical Spec 05 не создаёт новые продуктовые функ
 Правила:
 
 - applicability condition, использованный published Scenario Version, должен быть immutable после публикации;
+- Applicability Condition row, referenced by any published scenario_version_applicability_condition_context, является immutable;
+- изменение Applicability Condition после первого published использования требует создания нового Applicability Condition entity;
+- draft Applicability Condition, не referenced ни одной published Scenario Version, остаётся mutable;
+- Applicability Condition не имеет отдельного revision layer; новый entity является самостоятельным объектом с новым identity;
 - он не хранит user-filled eligibility values.
+
+## Publication State Transition Rules
+
+publication_state Scenario Version может изменяться только по следующему утверждённому графу переходов.
+
+Разрешённые переходы:
+
+- draft → published;
+- published → deprecated;
+- published → superseded;
+- deprecated → superseded.
+
+Запрещённые переходы:
+
+- published → draft;
+- deprecated → draft;
+- deprecated → published;
+- superseded → published;
+- superseded → deprecated;
+- superseded → draft;
+- draft → deprecated;
+- draft → superseded;
+- любой self-transition (same state → same state).
+
+superseded является финальным состоянием. Переход из superseded в любое другое состояние запрещён.
+
+Физическое удаление draft Scenario Version является отдельной admin операцией и не относится к transition graph. Правила удаления — в разделе Draft Scenario Version Deletion.
+
+Enforcement: переход publication_state должен быть защищён на database level. Механизм enforcement (trigger или check constraint) определяется при написании SQL.
+
+## Draft Scenario Version Deletion
+
+Физическое удаление Scenario Version допустимо только для publication_state = 'draft'.
+
+Удаление draft является отдельной admin операцией, не относящейся к Publication State Transition Graph.
+
+При удалении draft Scenario Version удаляются (cascade):
+
+- scenario_version_life_situation_contexts для этого draft;
+- scenario_version_step_contexts для этого draft;
+- scenario_version_step_dependencies для этого draft;
+- scenario_version_document_requirement_contexts для этого draft;
+- scenario_version_data_requirement_contexts для этого draft;
+- scenario_version_source_contexts для этого draft;
+- scenario_version_template_open_question_contexts для этого draft;
+- scenario_version_warning_contexts для этого draft;
+- scenario_version_restriction_contexts для этого draft;
+- scenario_version_applicability_condition_contexts для этого draft.
+
+При удалении draft Scenario Version не удаляются:
+
+- steps, document_requirements, data_requirements, sources, source_revisions, template_open_questions, warnings, restrictions, applicability_conditions, life_situations, scenarios.
+
+Эти сущности имеют stable identity и не принадлежат одному draft. Удаляются только versioned context link rows.
+
+Физическое удаление Scenario Version с publication_state != 'draft' запрещено, если от неё зависят Action Plans, Progress, History Events, User Open Questions, User Notes или Checked Source Marks. Это правило сохраняет historical context активных и завершённых планов.
+
+Точный механизм физического удаления draft Scenario Version (cascade delete или explicit multi-step delete) остаётся решением перед написанием SQL.
 
 ## Versioned Content Context Tables
 
@@ -428,7 +527,9 @@ Technical Spec 05 не создаёт новые продуктовые функ
 - status ограничен MVP states Action Plan;
 - one active Action Plan per user per stable Scenario identity;
 - Action Plan не ссылается только на live Scenario;
-- content update не меняет Action Plan автоматически.
+- content update не меняет Action Plan автоматически;
+- Action Plan может быть создан только для Scenario Version с publication_state = 'published';
+- создание Action Plan для deprecated или superseded Scenario Version запрещено.
 
 Initial Progress Strategy:
 
@@ -566,7 +667,8 @@ Privacy-правила:
 - status User Open Question: `open`, `requires_check`, `awaiting_external_response`, `clarified_by_user`, `irrelevant`;
 - lifecycle state User Note: `created`, `edited_by_user`, `hidden_by_user`, `deleted_by_user`;
 - type History Event: `action_plan_created`, `action_plan_completed`, `progress_status_changed`, `source_checked`, `user_open_question_created`, `user_open_question_status_changed`, `user_open_question_edited`, `user_note_created`, `user_note_edited`, `user_note_hidden`, `user_note_deleted`;
-- affected entity type для History Event: Action Plan, Progress, User Open Question, User Note, Checked Source Mark или versioned content context.
+- affected entity type для History Event: Action Plan, Progress, User Open Question, User Note, Checked Source Mark или versioned content context;
+- type content publication event: `scenario_version_published`, `scenario_version_deprecated`, `scenario_version_superseded`.
 
 Не добавлять enum values, которые подразумевают official validation, task management, support workflow или external authority decision.
 
@@ -576,6 +678,9 @@ Privacy-правила:
 
 - account_roles -> app_users;
 - content_publication_events -> app_users как admin actor;
+- content_publication_events -> scenarios как stable Scenario identity;
+- content_publication_events -> scenario_versions как affected version;
+- content_publication_events -> scenario_versions как successor version (nullable);
 - life_situation_scenario_links -> life_situations;
 - life_situation_scenario_links -> scenarios;
 - scenario_versions -> scenarios;
@@ -647,7 +752,8 @@ Privacy-правила:
 - один Versioned Source Context на Scenario Version и Source Revision context identity;
 - один Versioned Template Open Question Context на Scenario Version и Template Open Question context identity;
 - один active Action Plan на User и stable Scenario identity;
-- один Progress record на Action Plan и Versioned Step Context.
+- один Progress record на Action Plan и Versioned Step Context;
+- один draft Scenario Version на stable Scenario identity (partial unique constraint WHERE publication_state = 'draft').
 
 Ещё нужно решить:
 
@@ -664,14 +770,21 @@ Privacy-правила:
 - Source Revision rows referenced by a published Scenario Version;
 - Source Revision rows referenced by Checked Source Mark;
 - History Event rows after creation;
-- content context referenced by Action Plan, Progress, User Open Question, User Note or Checked Source Mark.
+- content context referenced by Action Plan, Progress, User Open Question, User Note or Checked Source Mark;
+- Warning rows referenced by any published scenario_version_warning_context;
+- Restriction rows referenced by any published scenario_version_restriction_context;
+- Applicability Condition rows referenced by any published scenario_version_applicability_condition_context.
+
+Source Revision rows not yet referenced by any published Scenario Version or Checked Source Mark remain mutable until first publication reference.
 
 Правила replacement:
 
 - published Scenario Version не мутируется;
 - замена контента требует новой Scenario Version, новой Source Revision или superseding relationship;
 - дочерний контент внутри published Scenario Version не заменяется in place;
-- deprecate и supersede меняют publication lifecycle без мутации published historical context.
+- deprecate и supersede меняют publication lifecycle без мутации published historical context;
+- Warning, Restriction и Applicability Condition становятся immutable после первого использования в published Scenario Version; изменение требует создания нового entity и новой Scenario Version;
+- publication_state Scenario Version не может переходить в состояния, нарушающие утверждённый Publication State Transition Graph; published Scenario Version не возвращается в draft.
 
 ## Append-Only Rules
 
@@ -691,7 +804,9 @@ Append-like historical behavior:
 - History Event нельзя удалять как side effect User Note hide/delete;
 - User Note edit/hide/delete создаёт дополнительный History Event;
 - Content Admin не может переписывать user-owned History Events;
-- изменения роли не должны переписывать user-owned History Events.
+- изменения роли не должны переписывать user-owned History Events;
+- content_publication_events rows не изменяются и не удаляются после создания;
+- возврат к предыдущему publication_state физически невозможен и не создаёт reverse event в content_publication_events.
 
 ## RLS Role Model
 
@@ -716,7 +831,9 @@ RLS должна различать:
 Authenticated User может:
 
 - читать published Content Model;
-- читать published Scenario Version и versioned content context;
+- читать Scenario Version с publication_state = 'published' без дополнительных ограничений;
+- читать Scenario Version с publication_state IN ('deprecated', 'superseded') только если у пользователя существует Action Plan, ссылающийся на эту Scenario Version;
+- читать versioned content context опубликованной или исторически доступной Scenario Version;
 - читать собственные Action Plans;
 - создавать Action Plan через stateful user action;
 - обновлять собственный Action Plan в рамках MVP lifecycle;
@@ -786,7 +903,11 @@ Content Admin не может:
 - связь Progress только с live Step;
 - Checked Source Mark обновляет Source или Source Revision;
 - delete User Note удаляет контекст History Event;
-- role self-escalation через account_roles.
+- role self-escalation через account_roles;
+- создание Action Plan для Scenario Version с publication_state != 'published';
+- чтение deprecated или superseded Scenario Version пользователем без существующего Action Plan на этой версии;
+- физическое удаление Scenario Version с publication_state != 'draft';
+- физическое удаление published, deprecated или superseded Scenario Version, если от неё зависят User-Owned Data.
 
 ## Conceptual Index Plan
 
@@ -805,7 +926,9 @@ Content Admin не может:
 - чтение User Open Questions по Action Plan и status;
 - чтение User Notes по Action Plan и History Event;
 - чтение Checked Source Marks по Action Plan и Source Revision;
-- проверку account roles по account и role.
+- проверку account roles по account и role;
+- чтение content_publication_events по scenario_version_id и created_at;
+- проверку существования Action Plan по User и Scenario Version для RLS доступа к deprecated/superseded Scenario Versions.
 
 Индексы не должны использоваться как замена RLS ownership checks.
 
@@ -836,7 +959,13 @@ Content Admin не может:
 - точную реализацию role assignment bootstrapping;
 - является ли роль `user` implicit или явно хранится для каждого authenticated account;
 - точное физическое представление role context для dual-role accounts;
-- точные retention и visibility для content_publication_events;
+- точная retention policy для content_publication_events (период хранения, archival rules);
+- точный механизм enforcement immutability Warning, Restriction и Applicability Condition entity rows после publication reference (trigger BEFORE UPDATE или RLS-based check);
+- точный механизм enforcement Publication State Transition Rules (trigger BEFORE UPDATE на scenario_versions.publication_state или check constraint);
+- точная реализация RLS для deprecated/superseded Scenario Version read access (отдельная policy с условием EXISTS (action_plans) или каскадный доступ через join с versioned context tables);
+- точная физическая реализация partial unique constraint для одного draft Scenario Version per stable Scenario identity;
+- механизм физического удаления draft Scenario Version (cascade delete или explicit multi-step delete);
+- обработка race condition при одновременном удалении draft Scenario Version и попытке публикации;
 - точную физическую реализацию User Note hide/delete без разрушения контекста History Event;
 - максимальную длину User Note;
 - максимальную длину и разрешённые типы значений для `previous_value` и `new_value` History Event;
@@ -886,6 +1015,9 @@ Content Admin не может:
 - Уникальность one active Action Plan enforced per Scenario Version вместо stable Scenario identity.
 - RLS проверяет role, но не ownership.
 - Content publication action автоматически мигрирует active Action Plans.
+- Warning, Restriction или Applicability Condition мутируется после published использования в отсутствие database-level enforcement.
+- Forbidden state transition проходит через application bug в отсутствие database-level protection.
+- User теряет read access к deprecated Scenario Version из-за неверной RLS реализации для исторически существующих Action Plans.
 
 ## Критерии приёмки
 
@@ -924,4 +1056,10 @@ Technical Spec 05 приемлем, если:
 - User Notes hide/delete не разрушает контекст History Event.
 - Decisions Required Before Writing SQL перечислены.
 - Deferred Beyond TS05 перечислены.
+- Publication State Transition Rules определены.
+- Draft Scenario Version Deletion правила определены.
+- Warning, Restriction и Applicability Condition entity immutability определена.
+- Content Publication Events conceptual payload определён.
+- Deprecated/superseded Scenario Version access model (два read pattern для User) определена.
+- Action Plan creation gate (только для publication_state = 'published') определён.
 - Документ не содержит SQL-код, синтаксис RLS policies, migration code, API routes, UI, frontend code или backend code.
