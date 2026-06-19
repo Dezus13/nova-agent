@@ -94,7 +94,8 @@ TS07 является операционным аналогом TS06 для ст
 - Этап открыт: 2026-06-18.
 - **TS07 завершён: 2026-06-18.** `docs/specs/технические/07-user-owned-workflow-operations.md` создан. 8 MVP-решений зафиксированы. Все открытые lifecycle-решения TS02/TS03 закрыты.
 - **UI-01 завершён: 2026-06-19.** `docs/specs/ui/01-ui-design-rules.md` создан. Visibility rules, 9 пользовательских экранов, 7 admin-экранов, 22 UI-инварианта, запрещённые паттерны, решения до TS08 зафиксированы.
-- TS08: ожидает TS07 + UI-01 (оба завершены).
+- **Decision Record завершён: 2026-06-19.** `docs/decisions/2026-06-19-api-layer-pre-decisions.md` создан. 9 архитектурных решений (DR-01–DR-09) зафиксированы: CSM uniqueness, Pattern B, plan idempotency, Life Situation lifecycle, Scenario lifecycle, audit trail, Notes/UOQ в completed плане, auth contract scope.
+- TS08: готов к написанию (TS07 + UI-01 + Decision Record завершены).
 - MVP Work Plan: ожидает TS08.
 - MVP Seed Content Plan: ожидает решения о начале.
 - README Navigation Polish: ожидает стабилизации структуры.
