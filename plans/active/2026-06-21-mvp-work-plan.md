@@ -473,7 +473,7 @@ Known non-blocking items:
 
 | Question | Status | Owner document | Notes |
 |---|---|---|---|
-| Exact first seed content for registration-of-address demo | Open | MVP Seed Content Plan | Required before final demo content, not a new product function. |
+| Exact first seed content for registration-of-address demo | Closed for first seed plan | `plans/active/2026-06-22-mvp-seed-content-plan.md` | First seed content is defined for VS-01; implementation details remain outside this plan. |
 | README navigation polish after structure stabilizes | Open | `plans/active/2026-06-18-mvp-implementation-preparation.md` | Documentation navigation task, not MVP scope. |
 | Implementation details deferred by TS08 | Deferred | Future implementation planning within approved specs | Must not change product/API decisions. |
 

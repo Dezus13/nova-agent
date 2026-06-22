@@ -106,5 +106,5 @@ TS07 является операционным аналогом TS06 для ст
 - **TS08 завершён: 2026-06-20.** `docs/specs/технические/08-api-layer-specification.md` создан. API contract зафиксирован: auth contract, role/ownership boundaries, user content read API, Action Plan, Progress, User Open Question, User Note, Checked Source Mark, History, Content Admin API, Pattern B, UI boundary requirements, invariants, forbidden API patterns.
 - **Принципы продукта завершены: 2026-06-21.** `docs/принципы-продукта.md` создан. Документ фиксирует продуктовые принципы перед MVP Work Plan: контекст перед действием, один главный следующий шаг, снижение когнитивной нагрузки, прозрачность истории, Mobile-First мышление, запрет drift в Task Manager/CRM и обязательную фиксацию открытых вопросов.
 - **MVP Work Plan создан: 2026-06-21.** `plans/active/2026-06-21-mvp-work-plan.md` создан. Документ преобразует утверждённую архитектуру Nova Agent в порядок реализации MVP через VS-01–VS-07: сначала пользовательская ценность, затем полнота системы.
-- MVP Seed Content Plan: ожидает решения о начале.
+- **MVP Seed Content Plan создан: 2026-06-22.** `plans/active/2026-06-22-mvp-seed-content-plan.md` создан. Документ определяет первый seed content для VS-01: "Регистрация места жительства в Австрии", без изменения TS01-TS08, UI-01 или DR-01-DR-09.
 - README Navigation Polish: ожидает стабилизации структуры.
