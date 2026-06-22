@@ -513,3 +513,30 @@ Self-audit result:
 8. DR-01-DR-09: not revised.
 9. MVP Work Plan: not revised.
 10. Seed Content Plan: not revised.
+
+## 16. Implementation Status
+
+### 2026-06-22 — Step 1: Seed Content Availability
+
+Status: completed.
+
+Implemented:
+
+- local typed Content Model definitions for VS-01 seed content;
+- local seed fixture for one Life Situation, one Scenario and one published Scenario Version;
+- seed Scenario Version content from `plans/active/2026-06-22-mvp-seed-content-plan.md`: Applicability Conditions, Warnings, Restrictions, 6 Steps, Documents/Data Requirements, Sources and Template Open Questions;
+- local repository boundary for reading seed content;
+- tests that verify content counts, published state, content links and absence of user-owned workflow entities.
+
+Out of scope preserved:
+
+- no Action Plan, Progress, History, User Open Questions, User Notes or Checked Source Marks implemented in this step;
+- no Content Admin UI, Supabase, API handlers, auth, routing library, state manager, dashboard or document storage added;
+- TS01-TS08, UI-01, Product Principles and MVP Scope were not changed.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`.

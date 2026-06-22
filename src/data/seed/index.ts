@@ -1,0 +1,1 @@
+export { registrationResidenceAustriaSeed } from "./registrationResidenceAustria";
