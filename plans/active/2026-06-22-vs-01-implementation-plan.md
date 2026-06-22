@@ -42,6 +42,7 @@ Life Situation
 - `docs/specs/технические/07-user-owned-workflow-operations.md`;
 - `docs/specs/технические/08-api-layer-specification.md`;
 - `docs/decisions/2026-06-19-api-layer-pre-decisions.md`;
+- `docs/decisions/2026-06-22-vs-01-technical-stack-baseline.md`;
 - `plans/active/2026-06-21-mvp-work-plan.md`;
 - `plans/active/2026-06-22-mvp-seed-content-plan.md`.
 
@@ -137,6 +138,7 @@ VS-01 зависит от уже утверждённых решений:
 - TS08: API contract уже содержит content read, Action Plan, Progress и History operations.
 - UI-01: U-01, U-02, U-03, U-05, U-06 и U-07 являются conceptual UI scope для VS-01.
 - DR-03: Action Plan creation is idempotent.
+- VS-01 Technical Stack Baseline: first code commit must be scaffold-only and use the approved minimal web app baseline.
 - Seed Content Plan: единственный seed content для VS-01 - "Регистрация места жительства в Австрии".
 
 VS-01 не зависит от:
@@ -459,6 +461,7 @@ No blocking product, architecture, data, role, lifecycle, API, UI or seed-conten
 | Does VS-01 include User Open Questions? | Out of scope | MVP Work Plan | Writable User Open Questions belong to VS-03. Template Open Questions remain Scenario content. |
 | Does VS-01 include User Notes or Checked Source Marks? | Out of scope | MVP Work Plan | They belong to VS-04. |
 | Does VS-01 include Pattern B or deprecated/superseded lifecycle? | Out of scope | MVP Work Plan | They belong to VS-07. |
+| Which technical stack baseline should the first scaffold use? | Closed | `docs/decisions/2026-06-22-vs-01-technical-stack-baseline.md` | Use the approved minimal web app baseline; first code commit must be scaffold-only. |
 | Which implementation details may be decided during code? | Constrained | This document / TS08 | Only framework, serialization, file organization or physical enforcement details that do not change product, API, UI, data model, roles, states or seed content. |
 
 If a new question affects product boundaries, architecture, data, roles, permissions, lifecycle, API, UI, user scenarios or seed content, it is not a code-level detail and must be documented before implementation continues.
