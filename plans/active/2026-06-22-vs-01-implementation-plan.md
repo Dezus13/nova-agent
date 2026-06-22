@@ -154,6 +154,17 @@ VS-01 не зависит от:
 
 Реализация должна идти по вертикальной ценности, а не слоями "сначала вся база, потом весь API, потом весь UI".
 
+### 0. Scaffold Baseline
+
+Цель: создать минимальный React + TypeScript + Vite scaffold без VS-01 бизнес-логики.
+
+Минимальный результат:
+
+- доступны npm scripts `dev`, `build`, `lint`, `typecheck`, `test` и `test:watch`;
+- приложение собирается и проходит scaffold smoke test;
+- README содержит только команды запуска и проверки;
+- scaffold не содержит seed content, Action Plan logic, Progress logic, History logic, API handlers, Supabase, auth, routing library, state manager, UI kit или Content Admin.
+
 ### 1. Seed Content Availability
 
 Цель: сделать доступным один published Scenario Version для утверждённого seed content.
