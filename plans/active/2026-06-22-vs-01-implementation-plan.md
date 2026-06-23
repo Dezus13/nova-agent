@@ -540,3 +540,31 @@ Verification:
 - `npm run lint`;
 - `npm test`;
 - `npm run build`.
+
+### 2026-06-23 — Step 2: Content Read Flow
+
+Status: completed.
+
+Implemented:
+
+- read-only React content flow for the existing seed Life Situation "Регистрация места жительства в Австрии";
+- Scenario and Scenario Version display using the existing local `contentRepository`;
+- visible Applicability Conditions, Warnings and Restrictions before scenario steps;
+- read-only Steps with related Documents/Data Requirements and Sources;
+- scenario-level Documents/Data Requirements, Sources and Template Open Questions as content-owned information;
+- product boundary copy: справочная помощь, not official answer, check official source;
+- focused tests for content flow rendering, Warnings/Restrictions ordering and absence of user-owned workflow areas.
+
+Out of scope preserved:
+
+- no Action Plan, Progress, History, User Open Questions, User Notes or Checked Source Marks implemented in this step;
+- no My Plans, Completed Plans, Pattern B, Content Admin UI, Supabase, API handlers, auth, routing library, state manager, dashboard or document storage added;
+- no new Life Situations, Scenarios, Scenario Versions, entities, roles, states or API added;
+- seed content was used through the existing repository boundary and was not changed.
+
+Verification:
+
+- `npm run build`;
+- `npm run lint`;
+- `npm run typecheck`;
+- `npm test`.
