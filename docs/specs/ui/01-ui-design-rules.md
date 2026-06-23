@@ -27,7 +27,7 @@ UI Spec 01 основан на следующих документах:
 4. `docs/пользовательские-сценарии.md`
 5. `docs/roadmap.md`
 6. `docs/техническая-архитектура.md`
-7. `docs/specs/функции/01–11`
+7. `docs/specs/функции/*`
 8. `docs/specs/технические/01-content-model-and-versioning.md`
 9. `docs/specs/технические/02-user-owned-workflow-model.md`
 10. `docs/specs/технические/03-logical-data-model.md`
