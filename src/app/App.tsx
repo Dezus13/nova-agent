@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type {
   LifeSituation,
   PublishedScenarioVersion,
@@ -8,6 +9,10 @@ import type {
   Step,
   Warning,
 } from "../domain/content";
+import {
+  startActionPlan,
+  type ActionPlanAggregate,
+} from "../domain/workflow";
 import {
   findSeedScenarioById,
   findSeedScenarioVersionById,
@@ -298,8 +303,91 @@ function StepsPanel({ scenarioVersion }: { scenarioVersion: PublishedScenarioVer
   );
 }
 
-export function App() {
+function StartPlanPanel({
+  activePlan,
+  onStartPlan,
+}: {
+  activePlan: ActionPlanAggregate | null;
+  onStartPlan: () => void;
+}) {
+  if (activePlan) {
+    return (
+      <section
+        className="flow-section plan-confirmation"
+        aria-labelledby="plan-confirmation-title"
+        aria-live="polite"
+      >
+        <p className="eyebrow">Action Plan</p>
+        <h2 id="plan-confirmation-title">План создан</h2>
+        <dl className="plan-summary">
+          <div>
+            <dt>Статус</dt>
+            <dd>{activePlan.actionPlan.state}</dd>
+          </div>
+          <div>
+            <dt>Scenario Version</dt>
+            <dd>{activePlan.actionPlan.scenarioVersionLabel}</dd>
+          </div>
+          <div>
+            <dt>Steps</dt>
+            <dd>{activePlan.progressRecords.length}</dd>
+          </div>
+          <div>
+            <dt>Progress records</dt>
+            <dd>{activePlan.progressRecords.length}</dd>
+          </div>
+        </dl>
+        <p className="plan-boundary">
+          Это ваш сохранённый план в Nova Agent, а не официальный статус. Требования и
+          результат внешнего процесса проверяйте в официальном источнике.
+        </p>
+      </section>
+    );
+  }
+
+  return (
+    <section className="flow-section start-plan-section" aria-labelledby="start-plan-title">
+      <p className="eyebrow">Следующий шаг</p>
+      <h2 id="start-plan-title">Сохранить этот путь как свой план</h2>
+      <p>
+        Создание плана сохранит выбранную Life Situation и текущую published Scenario
+        Version. Все шаги начнутся с вашей отметки <code>not_started</code>.
+      </p>
+      <p className="plan-boundary">
+        План помогает организовать прохождение, но не подтверждает официальный статус,
+        достаточность документов или результат обращения.
+      </p>
+      <button className="primary-action" type="button" onClick={onStartPlan}>
+        Начать план
+      </button>
+    </section>
+  );
+}
+
+export function App({
+  initialActionPlan = null,
+}: {
+  initialActionPlan?: ActionPlanAggregate | null;
+}) {
   const { lifeSituation, scenario, scenarioVersion } = getFirstContentFlow();
+  const [activePlan, setActivePlan] = useState<ActionPlanAggregate | null>(
+    initialActionPlan,
+  );
+
+  function handleStartPlan() {
+    const result = startActionPlan({
+      ownerId: "local-user",
+      intent: "start_plan",
+      lifeSituation,
+      scenario,
+      scenarioVersion,
+      existingPlans: activePlan ? [activePlan] : [],
+      operationId: `local-${scenario.id}`,
+      occurredAt: new Date().toISOString(),
+    });
+
+    setActivePlan(result.plan);
+  }
 
   return (
     <main className="app-shell">
@@ -313,8 +401,8 @@ export function App() {
       </header>
 
       <LifeSituationPanel lifeSituation={lifeSituation} />
-      <ScenarioPanel scenario={scenario} scenarioVersion={scenarioVersion} />
       <SafetyPanel scenarioVersion={scenarioVersion} />
+      <ScenarioPanel scenario={scenario} scenarioVersion={scenarioVersion} />
       <ApplicabilityPanel scenarioVersion={scenarioVersion} />
       <TemplateOpenQuestionsPanel scenarioVersion={scenarioVersion} />
       <StepsPanel scenarioVersion={scenarioVersion} />
@@ -324,6 +412,7 @@ export function App() {
         title="Что нужно подготовить"
       />
       <SourcesPanel id="scenario-sources" sources={scenarioVersion.sources} />
+      <StartPlanPanel activePlan={activePlan} onStartPlan={handleStartPlan} />
     </main>
   );
 }

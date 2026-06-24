@@ -74,7 +74,8 @@ a:hover {
 .scenario-meta,
 .safety-grid,
 .requirement-grid,
-.source-list {
+.source-list,
+.plan-summary {
   display: grid;
   gap: 14px;
 }
@@ -87,7 +88,8 @@ a:hover {
 .boundary-box,
 .requirement-card,
 .source-card,
-.step-card {
+.step-card,
+.plan-summary div {
   background: #f7f5ef;
   border: 1px solid #dfd8c7;
   border-radius: 8px;
@@ -206,6 +208,53 @@ dd {
   font-weight: 700;
 }
 
+.start-plan-section,
+.plan-confirmation {
+  border-color: #315e5b;
+}
+
+.start-plan-section p,
+.plan-confirmation p {
+  max-width: 820px;
+}
+
+.plan-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 18px 0;
+}
+
+.plan-summary dd {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.plan-boundary {
+  color: #405047;
+}
+
+.primary-action {
+  background: #195c6a;
+  border: 1px solid #195c6a;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  margin-top: 8px;
+  min-height: 44px;
+  padding: 10px 18px;
+}
+
+.primary-action:hover {
+  background: #124752;
+  border-color: #124752;
+}
+
+.primary-action:focus-visible {
+  outline: 3px solid #d8a841;
+  outline-offset: 3px;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     padding: 24px 14px 44px;
@@ -218,7 +267,8 @@ dd {
   .definition-grid,
   .scenario-meta,
   .safety-grid,
-  .requirement-grid {
+  .requirement-grid,
+  .plan-summary {
     grid-template-columns: 1fr;
   }
 }

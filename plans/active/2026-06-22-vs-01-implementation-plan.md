@@ -568,3 +568,35 @@ Verification:
 - `npm run lint`;
 - `npm run typecheck`;
 - `npm test`.
+
+### 2026-06-24 — Step 3: Action Plan Creation
+
+Status: completed.
+
+Implemented:
+
+- local typed models for Action Plan, Progress and History Event;
+- pure Explicit Start Plan helper for the existing published Scenario Version;
+- active Action Plan creation with stable Scenario identity, Scenario Version and selected Life Situation context;
+- initial `not_started` Progress records for every Scenario Version step;
+- exactly one `action_plan_created` History Event without per-step initial events;
+- idempotent repeated start behavior that returns the existing active plan;
+- CTA `Начать план` after Warnings, Restrictions and all read-only Scenario content;
+- minimal creation confirmation with plan state, Scenario Version, step/progress count and non-official-status boundary copy;
+- focused tests for creation, initial Progress, History Event, idempotency, UI ordering and absence of later workflow controls.
+
+Out of scope preserved:
+
+- no Action Plan Detail, Step Detail, Progress update UI or History view implemented;
+- no User Open Questions, User Notes, Checked Source Marks, My Plans or Completed Plans implemented;
+- no Pattern B, Content Admin UI, Supabase, API handlers, auth, routing library, state manager, dashboard or document storage added;
+- no new Life Situations, Scenarios, Scenario Versions, roles, API operations or product states added;
+- TS01-TS08, UI-01, Product Principles and seed content were not changed.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`;
+- `git diff --check`.
