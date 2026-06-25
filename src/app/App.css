@@ -32,7 +32,10 @@ a:hover {
 
 .page-header h1,
 .flow-section h2,
-.safety-section h2 {
+.safety-section h2,
+.plan-view h2,
+.plan-view h3,
+.plan-view h4 {
   letter-spacing: 0;
   line-height: 1.12;
   margin: 0 0 12px;
@@ -209,18 +212,20 @@ dd {
 }
 
 .start-plan-section,
-.plan-confirmation {
+.plan-header,
+.step-detail-header {
   border-color: #315e5b;
 }
 
 .start-plan-section p,
-.plan-confirmation p {
+.plan-header p,
+.step-detail-header p {
   max-width: 820px;
 }
 
 .plan-summary {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin: 18px 0;
+  grid-template-columns: minmax(0, 280px);
+  margin: 14px 0;
 }
 
 .plan-summary dd {
@@ -230,6 +235,123 @@ dd {
 
 .plan-boundary {
   color: #405047;
+}
+
+.plan-view {
+  margin-top: 18px;
+}
+
+.plan-title-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.plan-title-row h2 {
+  margin-bottom: 0;
+}
+
+.plan-title-row span {
+  background: #e7efe9;
+  border-radius: 999px;
+  color: #274d45;
+  font-size: 14px;
+  padding: 6px 10px;
+}
+
+.plan-context {
+  color: #405047;
+  margin: 12px 0 0;
+}
+
+.plan-header,
+.step-detail-header,
+.plan-steps-section,
+.step-detail-safety,
+.step-context-section,
+.step-progress-section {
+  background: #fffdf8;
+  border: 1px solid #d8d3c5;
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.plan-steps-section,
+.step-detail-safety,
+.step-context-section,
+.step-progress-section {
+  margin-top: 18px;
+}
+
+.next-step-panel {
+  background: #edf5f0;
+  border: 1px solid #6d9987;
+  border-radius: 8px;
+  margin-top: 18px;
+  padding: 18px;
+}
+
+.section-intro {
+  color: #405047;
+  max-width: 760px;
+}
+
+.plan-step-list {
+  border-top: 1px solid #d8d3c5;
+  margin-top: 18px;
+}
+
+.plan-step-row {
+  align-items: center;
+  border-bottom: 1px solid #d8d3c5;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+  padding: 18px 0;
+}
+
+.plan-step-row h4 {
+  font-size: 18px;
+}
+
+.plan-step-row p {
+  margin-bottom: 0;
+}
+
+.plan-step-actions {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress-mark {
+  background: #edf2ee;
+  border: 1px solid #9ab4a8;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 12px;
+}
+
+.progress-mark span {
+  color: #405047;
+  font-size: 13px;
+}
+
+.progress-mark strong {
+  color: #274d45;
+  margin-top: 4px;
+}
+
+.step-progress-section {
+  border-color: #6d9987;
+}
+
+.step-progress-section .progress-mark {
+  max-width: 280px;
 }
 
 .primary-action {
@@ -255,6 +377,27 @@ dd {
   outline-offset: 3px;
 }
 
+.secondary-action {
+  background: #ffffff;
+  border: 1px solid #195c6a;
+  border-radius: 8px;
+  color: #195c6a;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 9px 14px;
+}
+
+.secondary-action:hover {
+  background: #edf5f0;
+}
+
+.secondary-action:focus-visible {
+  outline: 3px solid #d8a841;
+  outline-offset: 3px;
+}
+
 @media (max-width: 760px) {
   .app-shell {
     padding: 24px 14px 44px;
@@ -269,6 +412,11 @@ dd {
   .safety-grid,
   .requirement-grid,
   .plan-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-step-row {
+    align-items: stretch;
     grid-template-columns: 1fr;
   }
 }

@@ -74,28 +74,94 @@ describe("App", () => {
     );
   });
 
-  it("shows only the minimal Action Plan creation confirmation", () => {
+  it("shows Action Plan Detail with the next step and user-marked progress", () => {
     const html = renderToString(<App initialActionPlan={createActionPlanForUi()} />);
+    const scenarioPosition = html.indexOf("Ваш план");
+    const versionPosition = html.indexOf("Scenario Version:");
+    const statePosition = html.indexOf("Статус плана");
+    const boundaryPosition = html.indexOf(
+      "Nova Agent — справочная и организационная помощь",
+    );
+    const stepsPosition = html.indexOf("Шаги плана");
 
-    expect(html).toContain("План создан");
+    expect(html).toContain("Ваш план");
+    expect(html).toContain("Шаги плана");
+    expect(html).toContain("Следующий шаг");
     expect(html).toContain("active");
     expect(html).toContain("Scenario Version");
     expect(html).toContain("v1");
-    expect(html).toContain("Progress records");
-    expect(html).toContain(">6<");
-    expect(html).toContain("не официальный статус");
+    expect(html).toContain("Проверить, нужно ли регистрировать адрес");
+    expect(html).toContain("Получить подтверждение и сохранить собственный контекст");
+    expect(html.match(/Ваша отметка/g)).toHaveLength(6);
+    expect(html.match(/Не начато/g)).toHaveLength(6);
+    expect(html).toContain(
+      "Nova Agent не подтверждает документы, сроки, применимость требований или результаты официального процесса.",
+    );
+    expect(scenarioPosition).toBeGreaterThanOrEqual(0);
+    expect(versionPosition).toBeGreaterThanOrEqual(0);
+    expect(statePosition).toBeGreaterThanOrEqual(0);
+    expect(boundaryPosition).toBeGreaterThanOrEqual(0);
+    expect(stepsPosition).toBeGreaterThanOrEqual(0);
+    expect(scenarioPosition).toBeLessThan(versionPosition);
+    expect(versionPosition).toBeLessThan(statePosition);
+    expect(statePosition).toBeLessThan(boundaryPosition);
+    expect(boundaryPosition).toBeLessThan(stepsPosition);
     expect(html).not.toContain("Начать план");
+  });
+
+  it("shows Step Detail context before the read-only Progress mark", () => {
+    const html = renderToString(
+      <App
+        initialActionPlan={createActionPlanForUi()}
+        initialSelectedStepId="step-prepare-meldezettel"
+      />,
+    );
+    const safetyPosition = html.indexOf("Warnings / Restrictions");
+    const purposePosition = html.indexOf("Подготовить базовую форму регистрации");
+    const applicabilityPosition = html.indexOf("Applicability Conditions");
+    const requirementsPosition = html.indexOf("Documents / Data Requirements");
+    const sourcesPosition = html.indexOf("Где проверить официальный источник");
+    const progressPosition = html.indexOf("Текущее состояние шага");
+
+    expect(html).toContain("Подготовить Meldezettel и подпись Unterkunftgeber");
+    expect(safetyPosition).toBeGreaterThanOrEqual(0);
+    expect(purposePosition).toBeGreaterThanOrEqual(0);
+    expect(applicabilityPosition).toBeGreaterThanOrEqual(0);
+    expect(requirementsPosition).toBeGreaterThanOrEqual(0);
+    expect(sourcesPosition).toBeGreaterThanOrEqual(0);
+    expect(progressPosition).toBeGreaterThanOrEqual(0);
+    expect(safetyPosition).toBeLessThan(purposePosition);
+    expect(purposePosition).toBeLessThan(applicabilityPosition);
+    expect(applicabilityPosition).toBeLessThan(requirementsPosition);
+    expect(requirementsPosition).toBeLessThan(sourcesPosition);
+    expect(sourcesPosition).toBeLessThan(progressPosition);
+    expect(html).toContain("Ваша отметка");
+    expect(html).toContain("Не начато");
+    expect(html).toContain(
+      "Nova Agent — справочная и организационная помощь. Продукт не является государственным органом, специалистом или консультантом.",
+    );
+    expect(html).toContain(
+      "Nova Agent не подтверждает документы, сроки, применимость требований или результаты официального процесса.",
+    );
+    expect(html).toContain("Вернуться к плану");
   });
 
   it("does not expose later workflow controls or views", () => {
     const screens = [
       renderToString(<App />),
       renderToString(<App initialActionPlan={createActionPlanForUi()} />),
+      renderToString(
+        <App
+          initialActionPlan={createActionPlanForUi()}
+          initialSelectedStepId="step-prepare-meldezettel"
+        />,
+      ),
     ];
 
     for (const html of screens) {
       expect(html).not.toContain("Изменить Progress");
       expect(html).not.toContain("Progress update");
+      expect(html).not.toContain("Завершить шаг");
       expect(html).not.toContain("История плана");
       expect(html).not.toContain("History view");
       expect(html).not.toContain("User Open Questions");

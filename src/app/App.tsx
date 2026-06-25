@@ -12,6 +12,8 @@ import type {
 import {
   startActionPlan,
   type ActionPlanAggregate,
+  type Progress,
+  type ProgressStatus,
 } from "../domain/workflow";
 import {
   findSeedScenarioById,
@@ -30,6 +32,17 @@ const requirementKindLabels: Record<Requirement["kind"], string> = {
   document: "Документ",
   data: "Данные",
 };
+
+const progressStatusLabels: Record<ProgressStatus, string> = {
+  not_started: "Не начато",
+  in_progress: "В процессе",
+  awaiting_external_response: "Ожидает внешнего ответа",
+  completed: "Выполнено",
+  requires_check: "Требует проверки",
+};
+
+const planBoundaryCopy =
+  "Nova Agent — справочная и организационная помощь. Продукт не является государственным органом, специалистом или консультантом. Все отметки прогресса отражают только ваши собственные записи. Nova Agent не подтверждает документы, сроки, применимость требований или результаты официального процесса.";
 
 function getFirstContentFlow(): {
   lifeSituation: LifeSituation;
@@ -303,48 +316,210 @@ function StepsPanel({ scenarioVersion }: { scenarioVersion: PublishedScenarioVer
   );
 }
 
-function StartPlanPanel({
-  activePlan,
-  onStartPlan,
+function ProgressMark({ progress }: { progress: Progress }) {
+  return (
+    <p className="progress-mark">
+      <span>Ваша отметка</span>
+      <strong>{progressStatusLabels[progress.status]}</strong>
+    </p>
+  );
+}
+
+function ActionPlanDetail({
+  actionPlan,
+  onOpenStep,
+  scenario,
+  scenarioVersion,
 }: {
-  activePlan: ActionPlanAggregate | null;
-  onStartPlan: () => void;
+  actionPlan: ActionPlanAggregate;
+  onOpenStep: (stepId: string) => void;
+  scenario: Scenario;
+  scenarioVersion: PublishedScenarioVersion;
 }) {
-  if (activePlan) {
-    return (
-      <section
-        className="flow-section plan-confirmation"
-        aria-labelledby="plan-confirmation-title"
-        aria-live="polite"
-      >
-        <p className="eyebrow">Action Plan</p>
-        <h2 id="plan-confirmation-title">План создан</h2>
+  const nextProgress = actionPlan.progressRecords.find(
+    (progress) => progress.status !== "completed",
+  );
+  const nextStep = scenarioVersion.steps.find(
+    (step) => step.id === nextProgress?.versionedStepContextId,
+  );
+
+  return (
+    <section className="plan-view" aria-labelledby="action-plan-title">
+      <header className="plan-header">
+        <p className="eyebrow">Ваш план</p>
+        <div className="plan-title-row">
+          <h2 id="action-plan-title">{scenario.title}</h2>
+          <span>Scenario Version: {actionPlan.actionPlan.scenarioVersionLabel}</span>
+        </div>
+        <p className="plan-context">
+          Life Situation: {actionPlan.actionPlan.selectedLifeSituationContext.title}
+        </p>
         <dl className="plan-summary">
           <div>
-            <dt>Статус</dt>
-            <dd>{activePlan.actionPlan.state}</dd>
-          </div>
-          <div>
-            <dt>Scenario Version</dt>
-            <dd>{activePlan.actionPlan.scenarioVersionLabel}</dd>
-          </div>
-          <div>
-            <dt>Steps</dt>
-            <dd>{activePlan.progressRecords.length}</dd>
-          </div>
-          <div>
-            <dt>Progress records</dt>
-            <dd>{activePlan.progressRecords.length}</dd>
+            <dt>Статус плана</dt>
+            <dd>{actionPlan.actionPlan.state}</dd>
           </div>
         </dl>
-        <p className="plan-boundary">
-          Это ваш сохранённый план в Nova Agent, а не официальный статус. Требования и
-          результат внешнего процесса проверяйте в официальном источнике.
+        <p className="plan-boundary">{planBoundaryCopy}</p>
+      </header>
+
+      <section className="plan-steps-section" aria-labelledby="plan-steps-title">
+        <p className="eyebrow">Progress</p>
+        <h3 id="plan-steps-title">Шаги плана</h3>
+        <p className="section-intro">
+          Статусы ниже — ваши личные отметки в Nova Agent, а не сведения от
+          государственного органа или учреждения.
+        </p>
+        {nextStep ? (
+          <div className="next-step-panel" aria-labelledby="next-step-title">
+            <p className="eyebrow">Следующий шаг</p>
+            <h4 id="next-step-title">
+              Step {nextStep.order}: {nextStep.title}
+            </h4>
+            <p>{nextStep.purpose}</p>
+            <button
+              className="secondary-action"
+              type="button"
+              onClick={() => onOpenStep(nextStep.id)}
+            >
+              Открыть следующий шаг
+            </button>
+          </div>
+        ) : null}
+        <div className="plan-step-list">
+          {scenarioVersion.steps.map((step) => {
+            const progress = actionPlan.progressRecords.find(
+              (record) => record.versionedStepContextId === step.id,
+            );
+
+            if (!progress) {
+              throw new Error(`Progress is missing for step ${step.id}.`);
+            }
+
+            return (
+              <article className="plan-step-row" key={step.id}>
+                <div>
+                  <p className="step-order">Step {step.order}</p>
+                  <h4>{step.title}</h4>
+                  <p>{step.purpose}</p>
+                </div>
+                <div className="plan-step-actions">
+                  <ProgressMark progress={progress} />
+                  <button
+                    className="secondary-action"
+                    type="button"
+                    onClick={() => onOpenStep(step.id)}
+                  >
+                    Открыть шаг
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
+      </section>
+    </section>
+  );
+}
+
+function StepDetail({
+  actionPlan,
+  onBack,
+  progress,
+  scenarioVersion,
+  step,
+}: {
+  actionPlan: ActionPlanAggregate;
+  onBack: () => void;
+  progress: Progress;
+  scenarioVersion: PublishedScenarioVersion;
+  step: Step;
+}) {
+  const requirements = scenarioVersion.requirements.filter((requirement) =>
+    step.requirementIds.includes(requirement.id),
+  );
+  const sources = scenarioVersion.sources.filter((source) =>
+    step.sourceIds.includes(source.id),
+  );
+  const warnings = scenarioVersion.warnings.filter((warning) =>
+    step.warningIds.includes(warning.id),
+  );
+  const restrictions = scenarioVersion.restrictions.filter((restriction) =>
+    step.restrictionIds.includes(restriction.id),
+  );
+
+  return (
+    <section className="plan-view" aria-labelledby="step-detail-title">
+      <header className="step-detail-header">
+        <p className="eyebrow">
+          Ваш план · Step {step.order} · {actionPlan.actionPlan.scenarioVersionLabel}
+        </p>
+        <h2 id="step-detail-title">{step.title}</h2>
+      </header>
+
+      <section className="step-detail-safety" aria-labelledby="step-safety-title">
+        <p className="eyebrow">Warnings / Restrictions</p>
+        <h3 id="step-safety-title">Важно до действий по шагу</h3>
+        <div className="safety-grid">
+          <ContentList
+            className="warning-panel"
+            items={warnings}
+            prefix="Предупреждение"
+            title="Warnings"
+          />
+          <ContentList
+            className="restriction-panel"
+            items={restrictions}
+            prefix="Ограничение"
+            title="Restrictions"
+          />
+        </div>
+      </section>
+
+      <section className="step-context-section" aria-labelledby="step-purpose-title">
+        <p className="eyebrow">Цель шага</p>
+        <h3 id="step-purpose-title">{step.purpose}</h3>
+        <p>{step.userShouldUnderstand}</p>
+      </section>
+
+      <section className="step-context-section" aria-labelledby="step-applicability-title">
+        <p className="eyebrow">Applicability Conditions</p>
+        <h3 id="step-applicability-title">Проверьте применимость сценария</h3>
+        <ul className="check-list">
+          {scenarioVersion.applicabilityConditions.map((condition) => (
+            <li key={condition.id}>
+              <strong>Условие применимости:</strong> {condition.text}
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <RequirementsPanel
+        id="plan-step-requirements"
+        requirements={requirements}
+        title="Documents / Data Requirements"
+      />
+      <SourcesPanel id="plan-step-sources" sources={sources} />
+
+      <section className="step-progress-section" aria-labelledby="step-progress-title">
+        <p className="eyebrow">Progress</p>
+        <h3 id="step-progress-title">Текущее состояние шага</h3>
+        <ProgressMark progress={progress} />
+        <p>
+          Эта отметка не подтверждает выполнение требования, принятие документов или
+          результат внешней регистрации.
         </p>
       </section>
-    );
-  }
 
+      <p className="plan-boundary">{planBoundaryCopy}</p>
+      <button className="secondary-action" type="button" onClick={onBack}>
+        Вернуться к плану
+      </button>
+    </section>
+  );
+}
+
+function StartPlanPanel({ onStartPlan }: { onStartPlan: () => void }) {
   return (
     <section className="flow-section start-plan-section" aria-labelledby="start-plan-title">
       <p className="eyebrow">Следующий шаг</p>
@@ -364,14 +539,49 @@ function StartPlanPanel({
   );
 }
 
+function ScenarioReadView({
+  lifeSituation,
+  onStartPlan,
+  scenario,
+  scenarioVersion,
+}: {
+  lifeSituation: LifeSituation;
+  onStartPlan: () => void;
+  scenario: Scenario;
+  scenarioVersion: PublishedScenarioVersion;
+}) {
+  return (
+    <>
+      <LifeSituationPanel lifeSituation={lifeSituation} />
+      <SafetyPanel scenarioVersion={scenarioVersion} />
+      <ScenarioPanel scenario={scenario} scenarioVersion={scenarioVersion} />
+      <ApplicabilityPanel scenarioVersion={scenarioVersion} />
+      <TemplateOpenQuestionsPanel scenarioVersion={scenarioVersion} />
+      <StepsPanel scenarioVersion={scenarioVersion} />
+      <RequirementsPanel
+        id="scenario-requirements"
+        requirements={scenarioVersion.requirements}
+        title="Что нужно подготовить"
+      />
+      <SourcesPanel id="scenario-sources" sources={scenarioVersion.sources} />
+      <StartPlanPanel onStartPlan={onStartPlan} />
+    </>
+  );
+}
+
 export function App({
   initialActionPlan = null,
+  initialSelectedStepId = null,
 }: {
   initialActionPlan?: ActionPlanAggregate | null;
+  initialSelectedStepId?: string | null;
 }) {
   const { lifeSituation, scenario, scenarioVersion } = getFirstContentFlow();
   const [activePlan, setActivePlan] = useState<ActionPlanAggregate | null>(
     initialActionPlan,
+  );
+  const [selectedStepId, setSelectedStepId] = useState<string | null>(
+    initialSelectedStepId,
   );
 
   function handleStartPlan() {
@@ -387,6 +597,18 @@ export function App({
     });
 
     setActivePlan(result.plan);
+    setSelectedStepId(null);
+  }
+
+  const selectedStep = scenarioVersion.steps.find(
+    (step) => step.id === selectedStepId,
+  );
+  const selectedProgress = activePlan?.progressRecords.find(
+    (progress) => progress.versionedStepContextId === selectedStepId,
+  );
+
+  if (activePlan && selectedStepId && (!selectedStep || !selectedProgress)) {
+    throw new Error("Selected step is not available in the active Action Plan.");
   }
 
   return (
@@ -400,19 +622,29 @@ export function App({
         </p>
       </header>
 
-      <LifeSituationPanel lifeSituation={lifeSituation} />
-      <SafetyPanel scenarioVersion={scenarioVersion} />
-      <ScenarioPanel scenario={scenario} scenarioVersion={scenarioVersion} />
-      <ApplicabilityPanel scenarioVersion={scenarioVersion} />
-      <TemplateOpenQuestionsPanel scenarioVersion={scenarioVersion} />
-      <StepsPanel scenarioVersion={scenarioVersion} />
-      <RequirementsPanel
-        id="scenario-requirements"
-        requirements={scenarioVersion.requirements}
-        title="Что нужно подготовить"
-      />
-      <SourcesPanel id="scenario-sources" sources={scenarioVersion.sources} />
-      <StartPlanPanel activePlan={activePlan} onStartPlan={handleStartPlan} />
+      {!activePlan ? (
+        <ScenarioReadView
+          lifeSituation={lifeSituation}
+          onStartPlan={handleStartPlan}
+          scenario={scenario}
+          scenarioVersion={scenarioVersion}
+        />
+      ) : selectedStep && selectedProgress ? (
+        <StepDetail
+          actionPlan={activePlan}
+          onBack={() => setSelectedStepId(null)}
+          progress={selectedProgress}
+          scenarioVersion={scenarioVersion}
+          step={selectedStep}
+        />
+      ) : (
+        <ActionPlanDetail
+          actionPlan={activePlan}
+          onOpenStep={setSelectedStepId}
+          scenario={scenario}
+          scenarioVersion={scenarioVersion}
+        />
+      )}
     </main>
   );
 }

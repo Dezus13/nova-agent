@@ -600,3 +600,36 @@ Verification:
 - `npm test`;
 - `npm run build`;
 - `git diff --check`.
+
+### 2026-06-24 — Step 4: Action Plan And Step Detail
+
+Status: completed.
+
+Implemented:
+
+- read-only Action Plan Detail for the existing local active Action Plan;
+- Scenario, Scenario Version, selected Life Situation context and plan state display;
+- one clearly identified next step based on the first non-completed Progress record;
+- all Scenario Version steps with title, short purpose and current Progress status;
+- mandatory `Ваша отметка` label for every Progress status;
+- local read-only navigation from Action Plan Detail to a selected Step Detail without a routing library;
+- Step Detail with Warnings, Restrictions, step purpose, Applicability Conditions, Documents/Data Requirements, Sources and current Progress;
+- Step Detail ordering that keeps content and external-verification context before the Progress mark;
+- persistent plan boundary copy that distinguishes Nova Agent records from official status;
+- focused tests for Action Plan Detail, next-step visibility, all initial Progress marks, Step Detail context order and absence of later workflow controls.
+
+Out of scope preserved:
+
+- no Progress update, status transition or step completion action implemented;
+- no History screen or History list implemented;
+- no User Open Questions, User Notes, Checked Source Marks, My Plans or Completed Plans implemented;
+- no Pattern B, Content Admin UI, Supabase, API handlers, auth, routing library, state manager, dashboard or document storage added;
+- no changes to Action Plan creation logic, workflow models, seed content, product entities, states or API contracts.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`;
+- `git diff --check`.
