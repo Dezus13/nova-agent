@@ -633,3 +633,36 @@ Verification:
 - `npm test`;
 - `npm run build`;
 - `git diff --check`.
+
+### 2026-06-26 — Step 5: Progress Update
+
+Status: completed.
+
+Implemented:
+
+- pure local Progress update operation for the existing Action Plan aggregate;
+- VS-01 transitions `not_started -> in_progress` and `not_started -> requires_check`;
+- active Action Plan gate and rejection of repeated Step 5 transitions from an already changed Progress;
+- immutable replacement of only the selected Progress record while all other Progress records remain unchanged;
+- Action Plan state remains `active`;
+- append-only `progress_status_changed` History Event with action plan context, versioned step context, previous status and new status;
+- explicit Progress controls in Step Detail after Warnings, Restrictions, purpose, Applicability Conditions, requirements, sources and the current user mark;
+- mandatory `Ваша отметка` label and non-official-status boundary copy;
+- controls disappear after the supported transition while the updated user mark remains visible;
+- focused tests for both supported transitions, unchanged sibling Progress records, active plan state, History payload, repeated-transition rejection, UI controls and hidden History.
+
+Out of scope preserved:
+
+- no History screen or History list implemented;
+- no additional Progress transitions, reset to `not_started`, automatic transition or Action Plan completion implemented;
+- no User Open Questions, User Notes, Checked Source Marks, My Plans or Completed Plans implemented;
+- no Pattern B, Content Admin UI, Supabase, API handlers, auth, routing library, state manager, dashboard or document storage added;
+- no changes to seed content, product entities, API contracts or approved state vocabulary.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`;
+- `git diff --check`.

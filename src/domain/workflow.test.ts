@@ -4,7 +4,11 @@ import {
   findSeedScenarioVersionById,
   listSeedLifeSituations,
 } from "../data/contentRepository";
-import { startActionPlan, type StartActionPlanInput } from "./workflow";
+import {
+  startActionPlan,
+  updateProgressStatus,
+  type StartActionPlanInput,
+} from "./workflow";
 
 function getStartInput(
   existingPlans: StartActionPlanInput["existingPlans"] = [],
@@ -85,5 +89,128 @@ describe("startActionPlan", () => {
       firstResult.plan.progressRecords.length,
     );
     expect(repeatedResult.plan.historyEvents).toHaveLength(1);
+  });
+});
+
+describe("updateProgressStatus", () => {
+  it.each(["in_progress", "requires_check"] as const)(
+    "updates one not_started Progress to %s and keeps the Action Plan active",
+    (targetStatus) => {
+      const createdPlan = startActionPlan(getStartInput()).plan;
+      const targetProgress = createdPlan.progressRecords[2];
+
+      if (!targetProgress) {
+        throw new Error("Expected a target Progress record.");
+      }
+
+      const updatedPlan = updateProgressStatus({
+        plan: createdPlan,
+        progressId: targetProgress.id,
+        targetStatus,
+        operationId: `update-${targetStatus}`,
+        occurredAt: "2026-06-26T10:00:00.000Z",
+      });
+
+      expect(updatedPlan.actionPlan).toBe(createdPlan.actionPlan);
+      expect(updatedPlan.actionPlan.state).toBe("active");
+      expect(updatedPlan.progressRecords[2]?.status).toBe(targetStatus);
+      expect(
+        updatedPlan.progressRecords.filter(
+          (progress) => progress.status === "not_started",
+        ),
+      ).toHaveLength(createdPlan.progressRecords.length - 1);
+      for (const [index, progress] of updatedPlan.progressRecords.entries()) {
+        if (index !== 2) {
+          expect(progress).toBe(createdPlan.progressRecords[index]);
+        }
+      }
+      expect(createdPlan.progressRecords[2]?.status).toBe("not_started");
+    },
+  );
+
+  it.each(["completed", "awaiting_external_response"] as const)(
+    "rejects not_started -> %s without changing Progress or History",
+    (targetStatus) => {
+      const createdPlan = startActionPlan(getStartInput()).plan;
+      const targetProgress = createdPlan.progressRecords[0];
+
+      if (!targetProgress) {
+        throw new Error("Expected a target Progress record.");
+      }
+
+      expect(() =>
+        updateProgressStatus({
+          plan: createdPlan,
+          progressId: targetProgress.id,
+          targetStatus,
+          operationId: `rejected-${targetStatus}`,
+          occurredAt: "2026-06-26T10:00:00.000Z",
+        }),
+      ).toThrow(`Target status ${targetStatus} is not available in VS-01 Step 5.`);
+
+      expect(targetProgress.status).toBe("not_started");
+      expect(createdPlan.progressRecords[0]).toBe(targetProgress);
+      expect(createdPlan.historyEvents).toHaveLength(1);
+      expect(
+        createdPlan.historyEvents.some(
+          (event) => event.eventType === "progress_status_changed",
+        ),
+      ).toBe(false);
+    },
+  );
+
+  it("appends one progress_status_changed History Event with transition context", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const targetProgress = createdPlan.progressRecords[0];
+
+    if (!targetProgress) {
+      throw new Error("Expected a target Progress record.");
+    }
+
+    const updatedPlan = updateProgressStatus({
+      plan: createdPlan,
+      progressId: targetProgress.id,
+      targetStatus: "in_progress",
+      operationId: "update-history",
+      occurredAt: "2026-06-26T10:00:00.000Z",
+    });
+    const historyEvent = updatedPlan.historyEvents[1];
+
+    expect(updatedPlan.historyEvents).toHaveLength(2);
+    expect(historyEvent?.eventType).toBe("progress_status_changed");
+    expect(historyEvent?.payload).toEqual({
+      actionPlanId: createdPlan.actionPlan.id,
+      versionedStepContextId: targetProgress.versionedStepContextId,
+      previousStatus: "not_started",
+      newStatus: "in_progress",
+    });
+    expect(createdPlan.historyEvents).toHaveLength(1);
+  });
+
+  it("rejects a second VS-01 transition from an already changed Progress", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const targetProgress = createdPlan.progressRecords[0];
+
+    if (!targetProgress) {
+      throw new Error("Expected a target Progress record.");
+    }
+
+    const updatedPlan = updateProgressStatus({
+      plan: createdPlan,
+      progressId: targetProgress.id,
+      targetStatus: "in_progress",
+      operationId: "first-update",
+      occurredAt: "2026-06-26T10:00:00.000Z",
+    });
+
+    expect(() =>
+      updateProgressStatus({
+        plan: updatedPlan,
+        progressId: targetProgress.id,
+        targetStatus: "requires_check",
+        operationId: "second-update",
+        occurredAt: "2026-06-26T10:05:00.000Z",
+      }),
+    ).toThrow("is not available in VS-01 Step 5");
   });
 });

@@ -13,7 +13,11 @@ export type ProgressStatus =
   | "completed"
   | "requires_check";
 
-export type HistoryEventType = "action_plan_created";
+export type HistoryEventType =
+  | "action_plan_created"
+  | "progress_status_changed";
+
+export type Vs01ProgressUpdateStatus = "in_progress" | "requires_check";
 
 export interface SelectedLifeSituationContext {
   readonly id: string;
@@ -45,13 +49,32 @@ export interface ActionPlanCreatedHistoryPayload {
   readonly selectedLifeSituationContext: SelectedLifeSituationContext;
 }
 
-export interface HistoryEvent {
+export interface ActionPlanCreatedHistoryEvent {
   readonly id: string;
   readonly actionPlanId: string;
-  readonly eventType: HistoryEventType;
+  readonly eventType: "action_plan_created";
   readonly occurredAt: string;
   readonly payload: ActionPlanCreatedHistoryPayload;
 }
+
+export interface ProgressStatusChangedHistoryPayload {
+  readonly actionPlanId: string;
+  readonly versionedStepContextId: string;
+  readonly previousStatus: ProgressStatus;
+  readonly newStatus: Vs01ProgressUpdateStatus;
+}
+
+export interface ProgressStatusChangedHistoryEvent {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly eventType: "progress_status_changed";
+  readonly occurredAt: string;
+  readonly payload: ProgressStatusChangedHistoryPayload;
+}
+
+export type HistoryEvent =
+  | ActionPlanCreatedHistoryEvent
+  | ProgressStatusChangedHistoryEvent;
 
 export interface ActionPlanAggregate {
   readonly actionPlan: ActionPlan;
@@ -73,6 +96,20 @@ export interface StartActionPlanInput {
 export interface StartActionPlanResult {
   readonly plan: ActionPlanAggregate;
   readonly created: boolean;
+}
+
+export interface UpdateProgressStatusInput {
+  readonly plan: ActionPlanAggregate;
+  readonly progressId: string;
+  readonly targetStatus: ProgressStatus;
+  readonly operationId: string;
+  readonly occurredAt: string;
+}
+
+function isVs01ProgressUpdateStatus(
+  status: ProgressStatus,
+): status is Vs01ProgressUpdateStatus {
+  return status === "in_progress" || status === "requires_check";
 }
 
 export function startActionPlan(input: StartActionPlanInput): StartActionPlanResult {
@@ -120,7 +157,7 @@ export function startActionPlan(input: StartActionPlanInput): StartActionPlanRes
     versionedStepContextId: step.id,
     status: "not_started" as const,
   }));
-  const historyEvent: HistoryEvent = {
+  const historyEvent: ActionPlanCreatedHistoryEvent = {
     id: `history-${input.operationId}-action-plan-created`,
     actionPlanId,
     eventType: "action_plan_created",
@@ -140,5 +177,58 @@ export function startActionPlan(input: StartActionPlanInput): StartActionPlanRes
       progressRecords,
       historyEvents: [historyEvent],
     },
+  };
+}
+
+export function updateProgressStatus(
+  input: UpdateProgressStatusInput,
+): ActionPlanAggregate {
+  if (input.plan.actionPlan.state !== "active") {
+    throw new Error("Progress can only be updated inside an active Action Plan.");
+  }
+
+  const currentProgress = input.plan.progressRecords.find(
+    (progress) => progress.id === input.progressId,
+  );
+
+  if (!currentProgress) {
+    throw new Error("Progress does not belong to the Action Plan.");
+  }
+
+  if (!isVs01ProgressUpdateStatus(input.targetStatus)) {
+    throw new Error(
+      `Target status ${input.targetStatus} is not available in VS-01 Step 5.`,
+    );
+  }
+
+  if (currentProgress.status !== "not_started") {
+    throw new Error(
+      `Transition ${currentProgress.status} -> ${input.targetStatus} is not available in VS-01 Step 5.`,
+    );
+  }
+
+  const updatedProgress: Progress = {
+    ...currentProgress,
+    status: input.targetStatus,
+  };
+  const historyEvent: ProgressStatusChangedHistoryEvent = {
+    id: `history-${input.operationId}-progress-status-changed`,
+    actionPlanId: input.plan.actionPlan.id,
+    eventType: "progress_status_changed",
+    occurredAt: input.occurredAt,
+    payload: {
+      actionPlanId: input.plan.actionPlan.id,
+      versionedStepContextId: currentProgress.versionedStepContextId,
+      previousStatus: currentProgress.status,
+      newStatus: input.targetStatus,
+    },
+  };
+
+  return {
+    actionPlan: input.plan.actionPlan,
+    progressRecords: input.plan.progressRecords.map((progress) =>
+      progress.id === currentProgress.id ? updatedProgress : progress,
+    ),
+    historyEvents: [...input.plan.historyEvents, historyEvent],
   };
 }

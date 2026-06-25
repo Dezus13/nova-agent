@@ -354,6 +354,18 @@ dd {
   max-width: 280px;
 }
 
+.progress-actions {
+  border-top: 1px solid #d8d3c5;
+  margin-top: 18px;
+  padding-top: 16px;
+}
+
+.progress-action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
 .primary-action {
   background: #195c6a;
   border: 1px solid #195c6a;

@@ -14,6 +14,8 @@ import {
   type ActionPlanAggregate,
   type Progress,
   type ProgressStatus,
+  type Vs01ProgressUpdateStatus,
+  updateProgressStatus,
 } from "../domain/workflow";
 import {
   findSeedScenarioById,
@@ -425,12 +427,17 @@ function ActionPlanDetail({
 function StepDetail({
   actionPlan,
   onBack,
+  onUpdateProgress,
   progress,
   scenarioVersion,
   step,
 }: {
   actionPlan: ActionPlanAggregate;
   onBack: () => void;
+  onUpdateProgress: (
+    progressId: string,
+    targetStatus: Vs01ProgressUpdateStatus,
+  ) => void;
   progress: Progress;
   scenarioVersion: PublishedScenarioVersion;
   step: Step;
@@ -509,6 +516,27 @@ function StepDetail({
           Эта отметка не подтверждает выполнение требования, принятие документов или
           результат внешней регистрации.
         </p>
+        {progress.status === "not_started" ? (
+          <div className="progress-actions" aria-label="Изменить вашу отметку">
+            <p>Выберите только то состояние, которое соответствует вашему контексту.</p>
+            <div className="progress-action-buttons">
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => onUpdateProgress(progress.id, "in_progress")}
+              >
+                Отметить: В процессе
+              </button>
+              <button
+                className="secondary-action"
+                type="button"
+                onClick={() => onUpdateProgress(progress.id, "requires_check")}
+              >
+                Отметить: Требует проверки
+              </button>
+            </div>
+          </div>
+        ) : null}
       </section>
 
       <p className="plan-boundary">{planBoundaryCopy}</p>
@@ -600,6 +628,26 @@ export function App({
     setSelectedStepId(null);
   }
 
+  function handleUpdateProgress(
+    progressId: string,
+    targetStatus: Vs01ProgressUpdateStatus,
+  ) {
+    if (!activePlan) {
+      throw new Error("An active Action Plan is required to update Progress.");
+    }
+
+    const occurredAt = new Date().toISOString();
+    const updatedPlan = updateProgressStatus({
+      plan: activePlan,
+      progressId,
+      targetStatus,
+      operationId: `${progressId}-${targetStatus}-${occurredAt}`,
+      occurredAt,
+    });
+
+    setActivePlan(updatedPlan);
+  }
+
   const selectedStep = scenarioVersion.steps.find(
     (step) => step.id === selectedStepId,
   );
@@ -633,6 +681,7 @@ export function App({
         <StepDetail
           actionPlan={activePlan}
           onBack={() => setSelectedStepId(null)}
+          onUpdateProgress={handleUpdateProgress}
           progress={selectedProgress}
           scenarioVersion={scenarioVersion}
           step={selectedStep}

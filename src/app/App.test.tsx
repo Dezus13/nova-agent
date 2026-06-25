@@ -5,7 +5,7 @@ import {
   findSeedScenarioVersionById,
   listSeedLifeSituations,
 } from "../data/contentRepository";
-import { startActionPlan } from "../domain/workflow";
+import { startActionPlan, updateProgressStatus } from "../domain/workflow";
 import { App } from "./App";
 
 function createActionPlanForUi() {
@@ -31,6 +31,23 @@ function createActionPlanForUi() {
     operationId: "ui-test",
     occurredAt: "2026-06-24T10:00:00.000Z",
   }).plan;
+}
+
+function createUpdatedActionPlanForUi() {
+  const plan = createActionPlanForUi();
+  const progress = plan.progressRecords[2];
+
+  if (!progress) {
+    throw new Error("Expected a Progress record for the UI test.");
+  }
+
+  return updateProgressStatus({
+    plan,
+    progressId: progress.id,
+    targetStatus: "in_progress",
+    operationId: "ui-progress-update",
+    occurredAt: "2026-06-26T10:00:00.000Z",
+  });
 }
 
 describe("App", () => {
@@ -122,6 +139,7 @@ describe("App", () => {
     const requirementsPosition = html.indexOf("Documents / Data Requirements");
     const sourcesPosition = html.indexOf("Где проверить официальный источник");
     const progressPosition = html.indexOf("Текущее состояние шага");
+    const progressActionPosition = html.indexOf("Отметить: В процессе");
 
     expect(html).toContain("Подготовить Meldezettel и подпись Unterkunftgeber");
     expect(safetyPosition).toBeGreaterThanOrEqual(0);
@@ -130,13 +148,17 @@ describe("App", () => {
     expect(requirementsPosition).toBeGreaterThanOrEqual(0);
     expect(sourcesPosition).toBeGreaterThanOrEqual(0);
     expect(progressPosition).toBeGreaterThanOrEqual(0);
+    expect(progressActionPosition).toBeGreaterThanOrEqual(0);
     expect(safetyPosition).toBeLessThan(purposePosition);
     expect(purposePosition).toBeLessThan(applicabilityPosition);
     expect(applicabilityPosition).toBeLessThan(requirementsPosition);
     expect(requirementsPosition).toBeLessThan(sourcesPosition);
     expect(sourcesPosition).toBeLessThan(progressPosition);
+    expect(progressPosition).toBeLessThan(progressActionPosition);
     expect(html).toContain("Ваша отметка");
     expect(html).toContain("Не начато");
+    expect(html).toContain("Отметить: В процессе");
+    expect(html).toContain("Отметить: Требует проверки");
     expect(html).toContain(
       "Nova Agent — справочная и организационная помощь. Продукт не является государственным органом, специалистом или консультантом.",
     );
@@ -144,6 +166,22 @@ describe("App", () => {
       "Nova Agent не подтверждает документы, сроки, применимость требований или результаты официального процесса.",
     );
     expect(html).toContain("Вернуться к плану");
+  });
+
+  it("renders an updated user mark without exposing History", () => {
+    const html = renderToString(
+      <App
+        initialActionPlan={createUpdatedActionPlanForUi()}
+        initialSelectedStepId="step-prepare-meldezettel"
+      />,
+    );
+
+    expect(html).toContain("Ваша отметка");
+    expect(html).toContain("В процессе");
+    expect(html).not.toContain("Отметить: В процессе");
+    expect(html).not.toContain("Отметить: Требует проверки");
+    expect(html).not.toContain("progress_status_changed");
+    expect(html).not.toContain("История плана");
   });
 
   it("does not expose later workflow controls or views", () => {
