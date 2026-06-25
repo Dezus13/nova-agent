@@ -666,3 +666,35 @@ Verification:
 - `npm test`;
 - `npm run build`;
 - `git diff --check`.
+
+### 2026-06-26 — Step 6: History Visibility
+
+Status: completed.
+
+Implemented:
+
+- read-only History view inside the existing local Action Plan flow;
+- local navigation from Action Plan Detail to History without a routing library;
+- display of only existing `action_plan_created` and `progress_status_changed` events;
+- chronological ordering by History Event `occurredAt`;
+- human-readable event type, description and creation time for every event;
+- linked Scenario step context for `progress_status_changed`;
+- explicit internal-history boundary copy stating that History is not an official journal and does not confirm user action completion;
+- return navigation to Action Plan Detail without History mutation controls;
+- focused tests for both event types, chronological ordering, step context, timestamps, boundary copy and absence of edit, delete, search, filter and user sorting controls.
+
+Out of scope preserved:
+
+- no History Event editing or deletion implemented;
+- no History filtering, search, user sorting, realtime updates or pagination implemented;
+- no User Notes, User Open Questions, Checked Source Marks, My Plans or Completed Plans implemented;
+- no Pattern B, Content Admin UI, Supabase, API handlers, auth, routing library, state manager, dashboard or document storage added;
+- no changes to workflow models, event creation logic, seed content, product entities, states or API contracts.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`;
+- `git diff --check`.

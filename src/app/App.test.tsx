@@ -123,6 +123,7 @@ describe("App", () => {
     expect(versionPosition).toBeLessThan(statePosition);
     expect(statePosition).toBeLessThan(boundaryPosition);
     expect(boundaryPosition).toBeLessThan(stepsPosition);
+    expect(html).toContain("Открыть историю");
     expect(html).not.toContain("Начать план");
   });
 
@@ -168,7 +169,7 @@ describe("App", () => {
     expect(html).toContain("Вернуться к плану");
   });
 
-  it("renders an updated user mark without exposing History", () => {
+  it("renders an updated user mark without exposing History inside Step Detail", () => {
     const html = renderToString(
       <App
         initialActionPlan={createUpdatedActionPlanForUi()}
@@ -184,6 +185,57 @@ describe("App", () => {
     expect(html).not.toContain("История плана");
   });
 
+  it("shows action_plan_created in a read-only internal History view", () => {
+    const html = renderToString(
+      <App initialActionPlan={createActionPlanForUi()} initialHistoryOpen />,
+    );
+
+    expect(html).toContain("История плана");
+    expect(html).toContain("События в порядке создания");
+    expect(html).toContain("План создан");
+    expect(html).toContain("Создание плана");
+    expect(html).toContain("Scenario Version v1");
+    expect(html).toContain('dateTime="2026-06-24T10:00:00.000Z"');
+    expect(html).toContain(
+      "История — внутренние события Nova Agent. Не является официальным журналом взаимодействия с органами, учреждениями или специалистами.",
+    );
+    expect(html).toContain(
+      "Записи не подтверждают, что действие выполнено пользователем или принято внешней стороной.",
+    );
+    expect(html).toContain("Вернуться к плану");
+    expect(html).not.toContain("Редактировать событие");
+    expect(html).not.toContain("Удалить событие");
+    expect(html).not.toContain("Поиск");
+    expect(html).not.toContain("Фильтр");
+    expect(html).not.toContain("Сортировать");
+  });
+
+  it("shows progress history after plan creation with the linked step context", () => {
+    const updatedPlan = createUpdatedActionPlanForUi();
+    const planWithUnorderedHistory = {
+      ...updatedPlan,
+      historyEvents: [...updatedPlan.historyEvents].reverse(),
+    };
+    const html = renderToString(
+      <App
+        initialActionPlan={planWithUnorderedHistory}
+        initialHistoryOpen
+      />,
+    );
+    const planCreatedPosition = html.indexOf("План создан");
+    const progressChangedPosition = html.indexOf("Отметка шага изменена");
+
+    expect(planCreatedPosition).toBeGreaterThanOrEqual(0);
+    expect(progressChangedPosition).toBeGreaterThanOrEqual(0);
+    expect(planCreatedPosition).toBeLessThan(progressChangedPosition);
+    expect(html).toContain("Изменение вашей отметки");
+    expect(html).toContain("Не начато");
+    expect(html).toContain("В процессе");
+    expect(html).toContain("Связанный шаг:");
+    expect(html).toContain("Step 3: Подготовить Meldezettel и подпись Unterkunftgeber");
+    expect(html).toContain('dateTime="2026-06-26T10:00:00.000Z"');
+  });
+
   it("does not expose later workflow controls or views", () => {
     const screens = [
       renderToString(<App />),
@@ -194,13 +246,15 @@ describe("App", () => {
           initialSelectedStepId="step-prepare-meldezettel"
         />,
       ),
+      renderToString(
+        <App initialActionPlan={createUpdatedActionPlanForUi()} initialHistoryOpen />,
+      ),
     ];
 
     for (const html of screens) {
       expect(html).not.toContain("Изменить Progress");
       expect(html).not.toContain("Progress update");
       expect(html).not.toContain("Завершить шаг");
-      expect(html).not.toContain("История плана");
       expect(html).not.toContain("History view");
       expect(html).not.toContain("User Open Questions");
       expect(html).not.toContain("User Notes");

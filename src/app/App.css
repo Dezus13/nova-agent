@@ -267,10 +267,12 @@ dd {
 
 .plan-header,
 .step-detail-header,
+.history-header,
 .plan-steps-section,
 .step-detail-safety,
 .step-context-section,
-.step-progress-section {
+.step-progress-section,
+.history-section {
   background: #fffdf8;
   border: 1px solid #d8d3c5;
   border-radius: 8px;
@@ -280,7 +282,8 @@ dd {
 .plan-steps-section,
 .step-detail-safety,
 .step-context-section,
-.step-progress-section {
+.step-progress-section,
+.history-section {
   margin-top: 18px;
 }
 
@@ -366,6 +369,62 @@ dd {
   gap: 10px;
 }
 
+.plan-history-link {
+  align-items: center;
+  border-top: 1px solid #d8d3c5;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.plan-history-link h4,
+.plan-history-link p {
+  margin-bottom: 0;
+}
+
+.history-boundary {
+  background: #fff3d6;
+  border: 1px solid #d8a841;
+  border-radius: 8px;
+  margin: 18px 0 0;
+  max-width: 840px;
+  padding: 16px;
+}
+
+.history-list {
+  list-style: none;
+  margin: 18px 0 0;
+  padding: 0;
+}
+
+.history-event {
+  border-top: 1px solid #d8d3c5;
+  padding: 20px 0;
+}
+
+.history-event:last-child {
+  border-bottom: 1px solid #d8d3c5;
+}
+
+.history-event-heading {
+  align-items: start;
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.history-event-heading time {
+  color: #405047;
+  white-space: nowrap;
+}
+
+.history-event-context {
+  color: #405047;
+  margin-bottom: 0;
+}
+
 .primary-action {
   background: #195c6a;
   border: 1px solid #195c6a;
@@ -430,5 +489,15 @@ dd {
   .plan-step-row {
     align-items: stretch;
     grid-template-columns: 1fr;
+  }
+
+  .plan-history-link,
+  .history-event-heading {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .history-event-heading {
+    gap: 4px;
   }
 }

@@ -12,6 +12,7 @@ import type {
 import {
   startActionPlan,
   type ActionPlanAggregate,
+  type HistoryEvent,
   type Progress,
   type ProgressStatus,
   type Vs01ProgressUpdateStatus,
@@ -45,6 +46,17 @@ const progressStatusLabels: Record<ProgressStatus, string> = {
 
 const planBoundaryCopy =
   "Nova Agent — справочная и организационная помощь. Продукт не является государственным органом, специалистом или консультантом. Все отметки прогресса отражают только ваши собственные записи. Nova Agent не подтверждает документы, сроки, применимость требований или результаты официального процесса.";
+
+const historyBoundaryCopy =
+  "История — внутренние события Nova Agent. Не является официальным журналом взаимодействия с органами, учреждениями или специалистами. Записи не подтверждают, что действие выполнено пользователем или принято внешней стороной.";
+
+function formatHistoryTimestamp(timestamp: string): string {
+  return new Intl.DateTimeFormat("ru-RU", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "UTC",
+  }).format(new Date(timestamp));
+}
 
 function getFirstContentFlow(): {
   lifeSituation: LifeSituation;
@@ -329,11 +341,13 @@ function ProgressMark({ progress }: { progress: Progress }) {
 
 function ActionPlanDetail({
   actionPlan,
+  onOpenHistory,
   onOpenStep,
   scenario,
   scenarioVersion,
 }: {
   actionPlan: ActionPlanAggregate;
+  onOpenHistory: () => void;
   onOpenStep: (stepId: string) => void;
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
@@ -419,7 +433,124 @@ function ActionPlanDetail({
             );
           })}
         </div>
+        <div className="plan-history-link">
+          <div>
+            <p className="eyebrow">History</p>
+            <h4>История плана</h4>
+            <p>
+              Просмотрите внутренние события Nova Agent, чтобы восстановить контекст
+              плана.
+            </p>
+          </div>
+          <button className="secondary-action" type="button" onClick={onOpenHistory}>
+            Открыть историю
+          </button>
+        </div>
       </section>
+    </section>
+  );
+}
+
+function HistoryEventItem({
+  event,
+  scenario,
+  scenarioVersion,
+}: {
+  event: HistoryEvent;
+  scenario: Scenario;
+  scenarioVersion: PublishedScenarioVersion;
+}) {
+  if (event.eventType === "action_plan_created") {
+    return (
+      <li className="history-event">
+        <div className="history-event-heading">
+          <div>
+            <p className="eyebrow">Создание плана</p>
+            <h3>План создан</h3>
+          </div>
+          <time dateTime={event.occurredAt}>
+            {formatHistoryTimestamp(event.occurredAt)}
+          </time>
+        </div>
+        <p>{`Создан ваш план для Scenario «${scenario.title}» на основе Scenario Version ${scenarioVersion.versionLabel}.`}</p>
+      </li>
+    );
+  }
+
+  const step = scenarioVersion.steps.find(
+    (candidate) =>
+      candidate.id === event.payload.versionedStepContextId,
+  );
+
+  if (!step) {
+    throw new Error("History Event references an unavailable Scenario step.");
+  }
+
+  const transitionLabel = `Ваша отметка изменилась: «${progressStatusLabels[event.payload.previousStatus]}» → «${progressStatusLabels[event.payload.newStatus]}».`;
+  const stepLabel = `Step ${step.order}: ${step.title}`;
+
+  return (
+    <li className="history-event">
+      <div className="history-event-heading">
+        <div>
+          <p className="eyebrow">Изменение вашей отметки</p>
+          <h3>Отметка шага изменена</h3>
+        </div>
+        <time dateTime={event.occurredAt}>
+          {formatHistoryTimestamp(event.occurredAt)}
+        </time>
+      </div>
+      <p>{transitionLabel}</p>
+      <p className="history-event-context">
+        <strong>Связанный шаг:</strong> {stepLabel}
+      </p>
+    </li>
+  );
+}
+
+function HistoryView({
+  actionPlan,
+  onBack,
+  scenario,
+  scenarioVersion,
+}: {
+  actionPlan: ActionPlanAggregate;
+  onBack: () => void;
+  scenario: Scenario;
+  scenarioVersion: PublishedScenarioVersion;
+}) {
+  const chronologicalEvents = [...actionPlan.historyEvents].sort((left, right) =>
+    left.occurredAt.localeCompare(right.occurredAt),
+  );
+
+  return (
+    <section className="plan-view" aria-labelledby="history-title">
+      <header className="history-header">
+        <p className="eyebrow">Ваш план · History</p>
+        <h2 id="history-title">История плана</h2>
+        <p>{`${scenario.title} · Scenario Version ${actionPlan.actionPlan.scenarioVersionLabel}`}</p>
+        <p className="history-boundary">{historyBoundaryCopy}</p>
+      </header>
+
+      <section className="history-section" aria-labelledby="history-events-title">
+        <p className="eyebrow">Хронология</p>
+        <h3 id="history-events-title">События в порядке создания</h3>
+        <ol className="history-list">
+          {chronologicalEvents.map((event) => (
+            <HistoryEventItem
+              event={event}
+              key={event.id}
+              scenario={scenario}
+              scenarioVersion={scenarioVersion}
+            />
+          ))}
+        </ol>
+      </section>
+
+      <p className="plan-boundary">{planBoundaryCopy}</p>
+      <button className="secondary-action" type="button" onClick={onBack}>
+        Вернуться к плану
+      </button>
     </section>
   );
 }
@@ -599,9 +730,11 @@ function ScenarioReadView({
 
 export function App({
   initialActionPlan = null,
+  initialHistoryOpen = false,
   initialSelectedStepId = null,
 }: {
   initialActionPlan?: ActionPlanAggregate | null;
+  initialHistoryOpen?: boolean;
   initialSelectedStepId?: string | null;
 }) {
   const { lifeSituation, scenario, scenarioVersion } = getFirstContentFlow();
@@ -611,6 +744,7 @@ export function App({
   const [selectedStepId, setSelectedStepId] = useState<string | null>(
     initialSelectedStepId,
   );
+  const [isHistoryOpen, setIsHistoryOpen] = useState(initialHistoryOpen);
 
   function handleStartPlan() {
     const result = startActionPlan({
@@ -626,6 +760,7 @@ export function App({
 
     setActivePlan(result.plan);
     setSelectedStepId(null);
+    setIsHistoryOpen(false);
   }
 
   function handleUpdateProgress(
@@ -677,6 +812,13 @@ export function App({
           scenario={scenario}
           scenarioVersion={scenarioVersion}
         />
+      ) : isHistoryOpen ? (
+        <HistoryView
+          actionPlan={activePlan}
+          onBack={() => setIsHistoryOpen(false)}
+          scenario={scenario}
+          scenarioVersion={scenarioVersion}
+        />
       ) : selectedStep && selectedProgress ? (
         <StepDetail
           actionPlan={activePlan}
@@ -689,7 +831,14 @@ export function App({
       ) : (
         <ActionPlanDetail
           actionPlan={activePlan}
-          onOpenStep={setSelectedStepId}
+          onOpenHistory={() => {
+            setSelectedStepId(null);
+            setIsHistoryOpen(true);
+          }}
+          onOpenStep={(stepId) => {
+            setIsHistoryOpen(false);
+            setSelectedStepId(stepId);
+          }}
           scenario={scenario}
           scenarioVersion={scenarioVersion}
         />
