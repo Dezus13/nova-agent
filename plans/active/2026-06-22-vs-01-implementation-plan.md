@@ -601,6 +601,44 @@ Verification:
 - `npm run build`;
 - `git diff --check`.
 
+## 17. VS-01 Cleanup
+
+### 2026-06-26 — VS-01 Cleanup Phase
+
+Status: completed.
+
+Purpose:
+
+- prepare the VS-01 codebase for further scaling before VS-02;
+- preserve VS-01 behavior without changing MVP scope, Product Principles, TS01-TS08 or UI-01;
+- keep VS-02 blocked until cleanup verification and audit pass.
+
+Implemented:
+
+- Phase 1: App component responsibility split completed without changing user-facing behavior;
+- `src/app/App.tsx` now owns local orchestration state and view selection only;
+- VS-01 views were moved into focused files under `src/app/components/`;
+- Phase 2: active Action Plan content context now resolves through `ActionPlan.scenarioVersionId` and the local content repository;
+- Phase 3: `README.md` was rewritten as a stable developer entrypoint with project purpose, problem, high-level architecture, run commands, repository structure and links to source-of-truth documents;
+- Phase 4: future development should use `main -> feature branch -> commit -> push -> merge -> main`.
+
+Out of scope preserved:
+
+- no new user-facing functions added;
+- no VS-02 functionality started;
+- no workflow logic changed;
+- no seed content changed;
+- no Product Principles, TS01-TS08 or UI-01 changed;
+- no Supabase, API handlers, auth, routing library, state manager or new dependencies added.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`;
+- `git diff --check`.
+
 ### 2026-06-24 — Step 4: Action Plan And Step Detail
 
 Status: completed.
