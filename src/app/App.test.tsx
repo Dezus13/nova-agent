@@ -1,3 +1,4 @@
+import React, { type ReactElement, type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import {
@@ -7,6 +8,184 @@ import {
 } from "../data/contentRepository";
 import { startActionPlan, updateProgressStatus } from "../domain/workflow";
 import { App } from "./App";
+
+type HookDispatcher = {
+  useState<State>(
+    initialState: State | (() => State),
+  ): [State, (nextState: State | ((previousState: State) => State)) => void];
+};
+
+type ReactClientInternals = {
+  H: HookDispatcher | null;
+};
+
+type ReactWithClientInternals = typeof React & {
+  __CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE?:
+    | ReactClientInternals
+    | undefined;
+};
+
+type HostNode = {
+  children: TestTree[];
+  props: Record<string, unknown>;
+  type: string;
+};
+
+type TestTree = HostNode | number | string;
+
+function createInteractiveRuntime() {
+  const stateSlots: unknown[] = [];
+  let stateSlotIndex = 0;
+
+  const dispatcher: HookDispatcher = {
+    useState<State>(initialState: State | (() => State)) {
+      const slotIndex = stateSlotIndex;
+      stateSlotIndex += 1;
+
+      if (!(slotIndex in stateSlots)) {
+        stateSlots[slotIndex] =
+          typeof initialState === "function"
+            ? (initialState as () => State)()
+            : initialState;
+      }
+
+      const setState = (nextState: State | ((previousState: State) => State)) => {
+        const previousState = stateSlots[slotIndex] as State;
+        stateSlots[slotIndex] =
+          typeof nextState === "function"
+            ? (nextState as (previousState: State) => State)(previousState)
+            : nextState;
+      };
+
+      return [stateSlots[slotIndex] as State, setState];
+    },
+  };
+
+  return {
+    dispatcher,
+    resetRender() {
+      stateSlotIndex = 0;
+    },
+  };
+}
+
+function withHookDispatcher<Result>(
+  runtime: ReturnType<typeof createInteractiveRuntime>,
+  callback: () => Result,
+): Result {
+  const reactInternals = (React as ReactWithClientInternals)
+    .__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE;
+
+  if (!reactInternals) {
+    throw new Error("React client internals are not available for interaction tests.");
+  }
+
+  const previousDispatcher = reactInternals.H;
+  reactInternals.H = runtime.dispatcher;
+
+  try {
+    return callback();
+  } finally {
+    reactInternals.H = previousDispatcher;
+  }
+}
+
+function resolveReactNode(node: ReactNode): TestTree[] {
+  if (node === null || node === undefined || typeof node === "boolean") {
+    return [];
+  }
+
+  if (typeof node === "string" || typeof node === "number") {
+    return [node];
+  }
+
+  if (Array.isArray(node)) {
+    return node.flatMap((child) => resolveReactNode(child));
+  }
+
+  if (!React.isValidElement(node)) {
+    return [];
+  }
+
+  const element = node as ReactElement<Record<string, unknown>>;
+  const props = element.props;
+
+  if (typeof element.type === "function") {
+    const Component = element.type as (componentProps: Record<string, unknown>) => ReactNode;
+    return resolveReactNode(Component(props));
+  }
+
+  const children = resolveReactNode(props.children as ReactNode);
+
+  if (typeof element.type !== "string") {
+    return children;
+  }
+
+  return [
+    {
+      children,
+      props,
+      type: element.type,
+    },
+  ];
+}
+
+function renderInteractiveApp(runtime: ReturnType<typeof createInteractiveRuntime>) {
+  runtime.resetRender();
+
+  return withHookDispatcher(runtime, () => resolveReactNode(<App />));
+}
+
+function getTextContent(tree: readonly TestTree[]): string {
+  return tree
+    .map((node) => {
+      if (typeof node === "string" || typeof node === "number") {
+        return String(node);
+      }
+
+      return getTextContent(node.children);
+    })
+    .join(" ");
+}
+
+function findHostNode(
+  tree: readonly TestTree[],
+  predicate: (node: HostNode) => boolean,
+): HostNode | null {
+  for (const node of tree) {
+    if (typeof node === "string" || typeof node === "number") {
+      continue;
+    }
+
+    const childMatch = findHostNode(node.children, predicate);
+
+    if (childMatch) {
+      return childMatch;
+    }
+
+    if (predicate(node)) {
+      return node;
+    }
+  }
+
+  return null;
+}
+
+function findButtonByText(tree: readonly TestTree[], label: string): HostNode | null {
+  return findHostNode(
+    tree,
+    (node) => node.type === "button" && getTextContent(node.children).includes(label),
+  );
+}
+
+function clickButton(tree: readonly TestTree[], label: string) {
+  const button = findButtonByText(tree, label);
+
+  expect(button).not.toBeNull();
+  expect(typeof button?.props.onClick).toBe("function");
+
+  (button?.props.onClick as () => void)();
+}
 
 function createActionPlanForUi() {
   const lifeSituation = listSeedLifeSituations()[0];
@@ -51,6 +230,60 @@ function createUpdatedActionPlanForUi() {
 }
 
 describe("App", () => {
+  it("passes the full VS-01 demo flow through user actions", () => {
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    const safetyPosition = text.indexOf("Warnings / Restrictions");
+    const startPlanPosition = text.indexOf("Начать план");
+
+    expect(text).toContain("Life Situation");
+    expect(text).toContain("Scenario");
+    expect(text).toContain("Регистрация места жительства в Австрии");
+    expect(safetyPosition).toBeGreaterThanOrEqual(0);
+    expect(startPlanPosition).toBeGreaterThanOrEqual(0);
+    expect(safetyPosition).toBeLessThan(startPlanPosition);
+
+    clickButton(tree, "Начать план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваш план");
+    expect(text).toContain("Статус плана");
+    expect(text).toContain("active");
+    expect(text).toContain("Шаги плана");
+
+    clickButton(tree, "Открыть следующий шаг");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Текущее состояние шага");
+    expect(text).toContain("Ваша отметка");
+    expect(text).toContain("Отметить: В процессе");
+
+    clickButton(tree, "Отметить: В процессе");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваша отметка");
+    expect(text).toContain("В процессе");
+
+    clickButton(tree, "Вернуться к плану");
+    tree = renderInteractiveApp(runtime);
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("План создан");
+    expect(text).toContain("Отметка шага изменена");
+    expect(text).toContain("Изменение вашей отметки");
+    expect(text).toContain("внутренние события Nova Agent");
+    expect(text).toContain("Не является официальным журналом");
+    expect(text).toContain("не подтверждают, что действие выполнено пользователем");
+  });
+
   it("renders the VS-01 content read flow from the seed content", () => {
     const html = renderToString(<App />);
 

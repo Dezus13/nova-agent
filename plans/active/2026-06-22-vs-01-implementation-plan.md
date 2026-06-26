@@ -698,3 +698,42 @@ Verification:
 - `npm test`;
 - `npm run build`;
 - `git diff --check`.
+
+### 2026-06-26 — Step 7: Demo Flow Validation
+
+Status: completed.
+
+Implemented:
+
+- one full interaction test for the VS-01 demo flow through user-facing actions;
+- validation that the user sees Life Situation and Scenario before creating an Action Plan;
+- validation that Warnings/Restrictions remain visible before the Start Action Plan CTA;
+- validation that clicking `Начать план` opens an active Action Plan Detail;
+- validation that the user can open Step Detail from the plan;
+- validation that the user can apply the supported Progress update action;
+- validation that Progress remains labelled as `Ваша отметка`;
+- validation that History opens from the Action Plan and shows plan creation plus progress-change events;
+- validation that History boundary copy states it is internal Nova Agent history, not an official journal and not proof of completed actions.
+
+Out of scope preserved:
+
+- no UI functions, components, workflow logic or seed content changed;
+- no VS-02 functionality implemented;
+- no My Plans, User Notes, User Open Questions, Checked Source Marks, Pattern B or Content Admin added;
+- no Supabase, API handlers, auth, routing library or state manager added;
+- no App refactor or plan move to `plans/completed` performed in this step.
+
+Testing note:
+
+- the current Demo Flow interaction test uses a React internal dispatcher workaround because the project currently runs Vitest in the `node` environment without a DOM interaction test setup;
+- this is a temporary test-only compromise, not a permanent testing strategy;
+- the workaround does not add runtime code, dependencies or application behavior changes;
+- before VS-02, the project should consider a normal DOM interaction test setup.
+
+Verification:
+
+- `npm run typecheck`;
+- `npm run lint`;
+- `npm test`;
+- `npm run build`;
+- `git diff --check`.
