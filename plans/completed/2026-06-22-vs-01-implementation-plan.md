@@ -775,3 +775,47 @@ Verification:
 - `npm test`;
 - `npm run build`;
 - `git diff --check`.
+
+## 18. Closure
+
+Status: completed.
+
+VS-01 is officially completed and moved to `plans/completed`.
+
+All VS-01 implementation stages are complete:
+
+- Step 1 Seed Content Availability;
+- Step 2 Content Read Flow;
+- Step 3 Action Plan Creation;
+- Step 4 Action Plan Detail + Step Detail;
+- Step 5 Progress Update;
+- Step 6 History Visibility;
+- Step 7 Demo Flow Validation;
+- VS-01 Cleanup.
+
+Scope was preserved:
+
+- no User Open Questions;
+- no User Notes;
+- no Checked Source Marks;
+- no My Plans;
+- no Completed Plans;
+- no Pattern B;
+- no Content Admin;
+- no Supabase;
+- no API handlers;
+- no auth;
+- no routing library;
+- no state manager;
+- no persistence;
+- no document storage;
+- no new product entities, roles, states or API contracts.
+
+Known limitations:
+
+- VS-01 remains local-only;
+- local React state is lost after reload;
+- persistence is absent;
+- auth is absent;
+- Supabase is absent;
+- the React internal dispatcher workaround remains a temporary test-only compromise and is not a permanent testing strategy.
