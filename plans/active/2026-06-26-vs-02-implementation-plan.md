@@ -229,6 +229,27 @@ Scope:
 
 Step 2 does not add a dashboard, completed-plan list, multiple plans management, filters, search, sorting, percentages, KPI, productivity metrics, deadlines, priorities, assignees, kanban, User Open Questions, User Notes, Checked Source Marks, Pattern B, Content Admin, Supabase, API handlers, auth, routing library, state manager, persistence or document storage.
 
+### Step 3: Demo Flow Validation
+
+Status: completed.
+
+Scope:
+
+- add one full interaction test for the VS-02 return-and-continue demo flow;
+- validate `Return Context -> Progress Summary -> Next Step -> Open Active Action Plan -> Open Step Detail -> Return To Action Plan -> Open History`;
+- use existing UI click handlers and existing local Action Plan behavior;
+- verify the single active continuation entry, Progress Summary fields, next step from Progress records, Step Detail access and read-only History access;
+- verify boundary copy for local reload limitation, Progress as user mark and History as internal non-official Nova Agent history;
+- assert forbidden dashboard, completed-plan, task-manager, persistence, API, auth, Supabase, Content Admin, Pattern B, User Open Questions, User Notes and Checked Source Marks scope.
+
+Step 3 does not add runtime functionality, workflow operations, API handlers, persistence, routing, state manager, Supabase, auth, new entities, new roles or new states.
+
+Final audit fix:
+
+- `ActionPlanView` uses the same VS-02 next-step helper as `ReturnContextView`;
+- Action Plan Detail and Return Context now resolve the next step by the same Progress-only priority: `in_progress -> requires_check -> not_started`;
+- History remains excluded from next-step calculation.
+
 ## 8. Dependencies
 
 VS-02 depends on completed VS-01 functionality:

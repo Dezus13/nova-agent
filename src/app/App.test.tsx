@@ -190,6 +190,40 @@ function clickButton(tree: readonly TestTree[], label: string) {
   (button?.props.onClick as () => void)();
 }
 
+function expectVs02ForbiddenScopeAbsent(text: string) {
+  for (const forbiddenText of [
+    "Dashboard",
+    "dashboard",
+    "Completed Plans",
+    "completedCount",
+    "completed",
+    "User Open Questions",
+    "User Notes",
+    "Checked Source Marks",
+    "Pattern B",
+    "Content Admin",
+    "Supabase",
+    "API handlers",
+    "auth",
+    "routing library",
+    "state manager",
+    "persistence",
+    "document storage",
+    "deadlines",
+    "priorities",
+    "assignees",
+    "kanban",
+    "productivity dashboard",
+    "productivity metrics",
+    "percentages",
+    "percent",
+    "%",
+    "KPI",
+  ]) {
+    expect(text).not.toContain(forbiddenText);
+  }
+}
+
 function createActionPlanForUi() {
   const lifeSituation = listSeedLifeSituations()[0];
   const scenario = lifeSituation
@@ -244,6 +278,34 @@ function createReturnContextActionPlanForUi() {
 
       if (index === 2) {
         return { ...progress, status: "in_progress" as const };
+      }
+
+      return progress;
+    }),
+  };
+}
+
+function createVs02DemoActionPlanForUi() {
+  const plan = createActionPlanForUi();
+  const firstProgress = plan.progressRecords[0];
+
+  if (!firstProgress) {
+    throw new Error("Expected a first Progress record for the VS-02 demo test.");
+  }
+
+  const updatedPlan = updateProgressStatus({
+    plan,
+    progressId: firstProgress.id,
+    targetStatus: "in_progress",
+    operationId: "vs-02-demo-progress-update",
+    occurredAt: "2026-06-28T10:00:00.000Z",
+  });
+
+  return {
+    ...updatedPlan,
+    progressRecords: updatedPlan.progressRecords.map((progress, index) => {
+      if (index === 1) {
+        return { ...progress, status: "requires_check" as const };
       }
 
       return progress;
@@ -451,6 +513,47 @@ describe("App", () => {
     expect(text).toContain("В процессе");
   });
 
+  it("uses the same VS-02 next step in Return Context and Action Plan Detail", () => {
+    const actionPlan = createReturnContextActionPlanForUi();
+    const returnRuntime = createInteractiveRuntime();
+    const actionPlanRuntime = createInteractiveRuntime();
+    const returnText = getTextContent(
+      renderInteractiveApp(returnRuntime, { initialActionPlan: actionPlan }),
+    );
+    const actionPlanText = getTextContent(
+      renderInteractiveApp(actionPlanRuntime, {
+        initialActionPlan: actionPlan,
+        initialPlanOpen: true,
+      }),
+    );
+    const returnNextStepText = returnText.slice(
+      returnText.indexOf("Главный следующий шаг"),
+      returnText.indexOf("Открыть Step Detail"),
+    );
+    const actionPlanNextStepText = actionPlanText.slice(
+      actionPlanText.indexOf("Следующий шаг"),
+      actionPlanText.indexOf("Открыть следующий шаг"),
+    );
+
+    expect(returnNextStepText).toContain("Step");
+    expect(returnNextStepText).toContain("3");
+    expect(returnNextStepText).toContain(
+      "Подготовить Meldezettel и подпись Unterkunftgeber",
+    );
+    expect(returnNextStepText).not.toContain("Проверить, нужно ли регистрировать адрес");
+    expect(returnNextStepText).not.toContain("Найти zuständige Meldebehörde");
+
+    expect(actionPlanNextStepText).toContain("Step");
+    expect(actionPlanNextStepText).toContain("3");
+    expect(actionPlanNextStepText).toContain(
+      "Подготовить Meldezettel и подпись Unterkunftgeber",
+    );
+    expect(actionPlanNextStepText).not.toContain(
+      "Проверить, нужно ли регистрировать адрес",
+    );
+    expect(actionPlanNextStepText).not.toContain("Найти zuständige Meldebehörde");
+  });
+
   it("opens History from the active-plan continuation entry", () => {
     const runtime = createInteractiveRuntime();
     let tree = renderInteractiveApp(runtime, {
@@ -467,6 +570,102 @@ describe("App", () => {
     expect(text).toContain("План создан");
     expect(text).toContain("внутренние события Nova Agent");
     expect(text).toContain("Не является официальным журналом");
+  });
+
+  it("passes the full VS-02 return and continue demo flow through user actions", () => {
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createVs02DemoActionPlanForUi(),
+    });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Return Context");
+    expect(text).toContain("Есть существующий active Action Plan");
+    expect(text.match(/Есть существующий active Action Plan/g)).toHaveLength(1);
+    expect(text.match(/Продолжить active plan/g)).toHaveLength(1);
+    expect(text).toContain("после перезагрузки страницы сохранение плана не обещается");
+    expect(text).toContain("Progress Summary");
+    expect(text).toContain("Total steps");
+    expect(text).toContain("not_started");
+    expect(text).toContain("in_progress");
+    expect(text).toContain("requires_check");
+    expect(text).toContain("6");
+    expect(text).toContain("4");
+    expect(text).toContain("1");
+    expect(text).toContain("Главный следующий шаг");
+    expect(text).toMatch(/Step\s+1/);
+    expect(text).toContain("Проверить, нужно ли регистрировать адрес");
+    expect(text).toContain("Ваша отметка");
+    expect(text).toContain("В процессе");
+    expect(text).toContain("Следующий шаг рассчитывается только по Progress records");
+    expect(text).toContain("не является source of truth для текущего Progress");
+    expect(text).toContain("Внутренний журнал Nova Agent");
+    expect(text).toContain("Не является официальным журналом");
+    expect(text).toContain("Nova Agent — справочная");
+    expectVs02ForbiddenScopeAbsent(text);
+
+    clickButton(tree, "Продолжить active plan");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createVs02DemoActionPlanForUi(),
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваш план");
+    expect(text).toContain("Статус плана");
+    expect(text).toContain("active");
+    expect(text).toContain("Шаги плана");
+    expect(text).toContain("Следующий шаг");
+    expect(text).toContain("Progress");
+    expect(text).toContain("Ваша отметка");
+    expectVs02ForbiddenScopeAbsent(text);
+
+    clickButton(tree, "Открыть следующий шаг");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createVs02DemoActionPlanForUi(),
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Текущее состояние шага");
+    expect(text).toContain("Проверить, нужно ли регистрировать адрес");
+    expect(text).toContain("Warnings / Restrictions");
+    expect(text).toContain("Documents / Data Requirements");
+    expect(text).toContain("Где проверить официальный источник");
+    expect(text).toContain("Ваша отметка");
+    expect(text).toContain("В процессе");
+    expectVs02ForbiddenScopeAbsent(text);
+
+    clickButton(tree, "Вернуться к плану");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createVs02DemoActionPlanForUi(),
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваш план");
+    expect(text).toContain("Шаги плана");
+    expectVs02ForbiddenScopeAbsent(text);
+
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createVs02DemoActionPlanForUi(),
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("События в порядке создания");
+    expect(text).toContain("План создан");
+    expect(text).toContain("Отметка шага изменена");
+    expect(text).toContain("Изменение вашей отметки");
+    expect(text).toContain("Связанный шаг:");
+    expect(text).toContain("внутренние события Nova Agent");
+    expect(text).toContain("Не является официальным журналом");
+    expect(text).toContain("не подтверждают, что действие выполнено пользователем");
+    expect(text).toContain("Nova Agent — справочная");
+    expect(text).not.toContain("Редактировать событие");
+    expect(text).not.toContain("Удалить событие");
+    expect(text).not.toContain("Поиск");
+    expect(text).not.toContain("Фильтр");
+    expect(text).not.toContain("Сортировать");
+    expectVs02ForbiddenScopeAbsent(text);
   });
 
   it("shows Step Detail context before the read-only Progress mark", () => {

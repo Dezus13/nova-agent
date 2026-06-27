@@ -1,5 +1,8 @@
 import type { PublishedScenarioVersion, Scenario } from "../../domain/content";
-import type { ActionPlanAggregate } from "../../domain/workflow";
+import {
+  getVs02NextStepProgress,
+  type ActionPlanAggregate,
+} from "../../domain/workflow";
 import { BoundaryNotice, planBoundaryCopy } from "./BoundaryNotice";
 import { ProgressBadge } from "./ProgressBadge";
 
@@ -16,9 +19,7 @@ export function ActionPlanView({
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
 }) {
-  const nextProgress = actionPlan.progressRecords.find(
-    (progress) => progress.status !== "completed",
-  );
+  const nextProgress = getVs02NextStepProgress(actionPlan.progressRecords);
   const nextStep = scenarioVersion.steps.find(
     (step) => step.id === nextProgress?.versionedStepContextId,
   );
