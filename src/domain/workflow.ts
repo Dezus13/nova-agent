@@ -82,6 +82,13 @@ export interface ActionPlanAggregate {
   readonly historyEvents: readonly HistoryEvent[];
 }
 
+export interface Vs02ProgressSummary {
+  readonly totalSteps: number;
+  readonly notStartedCount: number;
+  readonly inProgressCount: number;
+  readonly requiresCheckCount: number;
+}
+
 export interface StartActionPlanInput {
   readonly ownerId: string;
   readonly intent: "start_plan";
@@ -110,6 +117,38 @@ function isVs01ProgressUpdateStatus(
   status: ProgressStatus,
 ): status is Vs01ProgressUpdateStatus {
   return status === "in_progress" || status === "requires_check";
+}
+
+export function getVs02ProgressSummary(
+  progressRecords: readonly Progress[],
+): Vs02ProgressSummary {
+  return progressRecords.reduce<Vs02ProgressSummary>(
+    (summary, progress) => ({
+      totalSteps: summary.totalSteps + 1,
+      notStartedCount:
+        summary.notStartedCount + (progress.status === "not_started" ? 1 : 0),
+      inProgressCount:
+        summary.inProgressCount + (progress.status === "in_progress" ? 1 : 0),
+      requiresCheckCount:
+        summary.requiresCheckCount + (progress.status === "requires_check" ? 1 : 0),
+    }),
+    {
+      totalSteps: 0,
+      notStartedCount: 0,
+      inProgressCount: 0,
+      requiresCheckCount: 0,
+    },
+  );
+}
+
+export function getVs02NextStepProgress(
+  progressRecords: readonly Progress[],
+): Progress | undefined {
+  return (
+    progressRecords.find((progress) => progress.status === "in_progress") ??
+    progressRecords.find((progress) => progress.status === "requires_check") ??
+    progressRecords.find((progress) => progress.status === "not_started")
+  );
 }
 
 export function startActionPlan(input: StartActionPlanInput): StartActionPlanResult {

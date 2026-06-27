@@ -189,6 +189,29 @@ Implementation must proceed in small behavior-preserving steps:
 
 Do not refactor App architecture unless it is required to keep the VS-02 change clear and behavior-preserving. Any refactor must not change VS-01 behavior.
 
+### Step 1: Progress Summary And Next Step Helper
+
+Status: completed.
+
+Scope:
+
+- add domain-level Progress Summary helper;
+- add domain-level Next Step helper;
+- derive both helpers only from Progress records;
+- keep History out of current-state calculation;
+- keep UI unchanged.
+
+Progress Summary includes only `totalSteps`, `notStartedCount`, `inProgressCount` and `requiresCheckCount`.
+
+Next Step priority is:
+
+1. first Progress record with `in_progress`;
+2. first Progress record with `requires_check`;
+3. first Progress record with `not_started`;
+4. no next step if none of those statuses exist.
+
+Step 1 does not add UI, API handlers, persistence, state manager, My Plans dashboard, Completed Plans, User Open Questions, User Notes, Checked Source Marks, Pattern B, Content Admin or document storage.
+
 ## 8. Dependencies
 
 VS-02 depends on completed VS-01 functionality:

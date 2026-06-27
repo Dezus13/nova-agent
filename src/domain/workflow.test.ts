@@ -5,8 +5,11 @@ import {
   listSeedLifeSituations,
 } from "../data/contentRepository";
 import {
+  getVs02NextStepProgress,
+  getVs02ProgressSummary,
   startActionPlan,
   updateProgressStatus,
+  type Progress,
   type StartActionPlanInput,
 } from "./workflow";
 
@@ -212,5 +215,112 @@ describe("updateProgressStatus", () => {
         occurredAt: "2026-06-26T10:05:00.000Z",
       }),
     ).toThrow("is not available in VS-01 Step 5");
+  });
+});
+
+describe("VS-02 progress read helpers", () => {
+  function createProgressRecords(statuses: readonly Progress["status"][]): Progress[] {
+    return statuses.map((status, index) => ({
+      id: `progress-${index + 1}`,
+      actionPlanId: "action-plan-test-operation",
+      versionedStepContextId: `step-${index + 1}`,
+      status,
+    }));
+  }
+
+  it("summarizes only total, not_started, in_progress and requires_check counts", () => {
+    const summary = getVs02ProgressSummary(
+      createProgressRecords([
+        "not_started",
+        "in_progress",
+        "requires_check",
+        "completed",
+        "awaiting_external_response",
+      ]),
+    );
+
+    expect(summary).toEqual({
+      totalSteps: 5,
+      notStartedCount: 1,
+      inProgressCount: 1,
+      requiresCheckCount: 1,
+    });
+  });
+
+  it("does not expose completed, percentage, KPI or productivity fields", () => {
+    const summary = getVs02ProgressSummary(
+      createProgressRecords(["not_started", "completed"]),
+    );
+
+    expect(summary).not.toHaveProperty("completedCount");
+    expect(summary).not.toHaveProperty("completedPercentage");
+    expect(summary).not.toHaveProperty("percentage");
+    expect(summary).not.toHaveProperty("kpi");
+    expect(summary).not.toHaveProperty("productivityScore");
+    expect(summary).not.toHaveProperty("dashboardMetrics");
+  });
+
+  it("selects in_progress before requires_check", () => {
+    const progressRecords = createProgressRecords([
+      "requires_check",
+      "not_started",
+      "in_progress",
+    ]);
+
+    expect(getVs02NextStepProgress(progressRecords)).toBe(progressRecords[2]);
+  });
+
+  it("selects requires_check before not_started when no in_progress exists", () => {
+    const progressRecords = createProgressRecords([
+      "not_started",
+      "requires_check",
+      "not_started",
+    ]);
+
+    expect(getVs02NextStepProgress(progressRecords)).toBe(progressRecords[1]);
+  });
+
+  it("selects the first not_started when no in_progress or requires_check exists", () => {
+    const progressRecords = createProgressRecords([
+      "completed",
+      "not_started",
+      "not_started",
+    ]);
+
+    expect(getVs02NextStepProgress(progressRecords)).toBe(progressRecords[1]);
+  });
+
+  it("uses only Progress records and does not derive next step from History", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const changedProgress = createdPlan.progressRecords[2];
+
+    if (!changedProgress) {
+      throw new Error("Expected a Progress record to change.");
+    }
+
+    const updatedPlan = updateProgressStatus({
+      plan: createdPlan,
+      progressId: changedProgress.id,
+      targetStatus: "in_progress",
+      operationId: "history-does-not-drive-next-step",
+      occurredAt: "2026-06-27T10:00:00.000Z",
+    });
+
+    expect(updatedPlan.historyEvents).toHaveLength(2);
+    expect(getVs02NextStepProgress(createdPlan.progressRecords)).toBe(
+      createdPlan.progressRecords[0],
+    );
+  });
+
+  it("returns no next step when Progress records are empty", () => {
+    expect(getVs02NextStepProgress([])).toBeUndefined();
+  });
+
+  it("returns no next step when no VS-02 next-step statuses are present", () => {
+    expect(
+      getVs02NextStepProgress(
+        createProgressRecords(["completed", "awaiting_external_response"]),
+      ),
+    ).toBeUndefined();
   });
 });
