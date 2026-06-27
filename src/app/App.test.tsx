@@ -130,10 +130,13 @@ function resolveReactNode(node: ReactNode): TestTree[] {
   ];
 }
 
-function renderInteractiveApp(runtime: ReturnType<typeof createInteractiveRuntime>) {
+function renderInteractiveApp(
+  runtime: ReturnType<typeof createInteractiveRuntime>,
+  props: React.ComponentProps<typeof App> = {},
+) {
   runtime.resetRender();
 
-  return withHookDispatcher(runtime, () => resolveReactNode(<App />));
+  return withHookDispatcher(runtime, () => resolveReactNode(<App {...props} />));
 }
 
 function getTextContent(tree: readonly TestTree[]): string {
@@ -229,6 +232,25 @@ function createUpdatedActionPlanForUi() {
   });
 }
 
+function createReturnContextActionPlanForUi() {
+  const plan = createActionPlanForUi();
+
+  return {
+    ...plan,
+    progressRecords: plan.progressRecords.map((progress, index) => {
+      if (index === 1) {
+        return { ...progress, status: "requires_check" as const };
+      }
+
+      if (index === 2) {
+        return { ...progress, status: "in_progress" as const };
+      }
+
+      return progress;
+    }),
+  };
+}
+
 describe("App", () => {
   it("passes the full VS-01 demo flow through user actions", () => {
     const runtime = createInteractiveRuntime();
@@ -246,6 +268,15 @@ describe("App", () => {
     expect(safetyPosition).toBeLessThan(startPlanPosition);
 
     clickButton(tree, "Начать план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Return Context");
+    expect(text).toContain("Продолжить активный план");
+    expect(text).toContain("Progress Summary");
+    expect(text).toContain("Главный следующий шаг");
+
+    clickButton(tree, "Продолжить active plan");
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
@@ -325,7 +356,9 @@ describe("App", () => {
   });
 
   it("shows Action Plan Detail with the next step and user-marked progress", () => {
-    const html = renderToString(<App initialActionPlan={createActionPlanForUi()} />);
+    const html = renderToString(
+      <App initialActionPlan={createActionPlanForUi()} initialPlanOpen />,
+    );
     const scenarioPosition = html.indexOf("Ваш план");
     const versionPosition = html.indexOf("Scenario Version:");
     const statePosition = html.indexOf("Статус плана");
@@ -358,6 +391,82 @@ describe("App", () => {
     expect(boundaryPosition).toBeLessThan(stepsPosition);
     expect(html).toContain("Открыть историю");
     expect(html).not.toContain("Начать план");
+  });
+
+  it("shows a single active-plan continuation entry with VS-02 summary", () => {
+    const html = renderToString(
+      <App initialActionPlan={createReturnContextActionPlanForUi()} />,
+    );
+
+    expect(html).toContain("Return Context");
+    expect(html).toContain("Продолжить активный план");
+    expect(html).toContain("Есть существующий active Action Plan");
+    expect(html).toContain("Scenario Version:");
+    expect(html).toContain("v1");
+    expect(html).toContain("Состояние плана");
+    expect(html).toContain("active");
+    expect(html).toContain("Progress Summary");
+    expect(html).toContain("Total steps");
+    expect(html).toContain("not_started");
+    expect(html).toContain("in_progress");
+    expect(html).toContain("requires_check");
+    expect(html).toContain("<dd>6</dd>");
+    expect(html).toContain("<dd>4</dd>");
+    expect(html).toContain("<dd>1</dd>");
+    expect(html.match(/Продолжить active plan/g)).toHaveLength(1);
+    expect(html).not.toContain("completed");
+    expect(html).not.toContain("%");
+    expect(html).not.toContain("KPI");
+    expect(html).not.toContain("productivity");
+    expect(html).not.toContain("Dashboard");
+    expect(html).not.toContain("Search");
+    expect(html).not.toContain("Filter");
+    expect(html).not.toContain("Sorting");
+    expect(html).not.toContain("Completed Plans");
+  });
+
+  it("derives the return-context next step from Progress before opening Step Detail", () => {
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createReturnContextActionPlanForUi(),
+    });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Главный следующий шаг");
+    expect(text).toContain("Step");
+    expect(text).toContain("3");
+    expect(text).toContain("Подготовить Meldezettel и подпись Unterkunftgeber");
+    expect(text).toContain("Ваша отметка");
+    expect(text).toContain("В процессе");
+    expect(text).not.toContain("History Event");
+
+    clickButton(tree, "Открыть Step Detail");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createReturnContextActionPlanForUi(),
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Текущее состояние шага");
+    expect(text).toContain("Подготовить Meldezettel и подпись Unterkunftgeber");
+    expect(text).toContain("В процессе");
+  });
+
+  it("opens History from the active-plan continuation entry", () => {
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createReturnContextActionPlanForUi(),
+    });
+
+    clickButton(tree, "Открыть History");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: createReturnContextActionPlanForUi(),
+    });
+    const text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("План создан");
+    expect(text).toContain("внутренние события Nova Agent");
+    expect(text).toContain("Не является официальным журналом");
   });
 
   it("shows Step Detail context before the read-only Progress mark", () => {

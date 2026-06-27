@@ -12,6 +12,7 @@ import {
 } from "../data/contentRepository";
 import { ActionPlanView } from "./components/ActionPlanView";
 import { HistoryView } from "./components/HistoryView";
+import { ReturnContextView } from "./components/ReturnContextView";
 import { ScenarioView } from "./components/ScenarioView";
 import { StepDetailView } from "./components/StepDetailView";
 import "./App.css";
@@ -32,10 +33,12 @@ function getContentFlowForPlan(actionPlan: ActionPlanAggregate): SeedContentFlow
 export function App({
   initialActionPlan = null,
   initialHistoryOpen = false,
+  initialPlanOpen = false,
   initialSelectedStepId = null,
 }: {
   initialActionPlan?: ActionPlanAggregate | null;
   initialHistoryOpen?: boolean;
+  initialPlanOpen?: boolean;
   initialSelectedStepId?: string | null;
 }) {
   const defaultContentFlow = getDefaultSeedContentFlow();
@@ -46,6 +49,7 @@ export function App({
     initialSelectedStepId,
   );
   const [isHistoryOpen, setIsHistoryOpen] = useState(initialHistoryOpen);
+  const [isPlanOpen, setIsPlanOpen] = useState(initialPlanOpen);
 
   function handleStartPlan() {
     const result = startActionPlan({
@@ -62,6 +66,7 @@ export function App({
     setActivePlan(result.plan);
     setSelectedStepId(null);
     setIsHistoryOpen(false);
+    setIsPlanOpen(false);
   }
 
   function handleUpdateProgress(
@@ -132,16 +137,35 @@ export function App({
           scenarioVersion={contentFlow.scenarioVersion}
           step={selectedStep}
         />
+      ) : !isPlanOpen ? (
+        <ReturnContextView
+          actionPlan={activePlan}
+          onContinuePlan={() => setIsPlanOpen(true)}
+          onOpenHistory={() => {
+            setSelectedStepId(null);
+            setIsHistoryOpen(true);
+            setIsPlanOpen(true);
+          }}
+          onOpenStep={(stepId) => {
+            setIsHistoryOpen(false);
+            setSelectedStepId(stepId);
+            setIsPlanOpen(true);
+          }}
+          scenario={contentFlow.scenario}
+          scenarioVersion={contentFlow.scenarioVersion}
+        />
       ) : (
         <ActionPlanView
           actionPlan={activePlan}
           onOpenHistory={() => {
             setSelectedStepId(null);
             setIsHistoryOpen(true);
+            setIsPlanOpen(true);
           }}
           onOpenStep={(stepId) => {
             setIsHistoryOpen(false);
             setSelectedStepId(stepId);
+            setIsPlanOpen(true);
           }}
           scenario={contentFlow.scenario}
           scenarioVersion={contentFlow.scenarioVersion}

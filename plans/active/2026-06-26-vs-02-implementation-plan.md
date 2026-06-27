@@ -212,6 +212,23 @@ Next Step priority is:
 
 Step 1 does not add UI, API handlers, persistence, state manager, My Plans dashboard, Completed Plans, User Open Questions, User Notes, Checked Source Marks, Pattern B, Content Admin or document storage.
 
+### Step 2: Return Context UI
+
+Status: completed.
+
+Scope:
+
+- add one active-plan continuation entry;
+- show VS-02 Progress Summary from Progress records;
+- show one main next step from Progress records;
+- allow opening the existing active Action Plan;
+- allow opening Step Detail for the next step;
+- allow opening read-only History;
+- keep repository lookup through `ActionPlan.scenarioVersionId`;
+- keep UI active-only and local-only.
+
+Step 2 does not add a dashboard, completed-plan list, multiple plans management, filters, search, sorting, percentages, KPI, productivity metrics, deadlines, priorities, assignees, kanban, User Open Questions, User Notes, Checked Source Marks, Pattern B, Content Admin, Supabase, API handlers, auth, routing library, state manager, persistence or document storage.
+
 ## 8. Dependencies
 
 VS-02 depends on completed VS-01 functionality:
