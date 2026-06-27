@@ -474,3 +474,45 @@ Completion requires:
 - TS08 alignment: own Action Plan read semantics guide the local implementation without adding API handlers or contracts.
 - Product Principles alignment: the plan preserves one next step, context restoration, no task-manager drift and visible product boundaries.
 - Scope creep check: no new entities, roles, states, API, persistence, Supabase, auth, Content Admin, Pattern B, User Open Questions, User Notes or Checked Source Marks are introduced.
+
+## Closure
+
+Status: completed.
+
+VS-02 is officially completed. All VS-02 goals were achieved:
+
+- the user can return to the existing local active Action Plan;
+- the user sees Progress Summary for the active plan;
+- the user sees one next step derived only from Progress;
+- the user can continue to Action Plan Detail;
+- the user can open Step Detail;
+- the user can open read-only History;
+- Return Context and Action Plan Detail use the same next-step helper;
+- History remains excluded from current-state calculation.
+
+Scope was preserved:
+
+- no dashboard;
+- no Completed Plans;
+- no User Open Questions;
+- no User Notes;
+- no Checked Source Marks;
+- no Pattern B;
+- no Content Admin;
+- no Supabase;
+- no API handlers;
+- no auth;
+- no routing library;
+- no state manager;
+- no persistence;
+- no document storage;
+- no new entities, roles, states or API contracts.
+
+Known limitations:
+
+- VS-02 remains local-only;
+- local React state is lost after reload;
+- persistence is absent;
+- auth is absent;
+- Supabase is absent;
+- the React internal dispatcher workaround remains a temporary test-only compromise and is not a permanent testing strategy.

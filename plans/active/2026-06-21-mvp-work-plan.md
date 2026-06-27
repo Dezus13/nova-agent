@@ -126,6 +126,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 
 ### VS-01 Minimal Product Spine
 
+**Status:** Completed.
+
 **Пользовательская ценность:** пользователь впервые видит путь от жизненной ситуации к сохранённому процессу, прогрессу и истории.
 
 **Что входит:**
@@ -165,6 +167,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 
 ### VS-02 Return And Continue Context
 
+**Status:** Completed.
+
 **Пользовательская ценность:** пользователь возвращается к незавершённому процессу и быстро понимает, где остановился.
 
 **Что входит:**
@@ -190,6 +194,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 - UI-01 U-04 and U-05 concepts.
 
 **Критерий завершения:** пользователь может открыть существующий active Action Plan и восстановить следующий шаг без повторного чтения Scenario from scratch.
+
+**Следующий этап:** VS-03 User Open Questions.
 
 ### VS-03 User Open Questions
 
