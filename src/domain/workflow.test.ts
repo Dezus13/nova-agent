@@ -7,10 +7,12 @@ import {
 import {
   USER_OPEN_QUESTION_STATUSES,
   createUserOpenQuestion,
+  getAllowedUserOpenQuestionStatusTransitions,
   getVs02NextStepProgress,
   getVs02ProgressSummary,
   isUserOpenQuestionStatus,
   startActionPlan,
+  updateUserOpenQuestionStatus,
   updateProgressStatus,
   type Progress,
   type StartActionPlanInput,
@@ -447,5 +449,126 @@ describe("VS-03 User Open Question domain helpers", () => {
         occurredAt: "2026-06-28T10:00:00.000Z",
       }),
     ).toThrow("User Open Question can only be created inside an active Action Plan.");
+  });
+
+  it("updates a User Open Question status through a TS07 transition", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Нужно ли уточнить срок?",
+      operationId: "status-update",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    const updatedQuestion = updateUserOpenQuestionStatus({
+      question,
+      targetStatus: "requires_check",
+      occurredAt: "2026-06-30T10:00:00.000Z",
+    });
+
+    expect(updatedQuestion).toEqual({
+      ...question,
+      status: "requires_check",
+      updatedAt: "2026-06-30T10:00:00.000Z",
+    });
+    expect(question.status).toBe("open");
+  });
+
+  it("exposes only TS07 User Open Question status transitions", () => {
+    expect(getAllowedUserOpenQuestionStatusTransitions("open")).toEqual([
+      "requires_check",
+      "awaiting_external_response",
+      "irrelevant",
+    ]);
+    expect(getAllowedUserOpenQuestionStatusTransitions("requires_check")).toEqual([
+      "awaiting_external_response",
+      "clarified_by_user",
+      "irrelevant",
+    ]);
+    expect(
+      getAllowedUserOpenQuestionStatusTransitions("awaiting_external_response"),
+    ).toEqual(["clarified_by_user", "irrelevant"]);
+    expect(getAllowedUserOpenQuestionStatusTransitions("clarified_by_user")).toEqual([
+      "requires_check",
+    ]);
+    expect(getAllowedUserOpenQuestionStatusTransitions("irrelevant")).toEqual([]);
+  });
+
+  it("rejects an invalid runtime User Open Question status", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Нужно ли уточнить статус?",
+      operationId: "invalid-status",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    expect(() =>
+      updateUserOpenQuestionStatus({
+        question,
+        targetStatus: "officially_confirmed",
+        occurredAt: "2026-06-30T10:00:00.000Z",
+      }),
+    ).toThrow("Unknown User Open Question status: officially_confirmed.");
+  });
+
+  it("rejects forbidden TS07 transitions including transitions from irrelevant", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Нужно ли уточнить применимость?",
+      operationId: "forbidden-transition",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+    const irrelevantQuestion = updateUserOpenQuestionStatus({
+      question,
+      targetStatus: "irrelevant",
+      occurredAt: "2026-06-30T10:00:00.000Z",
+    });
+
+    expect(() =>
+      updateUserOpenQuestionStatus({
+        question,
+        targetStatus: "clarified_by_user",
+        occurredAt: "2026-06-30T10:05:00.000Z",
+      }),
+    ).toThrow(
+      "Transition open -> clarified_by_user is not allowed for User Open Questions.",
+    );
+    expect(() =>
+      updateUserOpenQuestionStatus({
+        question: irrelevantQuestion,
+        targetStatus: "requires_check",
+        occurredAt: "2026-06-30T10:10:00.000Z",
+      }),
+    ).toThrow(
+      "Transition irrelevant -> requires_check is not allowed for User Open Questions.",
+    );
+  });
+
+  it("does not affect Progress, History, Action Plan aggregate or question text when status changes", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const actionPlanBefore = createdPlan.actionPlan;
+    const progressBefore = createdPlan.progressRecords;
+    const historyBefore = createdPlan.historyEvents;
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Сохраняется ли текст вопроса?",
+      operationId: "status-side-effects",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    const updatedQuestion = updateUserOpenQuestionStatus({
+      question,
+      targetStatus: "awaiting_external_response",
+      occurredAt: "2026-06-30T10:00:00.000Z",
+    });
+
+    expect(createdPlan.actionPlan).toBe(actionPlanBefore);
+    expect(createdPlan.progressRecords).toBe(progressBefore);
+    expect(createdPlan.historyEvents).toBe(historyBefore);
+    expect(createdPlan.historyEvents).toHaveLength(1);
+    expect(updatedQuestion.questionText).toBe(question.questionText);
+    expect(question.questionText).toBe("Сохраняется ли текст вопроса?");
   });
 });

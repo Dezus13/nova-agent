@@ -3,6 +3,7 @@ import {
   getVs02NextStepProgress,
   type ActionPlanAggregate,
   type UserOpenQuestion,
+  type UserOpenQuestionStatus,
 } from "../../domain/workflow";
 import { BoundaryNotice, planBoundaryCopy } from "./BoundaryNotice";
 import { ProgressBadge } from "./ProgressBadge";
@@ -15,6 +16,7 @@ export function ActionPlanView({
   onNewUserOpenQuestionTextChange,
   onOpenHistory,
   onOpenStep,
+  onUpdateUserOpenQuestionStatus,
   scenario,
   scenarioVersion,
   userOpenQuestions,
@@ -25,6 +27,10 @@ export function ActionPlanView({
   onNewUserOpenQuestionTextChange: (questionText: string) => void;
   onOpenHistory: () => void;
   onOpenStep: (stepId: string) => void;
+  onUpdateUserOpenQuestionStatus: (
+    questionId: string,
+    targetStatus: UserOpenQuestionStatus,
+  ) => void;
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
   userOpenQuestions: readonly UserOpenQuestion[];
@@ -112,6 +118,7 @@ export function ActionPlanView({
           newQuestionText={newUserOpenQuestionText}
           onAddQuestion={onAddUserOpenQuestion}
           onNewQuestionTextChange={onNewUserOpenQuestionTextChange}
+          onUpdateQuestionStatus={onUpdateUserOpenQuestionStatus}
           userOpenQuestions={userOpenQuestions}
         />
         <div className="plan-history-link">

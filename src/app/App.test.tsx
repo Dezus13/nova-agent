@@ -214,6 +214,24 @@ function changeTextArea(tree: readonly TestTree[], label: string, value: string)
   });
 }
 
+function findSelectById(tree: readonly TestTree[], id: string): HostNode | null {
+  return findHostNode(
+    tree,
+    (node) => node.type === "select" && node.props.id === id,
+  );
+}
+
+function changeSelect(tree: readonly TestTree[], id: string, value: string) {
+  const select = findSelectById(tree, id);
+
+  expect(select).not.toBeNull();
+  expect(typeof select?.props.onChange).toBe("function");
+
+  (select?.props.onChange as (event: { target: { value: string } }) => void)({
+    target: { value },
+  });
+}
+
 function expectVs02ForbiddenScopeAbsent(text: string) {
   for (const forbiddenText of [
     "Dashboard",
@@ -674,7 +692,6 @@ describe("App", () => {
     expect(html).not.toContain("versioned_document_requirement");
     expect(html).not.toContain("Редактировать вопрос");
     expect(html).not.toContain("Удалить вопрос");
-    expect(html).not.toContain("Изменить статус");
     expect(html).not.toContain("Progress update");
     expect(html).not.toContain("User Notes");
     expect(html).not.toContain("Checked Source Marks");
@@ -737,7 +754,55 @@ describe("App", () => {
     expect(actionPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
     expect(text).not.toContain("Редактировать вопрос");
     expect(text).not.toContain("Удалить вопрос");
-    expect(text).not.toContain("Изменить статус");
+    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("AI suggestions");
+  });
+
+  it("updates a User Open Question status without workflow side effects", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    const [question] = createUserOpenQuestionsForUi(actionPlan);
+
+    if (!question) {
+      throw new Error("Expected a User Open Question fixture.");
+    }
+
+    const actionPlanBefore = actionPlan.actionPlan;
+    const progressBefore = actionPlan.progressRecords;
+    const historyBefore = actionPlan.historyEvents;
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialUserOpenQuestions: [question],
+    });
+
+    expect(findSelectById(tree, "user-open-question-status-1")?.props.value).toBe(
+      "open",
+    );
+
+    changeSelect(tree, "user-open-question-status-1", "requires_check");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialUserOpenQuestions: [question],
+    });
+    const text = getTextContent(tree);
+
+    expect(findSelectById(tree, "user-open-question-status-1")?.props.value).toBe(
+      "requires_check",
+    );
+    expect(text).toContain("Нужно ли уточнить срок регистрации в Magistrat?");
+    expect(text).toContain("requires_check");
+    expect(text).toContain("Ваша отметка");
+    expect(actionPlan.actionPlan).toBe(actionPlanBefore);
+    expect(actionPlan.progressRecords).toBe(progressBefore);
+    expect(actionPlan.historyEvents).toBe(historyBefore);
+    expect(actionPlan.progressRecords.every((progress) => progress.status === "not_started"))
+      .toBe(true);
+    expect(actionPlan.historyEvents).toHaveLength(1);
+    expect(actionPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
+    expect(text).not.toContain("Редактировать вопрос");
+    expect(text).not.toContain("Удалить вопрос");
     expect(text).not.toContain("Ответ Nova Agent");
     expect(text).not.toContain("AI suggestions");
   });

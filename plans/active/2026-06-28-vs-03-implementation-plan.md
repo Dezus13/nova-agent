@@ -262,15 +262,17 @@ No status update, edit, delete, History Event, User Notes, Checked Source Marks,
 
 ### Step 4: User Open Question Status Update
 
+Status: completed.
+
 Scope:
 
 - allow only TS07 status transitions;
 - keep `irrelevant` final;
 - keep `clarified_by_user` visibly marked as user's personal mark, not official answer;
-- create `user_open_question_status_changed`;
+- change only the existing User Open Question status;
 - keep Progress unchanged.
 
-No automatic closing and no Progress coupling.
+No automatic closing, Progress coupling, History Event, text edit, delete, User Notes or Checked Source Marks in this step.
 
 ### Step 5: User Open Question Text Edit
 

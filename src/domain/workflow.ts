@@ -155,6 +155,12 @@ export interface CreateUserOpenQuestionInput {
   readonly occurredAt: string;
 }
 
+export interface UpdateUserOpenQuestionStatusInput {
+  readonly question: UserOpenQuestion;
+  readonly targetStatus: string;
+  readonly occurredAt: string;
+}
+
 function isVs01ProgressUpdateStatus(
   status: ProgressStatus,
 ): status is Vs01ProgressUpdateStatus {
@@ -165,6 +171,23 @@ export function isUserOpenQuestionStatus(
   status: string,
 ): status is UserOpenQuestionStatus {
   return USER_OPEN_QUESTION_STATUSES.includes(status as UserOpenQuestionStatus);
+}
+
+export function getAllowedUserOpenQuestionStatusTransitions(
+  currentStatus: UserOpenQuestionStatus,
+): readonly UserOpenQuestionStatus[] {
+  switch (currentStatus) {
+    case "open":
+      return ["requires_check", "awaiting_external_response", "irrelevant"];
+    case "requires_check":
+      return ["awaiting_external_response", "clarified_by_user", "irrelevant"];
+    case "awaiting_external_response":
+      return ["clarified_by_user", "irrelevant"];
+    case "clarified_by_user":
+      return ["requires_check"];
+    case "irrelevant":
+      return [];
+  }
 }
 
 export function getVs02ProgressSummary(
@@ -341,6 +364,34 @@ export function createUserOpenQuestion(
     status: "open",
     context: input.context,
     createdAt: input.occurredAt,
+    updatedAt: input.occurredAt,
+  };
+}
+
+export function updateUserOpenQuestionStatus(
+  input: UpdateUserOpenQuestionStatusInput,
+): UserOpenQuestion {
+  if (!isUserOpenQuestionStatus(input.targetStatus)) {
+    throw new Error(`Unknown User Open Question status: ${input.targetStatus}.`);
+  }
+
+  if (input.targetStatus === input.question.status) {
+    return input.question;
+  }
+
+  const allowedStatuses = getAllowedUserOpenQuestionStatusTransitions(
+    input.question.status,
+  );
+
+  if (!allowedStatuses.includes(input.targetStatus)) {
+    throw new Error(
+      `Transition ${input.question.status} -> ${input.targetStatus} is not allowed for User Open Questions.`,
+    );
+  }
+
+  return {
+    ...input.question,
+    status: input.targetStatus,
     updatedAt: input.occurredAt,
   };
 }

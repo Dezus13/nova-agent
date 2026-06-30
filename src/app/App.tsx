@@ -4,7 +4,9 @@ import {
   startActionPlan,
   type ActionPlanAggregate,
   type UserOpenQuestion,
+  type UserOpenQuestionStatus,
   type Vs01ProgressUpdateStatus,
+  updateUserOpenQuestionStatus,
   updateProgressStatus,
 } from "../domain/workflow";
 import {
@@ -120,6 +122,25 @@ export function App({
     setNewUserOpenQuestionText("");
   }
 
+  function handleUpdateUserOpenQuestionStatus(
+    questionId: string,
+    targetStatus: UserOpenQuestionStatus,
+  ) {
+    const occurredAt = new Date().toISOString();
+
+    setUserOpenQuestions((currentQuestions) =>
+      currentQuestions.map((question) =>
+        question.id === questionId
+          ? updateUserOpenQuestionStatus({
+              question,
+              targetStatus,
+              occurredAt,
+            })
+          : question,
+      ),
+    );
+  }
+
   const contentFlow = activePlan
     ? getContentFlowForPlan(activePlan)
     : defaultContentFlow;
@@ -196,6 +217,7 @@ export function App({
           newUserOpenQuestionText={newUserOpenQuestionText}
           onAddUserOpenQuestion={handleAddUserOpenQuestion}
           onNewUserOpenQuestionTextChange={setNewUserOpenQuestionText}
+          onUpdateUserOpenQuestionStatus={handleUpdateUserOpenQuestionStatus}
           onOpenHistory={() => {
             setSelectedStepId(null);
             setIsHistoryOpen(true);
