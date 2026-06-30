@@ -199,6 +199,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 
 ### VS-03 User Open Questions
 
+**Status:** Completed.
+
 **Пользовательская ценность:** пользователь фиксирует неопределённость как вопрос для внешней проверки, не получая от Nova Agent официального ответа.
 
 **Что входит:**
@@ -226,6 +228,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 - UI-01 U-08 and Template OQ vs User OQ separation.
 
 **Критерий завершения:** пользователь может создать, увидеть and update a User Open Question in an active Action Plan, and every change remains marked as user's question for external verification.
+
+**Следующий этап:** VS-04 Sources And Notes.
 
 ### VS-04 Sources And Notes
 
