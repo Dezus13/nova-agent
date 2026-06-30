@@ -15,7 +15,9 @@ export type ProgressStatus =
 
 export type HistoryEventType =
   | "action_plan_created"
-  | "progress_status_changed";
+  | "progress_status_changed"
+  | "user_open_question_created"
+  | "user_open_question_status_changed";
 
 export type Vs01ProgressUpdateStatus = "in_progress" | "requires_check";
 
@@ -106,9 +108,42 @@ export interface ProgressStatusChangedHistoryEvent {
   readonly payload: ProgressStatusChangedHistoryPayload;
 }
 
+export interface UserOpenQuestionCreatedHistoryPayload {
+  readonly actionPlanId: string;
+  readonly userOpenQuestionId: string;
+  readonly questionText: string;
+  readonly status: "open";
+}
+
+export interface UserOpenQuestionCreatedHistoryEvent {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly eventType: "user_open_question_created";
+  readonly occurredAt: string;
+  readonly payload: UserOpenQuestionCreatedHistoryPayload;
+}
+
+export interface UserOpenQuestionStatusChangedHistoryPayload {
+  readonly actionPlanId: string;
+  readonly userOpenQuestionId: string;
+  readonly questionText: string;
+  readonly previousStatus: UserOpenQuestionStatus;
+  readonly newStatus: UserOpenQuestionStatus;
+}
+
+export interface UserOpenQuestionStatusChangedHistoryEvent {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly eventType: "user_open_question_status_changed";
+  readonly occurredAt: string;
+  readonly payload: UserOpenQuestionStatusChangedHistoryPayload;
+}
+
 export type HistoryEvent =
   | ActionPlanCreatedHistoryEvent
-  | ProgressStatusChangedHistoryEvent;
+  | ProgressStatusChangedHistoryEvent
+  | UserOpenQuestionCreatedHistoryEvent
+  | UserOpenQuestionStatusChangedHistoryEvent;
 
 export interface ActionPlanAggregate {
   readonly actionPlan: ActionPlan;
@@ -155,10 +190,28 @@ export interface CreateUserOpenQuestionInput {
   readonly occurredAt: string;
 }
 
+export type CreateUserOpenQuestionWithHistoryInput = CreateUserOpenQuestionInput;
+
+export interface CreateUserOpenQuestionWithHistoryResult {
+  readonly plan: ActionPlanAggregate;
+  readonly question: UserOpenQuestion;
+}
+
 export interface UpdateUserOpenQuestionStatusInput {
   readonly question: UserOpenQuestion;
   readonly targetStatus: string;
   readonly occurredAt: string;
+}
+
+export interface UpdateUserOpenQuestionStatusWithHistoryInput
+  extends UpdateUserOpenQuestionStatusInput {
+  readonly plan: ActionPlanAggregate;
+  readonly operationId: string;
+}
+
+export interface UpdateUserOpenQuestionStatusWithHistoryResult {
+  readonly plan: ActionPlanAggregate;
+  readonly question: UserOpenQuestion;
 }
 
 function isVs01ProgressUpdateStatus(
@@ -368,6 +421,40 @@ export function createUserOpenQuestion(
   };
 }
 
+function appendHistoryEvent(
+  plan: ActionPlanAggregate,
+  historyEvent: HistoryEvent,
+): ActionPlanAggregate {
+  return {
+    actionPlan: plan.actionPlan,
+    progressRecords: plan.progressRecords,
+    historyEvents: [...plan.historyEvents, historyEvent],
+  };
+}
+
+export function createUserOpenQuestionWithHistory(
+  input: CreateUserOpenQuestionWithHistoryInput,
+): CreateUserOpenQuestionWithHistoryResult {
+  const question = createUserOpenQuestion(input);
+  const historyEvent: UserOpenQuestionCreatedHistoryEvent = {
+    id: `history-${input.operationId}-user-open-question-created`,
+    actionPlanId: input.plan.actionPlan.id,
+    eventType: "user_open_question_created",
+    occurredAt: input.occurredAt,
+    payload: {
+      actionPlanId: input.plan.actionPlan.id,
+      userOpenQuestionId: question.id,
+      questionText: question.questionText,
+      status: "open",
+    },
+  };
+
+  return {
+    plan: appendHistoryEvent(input.plan, historyEvent),
+    question,
+  };
+}
+
 export function updateUserOpenQuestionStatus(
   input: UpdateUserOpenQuestionStatusInput,
 ): UserOpenQuestion {
@@ -393,5 +480,47 @@ export function updateUserOpenQuestionStatus(
     ...input.question,
     status: input.targetStatus,
     updatedAt: input.occurredAt,
+  };
+}
+
+export function updateUserOpenQuestionStatusWithHistory(
+  input: UpdateUserOpenQuestionStatusWithHistoryInput,
+): UpdateUserOpenQuestionStatusWithHistoryResult {
+  if (input.plan.actionPlan.state !== "active") {
+    throw new Error(
+      "User Open Question status can only be updated inside an active Action Plan.",
+    );
+  }
+
+  if (input.question.actionPlanId !== input.plan.actionPlan.id) {
+    throw new Error("User Open Question does not belong to the Action Plan.");
+  }
+
+  const updatedQuestion = updateUserOpenQuestionStatus(input);
+
+  if (updatedQuestion === input.question) {
+    return {
+      plan: input.plan,
+      question: updatedQuestion,
+    };
+  }
+
+  const historyEvent: UserOpenQuestionStatusChangedHistoryEvent = {
+    id: `history-${input.operationId}-user-open-question-status-changed`,
+    actionPlanId: input.plan.actionPlan.id,
+    eventType: "user_open_question_status_changed",
+    occurredAt: input.occurredAt,
+    payload: {
+      actionPlanId: input.plan.actionPlan.id,
+      userOpenQuestionId: input.question.id,
+      questionText: input.question.questionText,
+      previousStatus: input.question.status,
+      newStatus: updatedQuestion.status,
+    },
+  };
+
+  return {
+    plan: appendHistoryEvent(input.plan, historyEvent),
+    question: updatedQuestion,
   };
 }

@@ -41,6 +41,51 @@ function HistoryEventItem({
     );
   }
 
+  if (event.eventType === "user_open_question_created") {
+    return (
+      <li className="history-event">
+        <div className="history-event-heading">
+          <div>
+            <p className="eyebrow">Ваш вопрос</p>
+            <h3>Открытый вопрос добавлен</h3>
+          </div>
+          <time dateTime={event.occurredAt}>
+            {formatHistoryTimestamp(event.occurredAt)}
+          </time>
+        </div>
+        <p>{`Внутренняя запись Nova Agent: добавлен ваш вопрос для внешней проверки — «${event.payload.questionText}».`}</p>
+        <p className="history-event-context">
+          Это не официальный ответ, не официальный статус и не консультация.
+          Проверьте вопрос через официальный или другой надёжный источник.
+        </p>
+      </li>
+    );
+  }
+
+  if (event.eventType === "user_open_question_status_changed") {
+    return (
+      <li className="history-event">
+        <div className="history-event-heading">
+          <div>
+            <p className="eyebrow">Изменение вашего вопроса</p>
+            <h3>Статус вопроса изменён</h3>
+          </div>
+          <time dateTime={event.occurredAt}>
+            {formatHistoryTimestamp(event.occurredAt)}
+          </time>
+        </div>
+        <p>{`Ваша отметка по вопросу изменилась: «${event.payload.previousStatus}» → «${event.payload.newStatus}».`}</p>
+        <p className="history-event-context">
+          <strong>Связанный вопрос:</strong> {event.payload.questionText}
+        </p>
+        <p className="history-event-context">
+          Это внутренняя история Nova Agent, а не официальный журнал,
+          официальный статус или подтверждение внешнего действия.
+        </p>
+      </li>
+    );
+  }
+
   const step = scenarioVersion.steps.find(
     (candidate) => candidate.id === event.payload.versionedStepContextId,
   );

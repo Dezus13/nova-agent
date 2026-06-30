@@ -1,12 +1,12 @@
 import { useState } from "react";
 import {
-  createUserOpenQuestion,
+  createUserOpenQuestionWithHistory,
   startActionPlan,
   type ActionPlanAggregate,
   type UserOpenQuestion,
   type UserOpenQuestionStatus,
   type Vs01ProgressUpdateStatus,
-  updateUserOpenQuestionStatus,
+  updateUserOpenQuestionStatusWithHistory,
   updateProgressStatus,
 } from "../domain/workflow";
 import {
@@ -111,14 +111,18 @@ export function App({
     }
 
     const occurredAt = new Date().toISOString();
-    const question = createUserOpenQuestion({
+    const result = createUserOpenQuestionWithHistory({
       plan: activePlan,
       questionText: newUserOpenQuestionText,
       operationId: `${activePlan.actionPlan.id}-${userOpenQuestions.length + 1}`,
       occurredAt,
     });
 
-    setUserOpenQuestions((currentQuestions) => [...currentQuestions, question]);
+    setActivePlan(result.plan);
+    setUserOpenQuestions((currentQuestions) => [
+      ...currentQuestions,
+      result.question,
+    ]);
     setNewUserOpenQuestionText("");
   }
 
@@ -126,19 +130,37 @@ export function App({
     questionId: string,
     targetStatus: UserOpenQuestionStatus,
   ) {
+    if (!activePlan) {
+      throw new Error(
+        "An active Action Plan is required to update a User Open Question.",
+      );
+    }
+
+    const currentQuestion = userOpenQuestions.find(
+      (question) =>
+        question.id === questionId &&
+        question.actionPlanId === activePlan.actionPlan.id,
+    );
+
+    if (!currentQuestion) {
+      throw new Error("User Open Question is not available in the active plan.");
+    }
+
     const occurredAt = new Date().toISOString();
+    const result = updateUserOpenQuestionStatusWithHistory({
+      plan: activePlan,
+      question: currentQuestion,
+      targetStatus,
+      operationId: `${questionId}-${targetStatus}-${occurredAt}`,
+      occurredAt,
+    });
 
     setUserOpenQuestions((currentQuestions) =>
       currentQuestions.map((question) =>
-        question.id === questionId
-          ? updateUserOpenQuestionStatus({
-              question,
-              targetStatus,
-              occurredAt,
-            })
-          : question,
+        question.id === questionId ? result.question : question,
       ),
     );
+    setActivePlan(result.plan);
   }
 
   const contentFlow = activePlan

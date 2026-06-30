@@ -700,7 +700,7 @@ describe("App", () => {
     expect(html).not.toContain("Официальный статус вопроса");
   });
 
-  it("creates a User Open Question inside the active Action Plan without workflow side effects", () => {
+  it("creates a User Open Question and appends internal History without Progress or Action Plan state side effects", () => {
     const runtime = createInteractiveRuntime();
     const actionPlan = createActionPlanForUi();
     const actionPlanBefore = actionPlan.actionPlan;
@@ -756,9 +756,30 @@ describe("App", () => {
     expect(text).not.toContain("Удалить вопрос");
     expect(text).not.toContain("Ответ Nova Agent");
     expect(text).not.toContain("AI suggestions");
+
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("План создан");
+    expect(text).toContain("Открытый вопрос добавлен");
+    expect(text).toContain("Внутренняя запись Nova Agent");
+    expect(text).toContain("Нужно ли уточнить срок регистрации лично?");
+    expect(text).toContain("не официальный ответ");
+    expect(text).toContain("не консультация");
+    expect(text).toContain("внутренние события Nova Agent");
+    expect(text).toContain("Не является официальным журналом");
+    expect(text).not.toContain("Официальный ответ");
+    expect(text).not.toContain("Официальный журнал вопроса");
+    expect(text).not.toContain("User Notes");
+    expect(text).not.toContain("Checked Source Marks");
   });
 
-  it("updates a User Open Question status without workflow side effects", () => {
+  it("updates a User Open Question status and appends internal History without workflow side effects", () => {
     const runtime = createInteractiveRuntime();
     const actionPlan = createActionPlanForUi();
     const [question] = createUserOpenQuestionsForUi(actionPlan);
@@ -805,6 +826,85 @@ describe("App", () => {
     expect(text).not.toContain("Удалить вопрос");
     expect(text).not.toContain("Ответ Nova Agent");
     expect(text).not.toContain("AI suggestions");
+
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialUserOpenQuestions: [question],
+    });
+    const historyText = getTextContent(tree);
+
+    expect(historyText).toContain("История плана");
+    expect(historyText).toContain("План создан");
+    expect(historyText).toContain("Статус вопроса изменён");
+    expect(historyText).toContain("Ваша отметка по вопросу изменилась");
+    expect(historyText).toContain("open");
+    expect(historyText).toContain("requires_check");
+    expect(historyText).toContain("Связанный вопрос:");
+    expect(historyText).toContain("Нужно ли уточнить срок регистрации в Magistrat?");
+    expect(historyText).toContain("внутренняя история Nova Agent");
+    expect(historyText).toContain("не официальный журнал");
+    expect(historyText).toContain("подтверждение внешнего действия");
+    expect(historyText).not.toContain("Официальный ответ");
+    expect(historyText).not.toContain("Консультация Nova Agent");
+    expect(historyText).not.toContain("User Notes");
+    expect(historyText).not.toContain("Checked Source Marks");
+  });
+
+  it("shows User Open Question History Events in chronological append-only order", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+
+    changeTextArea(
+      tree,
+      "Новый открытый вопрос",
+      "Нужно ли проверить оригинал документа?",
+    );
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    clickButton(tree, "Добавить вопрос");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    changeSelect(tree, "user-open-question-status-1", "requires_check");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+
+    const text = getTextContent(tree);
+    const planCreatedPosition = text.indexOf("План создан");
+    const questionCreatedPosition = text.indexOf("Открытый вопрос добавлен");
+    const questionStatusChangedPosition = text.indexOf("Статус вопроса изменён");
+
+    expect(planCreatedPosition).toBeGreaterThanOrEqual(0);
+    expect(questionCreatedPosition).toBeGreaterThanOrEqual(0);
+    expect(questionStatusChangedPosition).toBeGreaterThanOrEqual(0);
+    expect(planCreatedPosition).toBeLessThan(questionCreatedPosition);
+    expect(questionCreatedPosition).toBeLessThan(questionStatusChangedPosition);
+    expect(text).toContain("Нужно ли проверить оригинал документа?");
+    expect(text).toContain("Внутренняя запись Nova Agent");
+    expect(text).toContain("внутренняя история Nova Agent");
+    expect(text).toContain("не официальный журнал");
+    expect(text).toContain("официальный статус");
+    expect(text).not.toContain("Редактировать событие");
+    expect(text).not.toContain("Удалить событие");
+    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("User Notes");
+    expect(text).not.toContain("Checked Source Marks");
   });
 
   it("opens History from the active-plan continuation entry", () => {

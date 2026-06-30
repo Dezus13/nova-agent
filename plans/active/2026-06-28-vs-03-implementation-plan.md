@@ -274,7 +274,22 @@ Scope:
 
 No automatic closing, Progress coupling, History Event, text edit, delete, User Notes or Checked Source Marks in this step.
 
-### Step 5: User Open Question Text Edit
+### Step 5: User Open Question History Events
+
+Status: completed.
+
+Scope:
+
+- create `user_open_question_created` when a User Open Question is created;
+- create `user_open_question_status_changed` when a User Open Question status changes;
+- keep History append-only, read-only, internal to Nova Agent and non-official;
+- extend existing History display only enough to format these existing events;
+- keep Progress unchanged;
+- keep Action Plan state unchanged.
+
+No text edit, delete, User Notes, Checked Source Marks, official-answer behavior, dashboard, API, Supabase, auth or persistence behavior in this step.
+
+### Step 6: User Open Question Text Edit
 
 Scope:
 
@@ -283,17 +298,7 @@ Scope:
 - create `user_open_question_edited`;
 - keep the question user-owned and externally verifiable.
 
-No User Notes and no document-storage behavior.
-
-### Step 6: History Visibility For UOQ Events
-
-Scope:
-
-- extend read-only History display to existing UOQ events;
-- show event type, timestamp and related context;
-- keep History append-only and non-official.
-
-No History edit/delete/filter/search/sorting.
+No User Notes, no Checked Source Marks and no document-storage behavior.
 
 ### Step 7: Demo Flow Validation
 

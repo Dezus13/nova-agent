@@ -7,12 +7,14 @@ import {
 import {
   USER_OPEN_QUESTION_STATUSES,
   createUserOpenQuestion,
+  createUserOpenQuestionWithHistory,
   getAllowedUserOpenQuestionStatusTransitions,
   getVs02NextStepProgress,
   getVs02ProgressSummary,
   isUserOpenQuestionStatus,
   startActionPlan,
   updateUserOpenQuestionStatus,
+  updateUserOpenQuestionStatusWithHistory,
   updateProgressStatus,
   type Progress,
   type StartActionPlanInput,
@@ -392,20 +394,33 @@ describe("VS-03 User Open Question domain helpers", () => {
       .toBe(true);
   });
 
-  it("does not affect History when creating a User Open Question in Step 1", () => {
+  it("creates user_open_question_created as an append-only History Event", () => {
     const createdPlan = startActionPlan(getStartInput()).plan;
     const historyBefore = createdPlan.historyEvents;
 
-    createUserOpenQuestion({
+    const result = createUserOpenQuestionWithHistory({
       plan: createdPlan,
       questionText: "Muss ich die Quelle extern prüfen?",
       operationId: "history-independent",
       occurredAt: "2026-06-28T10:00:00.000Z",
     });
+    const historyEvent = result.plan.historyEvents[1];
 
     expect(createdPlan.historyEvents).toBe(historyBefore);
     expect(createdPlan.historyEvents).toHaveLength(1);
     expect(createdPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
+    expect(result.plan).not.toBe(createdPlan);
+    expect(result.plan.actionPlan).toBe(createdPlan.actionPlan);
+    expect(result.plan.progressRecords).toBe(createdPlan.progressRecords);
+    expect(result.plan.historyEvents).toHaveLength(2);
+    expect(result.plan.historyEvents[0]).toBe(createdPlan.historyEvents[0]);
+    expect(historyEvent?.eventType).toBe("user_open_question_created");
+    expect(historyEvent?.payload).toEqual({
+      actionPlanId: createdPlan.actionPlan.id,
+      userOpenQuestionId: result.question.id,
+      questionText: "Muss ich die Quelle extern prüfen?",
+      status: "open",
+    });
   });
 
   it("does not mutate the existing Action Plan aggregate", () => {
@@ -546,7 +561,7 @@ describe("VS-03 User Open Question domain helpers", () => {
     );
   });
 
-  it("does not affect Progress, History, Action Plan aggregate or question text when status changes", () => {
+  it("creates user_open_question_status_changed without changing Progress, Action Plan state or question text", () => {
     const createdPlan = startActionPlan(getStartInput()).plan;
     const actionPlanBefore = createdPlan.actionPlan;
     const progressBefore = createdPlan.progressRecords;
@@ -558,17 +573,55 @@ describe("VS-03 User Open Question domain helpers", () => {
       occurredAt: "2026-06-28T10:00:00.000Z",
     });
 
-    const updatedQuestion = updateUserOpenQuestionStatus({
+    const result = updateUserOpenQuestionStatusWithHistory({
+      plan: createdPlan,
       question,
       targetStatus: "awaiting_external_response",
+      operationId: "status-side-effects",
       occurredAt: "2026-06-30T10:00:00.000Z",
     });
+    const historyEvent = result.plan.historyEvents[1];
 
     expect(createdPlan.actionPlan).toBe(actionPlanBefore);
     expect(createdPlan.progressRecords).toBe(progressBefore);
     expect(createdPlan.historyEvents).toBe(historyBefore);
     expect(createdPlan.historyEvents).toHaveLength(1);
-    expect(updatedQuestion.questionText).toBe(question.questionText);
+    expect(result.plan).not.toBe(createdPlan);
+    expect(result.plan.actionPlan).toBe(actionPlanBefore);
+    expect(result.plan.actionPlan.state).toBe("active");
+    expect(result.plan.progressRecords).toBe(progressBefore);
+    expect(result.plan.historyEvents).toHaveLength(2);
+    expect(historyEvent?.eventType).toBe("user_open_question_status_changed");
+    expect(historyEvent?.payload).toEqual({
+      actionPlanId: createdPlan.actionPlan.id,
+      userOpenQuestionId: question.id,
+      questionText: "Сохраняется ли текст вопроса?",
+      previousStatus: "open",
+      newStatus: "awaiting_external_response",
+    });
+    expect(result.question.questionText).toBe(question.questionText);
     expect(question.questionText).toBe("Сохраняется ли текст вопроса?");
+  });
+
+  it("does not append History when the User Open Question status is unchanged", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Статус уже актуален?",
+      operationId: "same-status-history",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    const result = updateUserOpenQuestionStatusWithHistory({
+      plan: createdPlan,
+      question,
+      targetStatus: "open",
+      operationId: "same-status-history",
+      occurredAt: "2026-06-30T10:00:00.000Z",
+    });
+
+    expect(result.question).toBe(question);
+    expect(result.plan).toBe(createdPlan);
+    expect(result.plan.historyEvents).toHaveLength(1);
   });
 });
