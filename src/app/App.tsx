@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   startActionPlan,
   type ActionPlanAggregate,
+  type UserOpenQuestion,
   type Vs01ProgressUpdateStatus,
   updateProgressStatus,
 } from "../domain/workflow";
@@ -35,11 +36,13 @@ export function App({
   initialHistoryOpen = false,
   initialPlanOpen = false,
   initialSelectedStepId = null,
+  initialUserOpenQuestions = [],
 }: {
   initialActionPlan?: ActionPlanAggregate | null;
   initialHistoryOpen?: boolean;
   initialPlanOpen?: boolean;
   initialSelectedStepId?: string | null;
+  initialUserOpenQuestions?: readonly UserOpenQuestion[];
 }) {
   const defaultContentFlow = getDefaultSeedContentFlow();
   const [activePlan, setActivePlan] = useState<ActionPlanAggregate | null>(
@@ -98,6 +101,11 @@ export function App({
   const selectedProgress = activePlan?.progressRecords.find(
     (progress) => progress.versionedStepContextId === selectedStepId,
   );
+  const activePlanUserOpenQuestions = activePlan
+    ? initialUserOpenQuestions.filter(
+        (question) => question.actionPlanId === activePlan.actionPlan.id,
+      )
+    : [];
 
   if (activePlan && selectedStepId && (!selectedStep || !selectedProgress)) {
     throw new Error("Selected step is not available in the active Action Plan.");
@@ -169,6 +177,7 @@ export function App({
           }}
           scenario={contentFlow.scenario}
           scenarioVersion={contentFlow.scenarioVersion}
+          userOpenQuestions={activePlanUserOpenQuestions}
         />
       )}
     </main>

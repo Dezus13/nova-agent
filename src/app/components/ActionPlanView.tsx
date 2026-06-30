@@ -2,9 +2,11 @@ import type { PublishedScenarioVersion, Scenario } from "../../domain/content";
 import {
   getVs02NextStepProgress,
   type ActionPlanAggregate,
+  type UserOpenQuestion,
 } from "../../domain/workflow";
 import { BoundaryNotice, planBoundaryCopy } from "./BoundaryNotice";
 import { ProgressBadge } from "./ProgressBadge";
+import { UserOpenQuestionsView } from "./UserOpenQuestionsView";
 
 export function ActionPlanView({
   actionPlan,
@@ -12,12 +14,14 @@ export function ActionPlanView({
   onOpenStep,
   scenario,
   scenarioVersion,
+  userOpenQuestions,
 }: {
   actionPlan: ActionPlanAggregate;
   onOpenHistory: () => void;
   onOpenStep: (stepId: string) => void;
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
+  userOpenQuestions: readonly UserOpenQuestion[];
 }) {
   const nextProgress = getVs02NextStepProgress(actionPlan.progressRecords);
   const nextStep = scenarioVersion.steps.find(
@@ -98,6 +102,7 @@ export function ActionPlanView({
             );
           })}
         </div>
+        <UserOpenQuestionsView userOpenQuestions={userOpenQuestions} />
         <div className="plan-history-link">
           <div>
             <p className="eyebrow">History</p>

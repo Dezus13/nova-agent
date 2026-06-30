@@ -232,16 +232,18 @@ Step 1 implementation note:
 
 ### Step 2: User Open Question UI In Active Plan Context
 
+Status: completed.
+
 Scope:
 
 - show existing User Open Questions inside the active Action Plan context;
 - show each User Open Question as "Ваш вопрос";
 - show boundary copy that the question is for external verification and not an answer;
 - distinguish Template Open Questions from User Open Questions;
-- allow explicit creation from the existing active plan or Step Detail context;
-- keep context before action.
+- keep context before action;
+- show an empty-state message when no User Open Questions exist.
 
-No User Notes, Checked Source Marks, dashboard, search, sorting or completed-plan behavior.
+No create, edit, delete, status update, History mutation, User Notes, Checked Source Marks, dashboard, search, sorting or completed-plan behavior in this step.
 
 ### Step 3: User Open Question Status Update
 

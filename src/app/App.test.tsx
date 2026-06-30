@@ -6,7 +6,13 @@ import {
   findSeedScenarioVersionById,
   listSeedLifeSituations,
 } from "../data/contentRepository";
-import { startActionPlan, updateProgressStatus } from "../domain/workflow";
+import {
+  createUserOpenQuestion,
+  startActionPlan,
+  updateProgressStatus,
+  type ActionPlanAggregate,
+  type UserOpenQuestion,
+} from "../domain/workflow";
 import { App } from "./App";
 
 type HookDispatcher = {
@@ -313,6 +319,39 @@ function createVs02DemoActionPlanForUi() {
   };
 }
 
+function createUserOpenQuestionsForUi(
+  actionPlan: ActionPlanAggregate,
+): UserOpenQuestion[] {
+  const firstQuestion = createUserOpenQuestion({
+    plan: actionPlan,
+    questionText: "Нужно ли уточнить срок регистрации в Magistrat?",
+    context: {
+      type: "versioned_step",
+      id: "step-check-registration-requirements",
+    },
+    operationId: "ui-question-one",
+    occurredAt: "2026-06-30T10:00:00.000Z",
+  });
+  const secondQuestion = createUserOpenQuestion({
+    plan: actionPlan,
+    questionText: "Подходит ли мой договор жилья для Anmeldung?",
+    context: {
+      type: "versioned_document_requirement",
+      id: "document-requirement-meldezettel",
+    },
+    operationId: "ui-question-two",
+    occurredAt: "2026-06-30T10:05:00.000Z",
+  });
+
+  return [
+    firstQuestion,
+    {
+      ...secondQuestion,
+      status: "requires_check",
+    },
+  ];
+}
+
 describe("App", () => {
   it("passes the full VS-01 demo flow through user actions", () => {
     const runtime = createInteractiveRuntime();
@@ -552,6 +591,78 @@ describe("App", () => {
       "Проверить, нужно ли регистрировать адрес",
     );
     expect(actionPlanNextStepText).not.toContain("Найти zuständige Meldebehörde");
+  });
+
+  it("shows an empty User Open Questions section inside Action Plan Detail", () => {
+    const html = renderToString(
+      <App initialActionPlan={createActionPlanForUi()} initialPlanOpen />,
+    );
+
+    expect(html).toContain("Ваши открытые вопросы");
+    expect(html).toContain("У вас пока нет открытых вопросов.");
+    expect(html).toContain(
+      "Это ваши вопросы для внешней проверки. Они не являются ответами Nova Agent или официальным статусом.",
+    );
+    expect(html).not.toContain("Редактировать вопрос");
+    expect(html).not.toContain("Удалить вопрос");
+    expect(html).not.toContain("User Notes");
+    expect(html).not.toContain("Checked Source Marks");
+    expect(html).not.toContain("AI suggestions");
+    expect(html).not.toContain("Ответ Nova Agent");
+  });
+
+  it("shows User Open Questions as read-only user questions with status and boundary copy", () => {
+    const actionPlan = createActionPlanForUi();
+    const userOpenQuestions = createUserOpenQuestionsForUi(actionPlan);
+    const firstQuestion = userOpenQuestions[0];
+
+    if (!firstQuestion) {
+      throw new Error("Expected a User Open Question fixture.");
+    }
+
+    const html = renderToString(
+      <App
+        initialActionPlan={actionPlan}
+        initialPlanOpen
+        initialUserOpenQuestions={[
+          ...userOpenQuestions,
+          {
+            ...firstQuestion,
+            id: "user-open-question-other-plan",
+            actionPlanId: "action-plan-other",
+            questionText: "Этот вопрос относится к другому плану.",
+          },
+        ]}
+      />,
+    );
+
+    expect(html).toContain("Ваши открытые вопросы");
+    expect(html.match(/Ваш вопрос/g)).toHaveLength(2);
+    expect(html).toContain("Нужно ли уточнить срок регистрации в Magistrat?");
+    expect(html).toContain("Подходит ли мой договор жилья для Anmeldung?");
+    expect(html).not.toContain("Этот вопрос относится к другому плану.");
+    expect(html).toContain("Статус");
+    expect(html).toContain("open");
+    expect(html).toContain("requires_check");
+    expect(html.match(/Nova Agent не отвечает на этот вопрос/g)).toHaveLength(2);
+    expect(html).toContain(
+      "Проверьте информацию через официальный или другой надёжный источник.",
+    );
+    expect(html).not.toContain("user-open-question-ui-question-one");
+    expect(html).not.toContain("action-plan-ui-test");
+    expect(html).not.toContain("scenario-version-registration-residence-austria-v1");
+    expect(html).not.toContain("2026-06-30T10:00:00.000Z");
+    expect(html).not.toContain("versioned_step");
+    expect(html).not.toContain("versioned_document_requirement");
+    expect(html).not.toContain("Редактировать вопрос");
+    expect(html).not.toContain("Удалить вопрос");
+    expect(html).not.toContain("Изменить статус");
+    expect(html).not.toContain("Progress update");
+    expect(html).not.toContain("User Notes");
+    expect(html).not.toContain("Checked Source Marks");
+    expect(html).not.toContain("AI suggestions");
+    expect(html).not.toContain("Ответ Nova Agent");
+    expect(html).not.toContain("Официальный статус вопроса");
   });
 
   it("opens History from the active-plan continuation entry", () => {
