@@ -5,8 +5,11 @@ import {
   listSeedLifeSituations,
 } from "../data/contentRepository";
 import {
+  USER_OPEN_QUESTION_STATUSES,
+  createUserOpenQuestion,
   getVs02NextStepProgress,
   getVs02ProgressSummary,
+  isUserOpenQuestionStatus,
   startActionPlan,
   updateProgressStatus,
   type Progress,
@@ -322,5 +325,127 @@ describe("VS-02 progress read helpers", () => {
         createProgressRecords(["completed", "awaiting_external_response"]),
       ),
     ).toBeUndefined();
+  });
+});
+
+describe("VS-03 User Open Question domain helpers", () => {
+  it("creates a User Open Question in an active Action Plan", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "  Нужно ли уточнить срок в Magistrat?  ",
+      context: {
+        type: "versioned_step",
+        id: "step-check-registration-requirements",
+      },
+      operationId: "create-uoq",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    expect(question).toEqual({
+      id: "user-open-question-create-uoq",
+      actionPlanId: createdPlan.actionPlan.id,
+      scenarioVersionId: createdPlan.actionPlan.scenarioVersionId,
+      questionText: "Нужно ли уточнить срок в Magistrat?",
+      status: "open",
+      context: {
+        type: "versioned_step",
+        id: "step-check-registration-requirements",
+      },
+      createdAt: "2026-06-28T10:00:00.000Z",
+      updatedAt: "2026-06-28T10:00:00.000Z",
+    });
+  });
+
+  it("uses only TS07 User Open Question statuses", () => {
+    expect(USER_OPEN_QUESTION_STATUSES).toEqual([
+      "open",
+      "requires_check",
+      "awaiting_external_response",
+      "clarified_by_user",
+      "irrelevant",
+    ]);
+
+    for (const status of USER_OPEN_QUESTION_STATUSES) {
+      expect(isUserOpenQuestionStatus(status)).toBe(true);
+    }
+    expect(isUserOpenQuestionStatus("answered")).toBe(false);
+    expect(isUserOpenQuestionStatus("officially_confirmed")).toBe(false);
+  });
+
+  it("does not affect Progress records when creating a User Open Question", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const progressBefore = createdPlan.progressRecords;
+
+    createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Welche Stelle muss ich kontaktieren?",
+      operationId: "progress-independent",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    expect(createdPlan.progressRecords).toBe(progressBefore);
+    expect(createdPlan.progressRecords.every((progress) => progress.status === "not_started"))
+      .toBe(true);
+  });
+
+  it("does not affect History when creating a User Open Question in Step 1", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const historyBefore = createdPlan.historyEvents;
+
+    createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Muss ich die Quelle extern prüfen?",
+      operationId: "history-independent",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    expect(createdPlan.historyEvents).toBe(historyBefore);
+    expect(createdPlan.historyEvents).toHaveLength(1);
+    expect(createdPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
+  });
+
+  it("does not mutate the existing Action Plan aggregate", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const actionPlanBefore = createdPlan.actionPlan;
+    const progressBefore = createdPlan.progressRecords;
+    const historyBefore = createdPlan.historyEvents;
+
+    createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Kann ich diesen Schritt später klären?",
+      operationId: "immutable-create",
+      occurredAt: "2026-06-28T10:00:00.000Z",
+    });
+
+    expect(createdPlan.actionPlan).toBe(actionPlanBefore);
+    expect(createdPlan.progressRecords).toBe(progressBefore);
+    expect(createdPlan.historyEvents).toBe(historyBefore);
+    expect(createdPlan).toEqual({
+      actionPlan: actionPlanBefore,
+      progressRecords: progressBefore,
+      historyEvents: historyBefore,
+    });
+  });
+
+  it("rejects creation outside an active Action Plan", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const completedPlan = {
+      ...createdPlan,
+      actionPlan: {
+        ...createdPlan.actionPlan,
+        state: "completed" as const,
+      },
+    };
+
+    expect(() =>
+      createUserOpenQuestion({
+        plan: completedPlan,
+        questionText: "Kann ich diese Frage speichern?",
+        operationId: "completed-plan",
+        occurredAt: "2026-06-28T10:00:00.000Z",
+      }),
+    ).toThrow("User Open Question can only be created inside an active Action Plan.");
   });
 });

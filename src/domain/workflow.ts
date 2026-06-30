@@ -19,6 +19,24 @@ export type HistoryEventType =
 
 export type Vs01ProgressUpdateStatus = "in_progress" | "requires_check";
 
+export const USER_OPEN_QUESTION_STATUSES = [
+  "open",
+  "requires_check",
+  "awaiting_external_response",
+  "clarified_by_user",
+  "irrelevant",
+] as const;
+
+export type UserOpenQuestionStatus = (typeof USER_OPEN_QUESTION_STATUSES)[number];
+
+export type UserOpenQuestionContextType =
+  | "versioned_step"
+  | "versioned_document_requirement"
+  | "versioned_data_requirement"
+  | "versioned_source"
+  | "versioned_template_open_question"
+  | "progress";
+
 export interface SelectedLifeSituationContext {
   readonly id: string;
   readonly title: string;
@@ -40,6 +58,22 @@ export interface Progress {
   readonly actionPlanId: string;
   readonly versionedStepContextId: string;
   readonly status: ProgressStatus;
+}
+
+export interface UserOpenQuestionContext {
+  readonly type: UserOpenQuestionContextType;
+  readonly id: string;
+}
+
+export interface UserOpenQuestion {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly scenarioVersionId: string;
+  readonly questionText: string;
+  readonly status: UserOpenQuestionStatus;
+  readonly context?: UserOpenQuestionContext;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }
 
 export interface ActionPlanCreatedHistoryPayload {
@@ -113,10 +147,24 @@ export interface UpdateProgressStatusInput {
   readonly occurredAt: string;
 }
 
+export interface CreateUserOpenQuestionInput {
+  readonly plan: ActionPlanAggregate;
+  readonly questionText: string;
+  readonly context?: UserOpenQuestionContext;
+  readonly operationId: string;
+  readonly occurredAt: string;
+}
+
 function isVs01ProgressUpdateStatus(
   status: ProgressStatus,
 ): status is Vs01ProgressUpdateStatus {
   return status === "in_progress" || status === "requires_check";
+}
+
+export function isUserOpenQuestionStatus(
+  status: string,
+): status is UserOpenQuestionStatus {
+  return USER_OPEN_QUESTION_STATUSES.includes(status as UserOpenQuestionStatus);
 }
 
 export function getVs02ProgressSummary(
@@ -269,5 +317,30 @@ export function updateProgressStatus(
       progress.id === currentProgress.id ? updatedProgress : progress,
     ),
     historyEvents: [...input.plan.historyEvents, historyEvent],
+  };
+}
+
+export function createUserOpenQuestion(
+  input: CreateUserOpenQuestionInput,
+): UserOpenQuestion {
+  if (input.plan.actionPlan.state !== "active") {
+    throw new Error("User Open Question can only be created inside an active Action Plan.");
+  }
+
+  const questionText = input.questionText.trim();
+
+  if (!questionText) {
+    throw new Error("User Open Question text is required.");
+  }
+
+  return {
+    id: `user-open-question-${input.operationId}`,
+    actionPlanId: input.plan.actionPlan.id,
+    scenarioVersionId: input.plan.actionPlan.scenarioVersionId,
+    questionText,
+    status: "open",
+    context: input.context,
+    createdAt: input.occurredAt,
+    updatedAt: input.occurredAt,
   };
 }
