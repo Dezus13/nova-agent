@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  createUserOpenQuestion,
   startActionPlan,
   type ActionPlanAggregate,
   type UserOpenQuestion,
@@ -53,6 +54,10 @@ export function App({
   );
   const [isHistoryOpen, setIsHistoryOpen] = useState(initialHistoryOpen);
   const [isPlanOpen, setIsPlanOpen] = useState(initialPlanOpen);
+  const [userOpenQuestions, setUserOpenQuestions] = useState<
+    readonly UserOpenQuestion[]
+  >(initialUserOpenQuestions);
+  const [newUserOpenQuestionText, setNewUserOpenQuestionText] = useState("");
 
   function handleStartPlan() {
     const result = startActionPlan({
@@ -67,6 +72,8 @@ export function App({
     });
 
     setActivePlan(result.plan);
+    setUserOpenQuestions([]);
+    setNewUserOpenQuestionText("");
     setSelectedStepId(null);
     setIsHistoryOpen(false);
     setIsPlanOpen(false);
@@ -92,6 +99,27 @@ export function App({
     setActivePlan(updatedPlan);
   }
 
+  function handleAddUserOpenQuestion() {
+    if (!activePlan) {
+      throw new Error("An active Action Plan is required to add a User Open Question.");
+    }
+
+    if (!newUserOpenQuestionText.trim()) {
+      return;
+    }
+
+    const occurredAt = new Date().toISOString();
+    const question = createUserOpenQuestion({
+      plan: activePlan,
+      questionText: newUserOpenQuestionText,
+      operationId: `${activePlan.actionPlan.id}-${userOpenQuestions.length + 1}`,
+      occurredAt,
+    });
+
+    setUserOpenQuestions((currentQuestions) => [...currentQuestions, question]);
+    setNewUserOpenQuestionText("");
+  }
+
   const contentFlow = activePlan
     ? getContentFlowForPlan(activePlan)
     : defaultContentFlow;
@@ -102,7 +130,7 @@ export function App({
     (progress) => progress.versionedStepContextId === selectedStepId,
   );
   const activePlanUserOpenQuestions = activePlan
-    ? initialUserOpenQuestions.filter(
+    ? userOpenQuestions.filter(
         (question) => question.actionPlanId === activePlan.actionPlan.id,
       )
     : [];
@@ -165,6 +193,9 @@ export function App({
       ) : (
         <ActionPlanView
           actionPlan={activePlan}
+          newUserOpenQuestionText={newUserOpenQuestionText}
+          onAddUserOpenQuestion={handleAddUserOpenQuestion}
+          onNewUserOpenQuestionTextChange={setNewUserOpenQuestionText}
           onOpenHistory={() => {
             setSelectedStepId(null);
             setIsHistoryOpen(true);

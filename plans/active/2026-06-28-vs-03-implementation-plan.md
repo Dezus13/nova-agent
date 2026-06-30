@@ -245,7 +245,22 @@ Scope:
 
 No create, edit, delete, status update, History mutation, User Notes, Checked Source Marks, dashboard, search, sorting or completed-plan behavior in this step.
 
-### Step 3: User Open Question Status Update
+### Step 3: User Open Question Creation In Active Plan
+
+Status: completed.
+
+Scope:
+
+- add a question input inside the existing active Action Plan context;
+- add an explicit "Добавить вопрос" action;
+- create the User Open Question through the existing domain helper;
+- show the new question in the current list with status `open`;
+- clear the input after successful creation;
+- keep Progress, History and the existing Action Plan aggregate unchanged.
+
+No status update, edit, delete, History Event, User Notes, Checked Source Marks, answers, AI suggestions or persistence behavior in this step.
+
+### Step 4: User Open Question Status Update
 
 Scope:
 
@@ -257,7 +272,7 @@ Scope:
 
 No automatic closing and no Progress coupling.
 
-### Step 4: User Open Question Text Edit
+### Step 5: User Open Question Text Edit
 
 Scope:
 
@@ -268,7 +283,7 @@ Scope:
 
 No User Notes and no document-storage behavior.
 
-### Step 5: History Visibility For UOQ Events
+### Step 6: History Visibility For UOQ Events
 
 Scope:
 
@@ -278,7 +293,7 @@ Scope:
 
 No History edit/delete/filter/search/sorting.
 
-### Step 6: Demo Flow Validation
+### Step 7: Demo Flow Validation
 
 Scope:
 

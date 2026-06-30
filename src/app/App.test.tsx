@@ -196,6 +196,24 @@ function clickButton(tree: readonly TestTree[], label: string) {
   (button?.props.onClick as () => void)();
 }
 
+function findTextAreaByLabel(tree: readonly TestTree[], label: string): HostNode | null {
+  return findHostNode(
+    tree,
+    (node) => node.type === "textarea" && node.props["aria-label"] === label,
+  );
+}
+
+function changeTextArea(tree: readonly TestTree[], label: string, value: string) {
+  const textArea = findTextAreaByLabel(tree, label);
+
+  expect(textArea).not.toBeNull();
+  expect(typeof textArea?.props.onChange).toBe("function");
+
+  (textArea?.props.onChange as (event: { target: { value: string } }) => void)({
+    target: { value },
+  });
+}
+
 function expectVs02ForbiddenScopeAbsent(text: string) {
   for (const forbiddenText of [
     "Dashboard",
@@ -663,6 +681,65 @@ describe("App", () => {
     expect(html).not.toContain("AI suggestions");
     expect(html).not.toContain("Ответ Nova Agent");
     expect(html).not.toContain("Официальный статус вопроса");
+  });
+
+  it("creates a User Open Question inside the active Action Plan without workflow side effects", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    const actionPlanBefore = actionPlan.actionPlan;
+    const progressBefore = actionPlan.progressRecords;
+    const historyBefore = actionPlan.historyEvents;
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("У вас пока нет открытых вопросов.");
+    expect(text).toContain("Добавить вопрос");
+
+    changeTextArea(
+      tree,
+      "Новый открытый вопрос",
+      "  Нужно ли уточнить срок регистрации лично?  ",
+    );
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+
+    expect(findTextAreaByLabel(tree, "Новый открытый вопрос")?.props.value).toBe(
+      "  Нужно ли уточнить срок регистрации лично?  ",
+    );
+
+    clickButton(tree, "Добавить вопрос");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваш вопрос");
+    expect(text).toContain("Нужно ли уточнить срок регистрации лично?");
+    expect(text).toContain("Статус");
+    expect(text).toContain("open");
+    expect(text).toContain(
+      "Nova Agent не отвечает на этот вопрос. Проверьте информацию через официальный или другой надёжный источник.",
+    );
+    expect(text).not.toContain("У вас пока нет открытых вопросов.");
+    expect(findTextAreaByLabel(tree, "Новый открытый вопрос")?.props.value).toBe("");
+    expect(actionPlan.actionPlan).toBe(actionPlanBefore);
+    expect(actionPlan.progressRecords).toBe(progressBefore);
+    expect(actionPlan.historyEvents).toBe(historyBefore);
+    expect(actionPlan.progressRecords.every((progress) => progress.status === "not_started"))
+      .toBe(true);
+    expect(actionPlan.historyEvents).toHaveLength(1);
+    expect(actionPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
+    expect(text).not.toContain("Редактировать вопрос");
+    expect(text).not.toContain("Удалить вопрос");
+    expect(text).not.toContain("Изменить статус");
+    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("AI suggestions");
   });
 
   it("opens History from the active-plan continuation entry", () => {

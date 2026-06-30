@@ -4,8 +4,14 @@ const userOpenQuestionBoundaryCopy =
   "Nova Agent не отвечает на этот вопрос. Проверьте информацию через официальный или другой надёжный источник.";
 
 export function UserOpenQuestionsView({
+  newQuestionText,
+  onAddQuestion,
+  onNewQuestionTextChange,
   userOpenQuestions,
 }: {
+  newQuestionText: string;
+  onAddQuestion: () => void;
+  onNewQuestionTextChange: (questionText: string) => void;
   userOpenQuestions: readonly UserOpenQuestion[];
 }) {
   return (
@@ -38,6 +44,20 @@ export function UserOpenQuestionsView({
           ))}
         </div>
       )}
+
+      <div className="progress-actions">
+        <label htmlFor="new-user-open-question">Новый вопрос</label>
+        <textarea
+          aria-label="Новый открытый вопрос"
+          id="new-user-open-question"
+          onChange={(event) => onNewQuestionTextChange(event.target.value)}
+          rows={3}
+          value={newQuestionText}
+        />
+        <button className="secondary-action" type="button" onClick={onAddQuestion}>
+          Добавить вопрос
+        </button>
+      </div>
     </section>
   );
 }

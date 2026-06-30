@@ -10,6 +10,9 @@ import { UserOpenQuestionsView } from "./UserOpenQuestionsView";
 
 export function ActionPlanView({
   actionPlan,
+  newUserOpenQuestionText,
+  onAddUserOpenQuestion,
+  onNewUserOpenQuestionTextChange,
   onOpenHistory,
   onOpenStep,
   scenario,
@@ -17,6 +20,9 @@ export function ActionPlanView({
   userOpenQuestions,
 }: {
   actionPlan: ActionPlanAggregate;
+  newUserOpenQuestionText: string;
+  onAddUserOpenQuestion: () => void;
+  onNewUserOpenQuestionTextChange: (questionText: string) => void;
   onOpenHistory: () => void;
   onOpenStep: (stepId: string) => void;
   scenario: Scenario;
@@ -102,7 +108,12 @@ export function ActionPlanView({
             );
           })}
         </div>
-        <UserOpenQuestionsView userOpenQuestions={userOpenQuestions} />
+        <UserOpenQuestionsView
+          newQuestionText={newUserOpenQuestionText}
+          onAddQuestion={onAddUserOpenQuestion}
+          onNewQuestionTextChange={onNewUserOpenQuestionTextChange}
+          userOpenQuestions={userOpenQuestions}
+        />
         <div className="plan-history-link">
           <div>
             <p className="eyebrow">History</p>
