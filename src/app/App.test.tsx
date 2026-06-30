@@ -69,6 +69,9 @@ function createInteractiveRuntime() {
 
   return {
     dispatcher,
+    getState<State>(slotIndex: number) {
+      return stateSlots[slotIndex] as State;
+    },
     resetRender() {
       stateSlotIndex = 0;
     },
@@ -905,6 +908,114 @@ describe("App", () => {
     expect(text).not.toContain("Ответ Nova Agent");
     expect(text).not.toContain("User Notes");
     expect(text).not.toContain("Checked Source Marks");
+  });
+
+  it("passes the full VS-03 User Open Question demo flow through user actions", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Ваш план");
+    expect(text).toContain("Статус плана");
+    expect(text).toContain("active");
+    expect(text).toContain("Ваши открытые вопросы");
+    expect(text).toContain("У вас пока нет открытых вопросов.");
+    expect(text.match(/Не начато/g)).toHaveLength(6);
+
+    changeTextArea(
+      tree,
+      "Новый открытый вопрос",
+      "  Нужно ли проверить перевод справки у официального источника?  ",
+    );
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    clickButton(tree, "Добавить вопрос");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваш вопрос");
+    expect(text).toContain(
+      "Нужно ли проверить перевод справки у официального источника?",
+    );
+    expect(text).toContain("open");
+    expect(findTextAreaByLabel(tree, "Новый открытый вопрос")?.props.value).toBe("");
+
+    changeSelect(tree, "user-open-question-status-1", "requires_check");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    text = getTextContent(tree);
+
+    expect(findSelectById(tree, "user-open-question-status-1")?.props.value).toBe(
+      "requires_check",
+    );
+    expect(text).toContain("requires_check");
+    expect(text).toContain("Ваша отметка");
+    expect(text.match(/Не начато/g)).toHaveLength(6);
+
+    const activePlanAfterQuestionFlow =
+      runtime.getState<ActionPlanAggregate | null>(0);
+
+    expect(activePlanAfterQuestionFlow?.actionPlan.state).toBe("active");
+    expect(
+      activePlanAfterQuestionFlow?.progressRecords.every(
+        (progress) => progress.status === "not_started",
+      ),
+    ).toBe(true);
+    expect(
+      activePlanAfterQuestionFlow?.historyEvents.map((event) => event.eventType),
+    ).toEqual([
+      "action_plan_created",
+      "user_open_question_created",
+      "user_open_question_status_changed",
+    ]);
+
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+    });
+    text = getTextContent(tree);
+
+    const planCreatedPosition = text.indexOf("План создан");
+    const questionCreatedPosition = text.indexOf("Открытый вопрос добавлен");
+    const questionStatusChangedPosition = text.indexOf("Статус вопроса изменён");
+
+    expect(planCreatedPosition).toBeGreaterThanOrEqual(0);
+    expect(questionCreatedPosition).toBeGreaterThanOrEqual(0);
+    expect(questionStatusChangedPosition).toBeGreaterThanOrEqual(0);
+    expect(planCreatedPosition).toBeLessThan(questionCreatedPosition);
+    expect(questionCreatedPosition).toBeLessThan(questionStatusChangedPosition);
+    expect(text).toContain("История плана");
+    expect(text).toContain("Внутренняя запись Nova Agent");
+    expect(text).toContain("внутренняя история Nova Agent");
+    expect(text).toContain("Не является официальным журналом");
+    expect(text).toContain("официальный статус");
+    expect(text).toContain("подтверждение внешнего действия");
+    expect(text).not.toContain("User Notes");
+    expect(text).not.toContain("Checked Source Marks");
+    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("AI suggestions");
+    expect(text).not.toContain("Редактировать вопрос");
+    expect(text).not.toContain("Удалить вопрос");
+    expect(text).not.toContain("Dashboard");
+    expect(text).not.toContain("Completed Plans");
+    expect(text).not.toContain("Supabase");
+    expect(text).not.toContain("API handlers");
+    expect(text).not.toContain("auth");
+    expect(text).not.toContain("routing library");
+    expect(text).not.toContain("state manager");
+    expect(text).not.toContain("persistence");
   });
 
   it("opens History from the active-plan continuation entry", () => {

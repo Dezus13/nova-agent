@@ -88,11 +88,9 @@ Allowed VS-03 behavior:
   - Template Open Question context;
   - Progress context where it explains `requires_check` or `awaiting_external_response`;
 - update User Open Question status according to TS07;
-- edit User Open Question text while allowed by TS07 and TS08;
 - create append-only History Events:
   - `user_open_question_created`;
   - `user_open_question_status_changed`;
-  - `user_open_question_edited`;
 - show User Open Questions as "Ваш вопрос" / user's question for external verification;
 - clearly distinguish Template Open Questions from User Open Questions;
 - keep History read-only.
@@ -155,7 +153,6 @@ existing active Action Plan
 -> create User Open Question explicitly
 -> see it as "Ваш вопрос"
 -> update its status according to TS07
--> edit its text while allowed
 -> see related History Events
 ```
 
@@ -228,7 +225,7 @@ Step 1 implementation note:
 
 - the first domain pass added the local typed User Open Question model and a pure create helper only;
 - it intentionally does not mutate Progress, History or the existing Action Plan aggregate;
-- status-transition helpers, text-edit helpers and UOQ History Event creation remain in the later VS-03 implementation steps where they are verified with their own behavior.
+- status-transition helpers and UOQ History Event creation remain in the later VS-03 implementation steps where they are verified with their own behavior.
 
 ### Step 2: User Open Question UI In Active Plan Context
 
@@ -289,26 +286,22 @@ Scope:
 
 No text edit, delete, User Notes, Checked Source Marks, official-answer behavior, dashboard, API, Supabase, auth or persistence behavior in this step.
 
-### Step 6: User Open Question Text Edit
+### Step 6: Demo Flow Validation
 
-Scope:
-
-- edit User Open Question text while allowed;
-- preserve Action Plan and Scenario Version context;
-- create `user_open_question_edited`;
-- keep the question user-owned and externally verifiable.
-
-No User Notes, no Checked Source Marks and no document-storage behavior.
-
-### Step 7: Demo Flow Validation
+Status: completed.
 
 Scope:
 
 - add one full interaction test for VS-03:
-  `Return Context -> Action Plan -> Step Detail -> Template OQ -> Create User OQ -> Update Status -> Edit Text -> History`;
+  `existing active Action Plan -> User Open Questions -> Create User OQ -> status open -> Update Status -> History`;
+- verify `user_open_question_created`;
+- verify `user_open_question_status_changed`;
+- verify History remains internal, read-only and non-official;
+- verify Progress remains unchanged;
+- verify Action Plan state remains `active`;
 - assert forbidden scope remains absent.
 
-No new product features beyond VS-03.
+No new product features beyond VS-03. No text edit, delete, User Notes, Checked Source Marks, Dashboard, Completed Plans, Supabase, API, auth, routing, state manager, persistence or document storage.
 
 ## 10. UI Scope
 
@@ -344,7 +337,6 @@ Tests must cover:
 - status changes create `user_open_question_status_changed`;
 - status changes do not update Progress automatically;
 - Progress changes do not update User Open Question automatically;
-- editing text creates `user_open_question_edited`;
 - Template Open Questions and User Open Questions are visually distinct;
 - UI labels User Open Questions as "Ваш вопрос";
 - UI boundary copy says questions require external verification and are not official answers;
@@ -388,8 +380,7 @@ VS-03 is complete when:
 - the user can update User Open Question status only through TS07 transitions;
 - `irrelevant` is final;
 - `clarified_by_user` remains a user's mark, not official answer;
-- the user can edit User Open Question text while allowed;
-- UOQ create, status update and edit produce append-only History Events;
+- UOQ create and status update produce append-only History Events;
 - History remains read-only and non-official;
 - Progress remains independent from UOQ status;
 - no User Notes, Checked Source Marks, Completed Plans, Pattern B, Content Admin, Supabase, API handlers, auth, routing library, state manager, persistence or document storage are added;
