@@ -12,6 +12,7 @@ import {
   updateProgressStatus,
   type ActionPlanAggregate,
   type CheckedSourceMark,
+  type UserNote,
   type UserOpenQuestion,
 } from "../domain/workflow";
 import { App } from "./App";
@@ -648,7 +649,7 @@ describe("App", () => {
     expect(html).not.toContain("User Notes");
     expect(html).not.toContain("Checked Source Marks");
     expect(html).not.toContain("AI suggestions");
-    expect(html).not.toContain("Ответ Nova Agent");
+    expect(html).not.toContain("Официальный ответ Nova Agent");
   });
 
   it("shows User Open Questions as read-only user questions with status and boundary copy", () => {
@@ -700,7 +701,7 @@ describe("App", () => {
     expect(html).not.toContain("User Notes");
     expect(html).not.toContain("Checked Source Marks");
     expect(html).not.toContain("AI suggestions");
-    expect(html).not.toContain("Ответ Nova Agent");
+    expect(html).not.toContain("Официальный ответ Nova Agent");
     expect(html).not.toContain("Официальный статус вопроса");
   });
 
@@ -758,7 +759,7 @@ describe("App", () => {
     expect(actionPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
     expect(text).not.toContain("Редактировать вопрос");
     expect(text).not.toContain("Удалить вопрос");
-    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("Официальный ответ Nova Agent");
     expect(text).not.toContain("AI suggestions");
 
     clickButton(tree, "Открыть историю");
@@ -828,7 +829,7 @@ describe("App", () => {
     expect(actionPlan.historyEvents[0]?.eventType).toBe("action_plan_created");
     expect(text).not.toContain("Редактировать вопрос");
     expect(text).not.toContain("Удалить вопрос");
-    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("Официальный ответ Nova Agent");
     expect(text).not.toContain("AI suggestions");
 
     clickButton(tree, "Открыть историю");
@@ -906,7 +907,7 @@ describe("App", () => {
     expect(text).toContain("официальный статус");
     expect(text).not.toContain("Редактировать событие");
     expect(text).not.toContain("Удалить событие");
-    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("Официальный ответ Nova Agent");
     expect(text).not.toContain("User Notes");
     expect(text).not.toContain("Checked Source Marks");
   });
@@ -1005,7 +1006,7 @@ describe("App", () => {
     expect(text).toContain("подтверждение внешнего действия");
     expect(text).not.toContain("User Notes");
     expect(text).not.toContain("Checked Source Marks");
-    expect(text).not.toContain("Ответ Nova Agent");
+    expect(text).not.toContain("Официальный ответ Nova Agent");
     expect(text).not.toContain("AI suggestions");
     expect(text).not.toContain("Редактировать вопрос");
     expect(text).not.toContain("Удалить вопрос");
@@ -1330,6 +1331,118 @@ describe("App", () => {
     expect(html).not.toContain("Поиск");
     expect(html).not.toContain("Фильтр");
     expect(html).not.toContain("Сортировать");
+  });
+
+  it("creates and reads a User Note beside an existing History context without workflow side effects", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    const actionPlanBefore = actionPlan.actionPlan;
+    const progressBefore = actionPlan.progressRecords;
+    const historyBefore = actionPlan.historyEvents;
+    const [question] = createUserOpenQuestionsForUi(actionPlan);
+    const checkedSourceMark: CheckedSourceMark = {
+      id: "checked-source-mark-note-ui",
+      actionPlanId: actionPlan.actionPlan.id,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      createdAt: "2026-07-02T13:00:00.000Z",
+      createdByUser: true,
+    };
+
+    if (!question) {
+      throw new Error("Expected a User Open Question fixture.");
+    }
+
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialCheckedSourceMarks: [checkedSourceMark],
+      initialHistoryOpen: true,
+      initialUserOpenQuestions: [question],
+    });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("План создан");
+    expect(text).toContain("Ваши заметки");
+    expect(text).toContain("Заметок к этому событию пока нет.");
+    expect(text).toContain("Добавить заметку");
+    expect(text).toContain("Не официальный документ");
+    expect(text).toContain("Не источник");
+    expect(text).toContain("Не ответ Nova Agent");
+
+    changeTextArea(
+      tree,
+      "Новая заметка",
+      "  Проверить, что взял подтверждение записи.  ",
+    );
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialCheckedSourceMarks: [checkedSourceMark],
+      initialHistoryOpen: true,
+      initialUserOpenQuestions: [question],
+    });
+
+    expect(findTextAreaByLabel(tree, "Новая заметка")?.props.value).toBe(
+      "  Проверить, что взял подтверждение записи.  ",
+    );
+
+    clickButton(tree, "Добавить заметку");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialCheckedSourceMarks: [checkedSourceMark],
+      initialHistoryOpen: true,
+      initialUserOpenQuestions: [question],
+    });
+    text = getTextContent(tree);
+
+    const activePlanAfterNote = runtime.getState<ActionPlanAggregate | null>(0);
+    const userOpenQuestionsAfterNote =
+      runtime.getState<readonly UserOpenQuestion[]>(4);
+    const checkedSourceMarksAfterNote =
+      runtime.getState<readonly CheckedSourceMark[]>(6);
+    const userNotesAfterNote = runtime.getState<readonly UserNote[]>(7);
+
+    expect(text).toContain("Ваша заметка");
+    expect(text).toContain("Проверить, что взял подтверждение записи.");
+    expect(text).toContain("Не официальный документ");
+    expect(text).toContain("Не источник");
+    expect(text).toContain("Не ответ Nova Agent");
+    expect(findTextAreaByLabel(tree, "Новая заметка")?.props.value).toBe("");
+    expect(userNotesAfterNote).toHaveLength(1);
+    expect(userNotesAfterNote[0]).toMatchObject({
+      actionPlanId: actionPlan.actionPlan.id,
+      createdByUser: true,
+      historyEventId: actionPlan.historyEvents[0]?.id,
+      text: "Проверить, что взял подтверждение записи.",
+    });
+    expect(activePlanAfterNote?.actionPlan).toBe(actionPlanBefore);
+    expect(activePlanAfterNote?.actionPlan.state).toBe("active");
+    expect(activePlanAfterNote?.progressRecords).toBe(progressBefore);
+    expect(
+      activePlanAfterNote?.progressRecords.every(
+        (progress) => progress.status === "not_started",
+      ),
+    ).toBe(true);
+    expect(activePlanAfterNote?.historyEvents).toBe(historyBefore);
+    expect(activePlanAfterNote?.historyEvents.map((event) => event.eventType)).toEqual([
+      "action_plan_created",
+    ]);
+    expect(userOpenQuestionsAfterNote).toHaveLength(1);
+    expect(userOpenQuestionsAfterNote[0]).toBe(question);
+    expect(checkedSourceMarksAfterNote).toHaveLength(1);
+    expect(checkedSourceMarksAfterNote[0]).toBe(checkedSourceMark);
+    expect(actionPlan.actionPlan).toBe(actionPlanBefore);
+    expect(actionPlan.progressRecords).toBe(progressBefore);
+    expect(actionPlan.historyEvents).toBe(historyBefore);
+    expect(text).not.toContain("user_note_created");
+    expect(text).not.toContain("Редактировать заметку");
+    expect(text).not.toContain("Скрыть заметку");
+    expect(text).not.toContain("Удалить заметку");
+    expect(text).not.toContain("Официальный ответ Nova Agent");
+    expect(text).not.toContain("Ответ от Nova Agent");
+    expect(text).not.toContain("Источник заметки");
+    expect(text).not.toContain("Официальный документ пользователя");
+    expect(text).not.toContain("AI answer");
+    expect(text).not.toContain("legal/tax/medical advice");
   });
 
   it("shows progress history after plan creation with the linked step context", () => {

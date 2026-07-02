@@ -291,7 +291,7 @@ Step 4 implementation note:
 
 ### Step 5: User Note Create/Read UI In Active Action Plan Context
 
-Status: planned.
+Status: completed.
 
 Scope:
 
@@ -302,6 +302,16 @@ Scope:
 - display hidden/deleted note states only if a lifecycle step has already introduced them.
 
 No User Note as a standalone notes app, no note list dashboard and no document-like UI.
+
+Step 5 implementation note:
+
+- added local React state for User Notes inside the existing active Action Plan flow;
+- displayed User Note create/read UI next to existing History context events only;
+- used `createUserNote` so each note is attached to an existing `historyEventId` from the same active Action Plan;
+- displayed created notes as "Ваша заметка" with boundary copy: "Не официальный документ", "Не источник" and "Не ответ Nova Agent";
+- cleared the note input after successful creation and showed a simple empty state per History Event;
+- kept Progress, History, Action Plan state, User Open Questions and Checked Source Marks unchanged;
+- did not add edit/hide/delete lifecycle, User Note History Events, `user_note_created`, source/document records, document upload, Supabase, API handlers, auth, routing, state manager, persistence, Dashboard, Completed Plans, Pattern B or Content Admin.
 
 ### Step 6: User Note Lifecycle
 

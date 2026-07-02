@@ -1,5 +1,9 @@
 import type { PublishedScenarioVersion, Scenario } from "../../domain/content";
-import type { ActionPlanAggregate, HistoryEvent } from "../../domain/workflow";
+import type {
+  ActionPlanAggregate,
+  HistoryEvent,
+  UserNote,
+} from "../../domain/workflow";
 import {
   BoundaryNotice,
   historyBoundaryCopy,
@@ -17,13 +21,69 @@ function formatHistoryTimestamp(timestamp: string): string {
 
 function HistoryEventItem({
   event,
+  newUserNoteText,
+  notes,
+  onAddUserNote,
+  onNewUserNoteTextChange,
   scenario,
   scenarioVersion,
 }: {
   event: HistoryEvent;
+  newUserNoteText: string;
+  notes: readonly UserNote[];
+  onAddUserNote: (historyEventId: string) => void;
+  onNewUserNoteTextChange: (historyEventId: string, noteText: string) => void;
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
 }) {
+  const userNoteContext = (
+    <section className="user-note-context" aria-labelledby={`notes-${event.id}`}>
+      <div>
+        <p className="eyebrow">Заметки к событию</p>
+        <h4 id={`notes-${event.id}`}>Ваши заметки</h4>
+        <p className="history-event-context">
+          Не официальный документ. Не источник. Не ответ Nova Agent.
+        </p>
+      </div>
+
+      {notes.length === 0 ? (
+        <p className="history-event-context">Заметок к этому событию пока нет.</p>
+      ) : (
+        <ul className="user-note-list">
+          {notes.map((note) => (
+            <li className="user-note-item" key={note.id}>
+              <p className="step-order">Ваша заметка</p>
+              <p>{note.text}</p>
+              <p className="history-event-context">
+                Не официальный документ. Не источник. Не ответ Nova Agent.
+              </p>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="user-note-form">
+        <label htmlFor={`new-user-note-${event.id}`}>Короткая заметка</label>
+        <textarea
+          aria-label="Новая заметка"
+          id={`new-user-note-${event.id}`}
+          onChange={(changeEvent) =>
+            onNewUserNoteTextChange(event.id, changeEvent.target.value)
+          }
+          rows={3}
+          value={newUserNoteText}
+        />
+        <button
+          className="secondary-action"
+          type="button"
+          onClick={() => onAddUserNote(event.id)}
+        >
+          Добавить заметку
+        </button>
+      </div>
+    </section>
+  );
+
   if (event.eventType === "action_plan_created") {
     return (
       <li className="history-event">
@@ -37,6 +97,7 @@ function HistoryEventItem({
           </time>
         </div>
         <p>{`Создан ваш план для Scenario «${scenario.title}» на основе Scenario Version ${scenarioVersion.versionLabel}.`}</p>
+        {userNoteContext}
       </li>
     );
   }
@@ -58,6 +119,7 @@ function HistoryEventItem({
           Это не официальный ответ, не официальный статус и не консультация.
           Проверьте вопрос через официальный или другой надёжный источник.
         </p>
+        {userNoteContext}
       </li>
     );
   }
@@ -82,6 +144,7 @@ function HistoryEventItem({
           Это внутренняя история Nova Agent, а не официальный журнал,
           официальный статус или подтверждение внешнего действия.
         </p>
+        {userNoteContext}
       </li>
     );
   }
@@ -110,6 +173,7 @@ function HistoryEventItem({
           Nova Agent не проверяет источник. Это не официальный статус. Это не
           подтверждение действия.
         </p>
+        {userNoteContext}
       </li>
     );
   }
@@ -137,23 +201,32 @@ function HistoryEventItem({
         </time>
       </div>
       <p>{transitionLabel}</p>
-      <p className="history-event-context">
-        <strong>Связанный шаг:</strong> {stepLabel}
-      </p>
-    </li>
+    <p className="history-event-context">
+      <strong>Связанный шаг:</strong> {stepLabel}
+    </p>
+    {userNoteContext}
+  </li>
   );
 }
 
 export function HistoryView({
   actionPlan,
+  newUserNoteTextByHistoryEventId,
+  onAddUserNote,
   onBack,
+  onNewUserNoteTextChange,
   scenario,
   scenarioVersion,
+  userNotes,
 }: {
   actionPlan: ActionPlanAggregate;
+  newUserNoteTextByHistoryEventId: Readonly<Record<string, string>>;
+  onAddUserNote: (historyEventId: string) => void;
   onBack: () => void;
+  onNewUserNoteTextChange: (historyEventId: string, noteText: string) => void;
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
+  userNotes: readonly UserNote[];
 }) {
   const chronologicalEvents = [...actionPlan.historyEvents].sort((left, right) =>
     left.occurredAt.localeCompare(right.occurredAt),
@@ -176,6 +249,10 @@ export function HistoryView({
             <HistoryEventItem
               event={event}
               key={event.id}
+              newUserNoteText={newUserNoteTextByHistoryEventId[event.id] ?? ""}
+              notes={userNotes.filter((note) => note.historyEventId === event.id)}
+              onAddUserNote={onAddUserNote}
+              onNewUserNoteTextChange={onNewUserNoteTextChange}
               scenario={scenario}
               scenarioVersion={scenarioVersion}
             />

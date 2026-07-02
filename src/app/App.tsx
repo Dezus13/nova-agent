@@ -1,10 +1,12 @@
 import { useState } from "react";
 import {
   createCheckedSourceMarkWithHistory,
+  createUserNote,
   createUserOpenQuestionWithHistory,
   startActionPlan,
   type ActionPlanAggregate,
   type CheckedSourceMark,
+  type UserNote,
   type UserOpenQuestion,
   type UserOpenQuestionStatus,
   type Vs01ProgressUpdateStatus,
@@ -42,6 +44,7 @@ export function App({
   initialHistoryOpen = false,
   initialPlanOpen = false,
   initialSelectedStepId = null,
+  initialUserNotes = [],
   initialUserOpenQuestions = [],
 }: {
   initialActionPlan?: ActionPlanAggregate | null;
@@ -49,6 +52,7 @@ export function App({
   initialHistoryOpen?: boolean;
   initialPlanOpen?: boolean;
   initialSelectedStepId?: string | null;
+  initialUserNotes?: readonly UserNote[];
   initialUserOpenQuestions?: readonly UserOpenQuestion[];
 }) {
   const defaultContentFlow = getDefaultSeedContentFlow();
@@ -67,6 +71,9 @@ export function App({
   const [checkedSourceMarks, setCheckedSourceMarks] = useState<
     readonly CheckedSourceMark[]
   >(initialCheckedSourceMarks);
+  const [userNotes, setUserNotes] = useState<readonly UserNote[]>(initialUserNotes);
+  const [newUserNoteTextByHistoryEventId, setNewUserNoteTextByHistoryEventId] =
+    useState<Record<string, string>>({});
 
   function handleStartPlan() {
     const result = startActionPlan({
@@ -84,6 +91,8 @@ export function App({
     setUserOpenQuestions([]);
     setNewUserOpenQuestionText("");
     setCheckedSourceMarks([]);
+    setUserNotes([]);
+    setNewUserNoteTextByHistoryEventId({});
     setSelectedStepId(null);
     setIsHistoryOpen(false);
     setIsPlanOpen(false);
@@ -201,6 +210,40 @@ export function App({
     });
   }
 
+  function handleNewUserNoteTextChange(historyEventId: string, noteText: string) {
+    setNewUserNoteTextByHistoryEventId((currentTextById) => ({
+      ...currentTextById,
+      [historyEventId]: noteText,
+    }));
+  }
+
+  function handleAddUserNote(historyEventId: string) {
+    if (!activePlan) {
+      throw new Error("An active Action Plan is required to add a User Note.");
+    }
+
+    const noteText = newUserNoteTextByHistoryEventId[historyEventId] ?? "";
+
+    if (!noteText.trim()) {
+      return;
+    }
+
+    const occurredAt = new Date().toISOString();
+    const note = createUserNote({
+      plan: activePlan,
+      historyEventId,
+      text: noteText,
+      operationId: `${activePlan.actionPlan.id}-${historyEventId}-${userNotes.length + 1}`,
+      occurredAt,
+    });
+
+    setUserNotes((currentNotes) => [...currentNotes, note]);
+    setNewUserNoteTextByHistoryEventId((currentTextById) => ({
+      ...currentTextById,
+      [historyEventId]: "",
+    }));
+  }
+
   const contentFlow = activePlan
     ? getContentFlowForPlan(activePlan)
     : defaultContentFlow;
@@ -219,6 +262,9 @@ export function App({
     ? checkedSourceMarks.filter(
         (mark) => mark.actionPlanId === activePlan.actionPlan.id,
       )
+    : [];
+  const activePlanUserNotes = activePlan
+    ? userNotes.filter((note) => note.actionPlanId === activePlan.actionPlan.id)
     : [];
 
   if (activePlan && selectedStepId && (!selectedStep || !selectedProgress)) {
@@ -246,9 +292,13 @@ export function App({
       ) : isHistoryOpen ? (
         <HistoryView
           actionPlan={activePlan}
+          newUserNoteTextByHistoryEventId={newUserNoteTextByHistoryEventId}
+          onAddUserNote={handleAddUserNote}
           onBack={() => setIsHistoryOpen(false)}
+          onNewUserNoteTextChange={handleNewUserNoteTextChange}
           scenario={contentFlow.scenario}
           scenarioVersion={contentFlow.scenarioVersion}
+          userNotes={activePlanUserNotes}
         />
       ) : selectedStep && selectedProgress ? (
         <StepDetailView
