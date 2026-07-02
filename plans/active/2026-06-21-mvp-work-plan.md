@@ -233,6 +233,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 
 ### VS-04 Sources And Notes
 
+**Status:** Completed.
+
 **Пользовательская ценность:** пользователь фиксирует, что источник был проверен, и добавляет короткий контекст к собственным событиям без превращения Nova Agent в document storage.
 
 **Что входит:**
@@ -240,14 +242,18 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 - list and create Checked Source Mark inside existing active Action Plan;
 - idempotent Checked Source Mark behavior;
 - User Note attached to context History Event;
-- User Note edit, hide and delete according to TS07 and DR-07;
-- History events for source check and note changes.
+- User Note create/read inside existing active Action Plan History context;
+- `source_checked` History Event;
+- `user_note_created` History Event;
+- User Note lifecycle gate decision: edit, hide/archive and delete deferred to a later slice after persistence/backend/auth/privacy decisions.
 
 **Что не входит:**
 
 - source verification by Nova Agent;
 - repeated Checked Source Marks for the same Source Revision;
 - User Note as document, source, diary or personal data store;
+- User Note edit, hide/archive or delete in VS-04;
+- `user_note_edited`, `user_note_hidden` or `user_note_deleted` in VS-04;
 - creating Action Plan from Checked Source Mark;
 - Content Admin access to User Notes or Checked Source Marks.
 
@@ -260,6 +266,8 @@ Steps, Documents/Data, Sources, Warnings, Restrictions, Applicability Conditions
 - UI-01 Source and User Note representation rules.
 
 **Критерий завершения:** source check and note actions preserve History context, do not create official meaning and do not introduce document storage.
+
+**Следующий этап:** VS-05 Completion And Completed Read-Only.
 
 ### VS-05 Completion And Completed Read-Only
 

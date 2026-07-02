@@ -380,7 +380,7 @@ Step 8 implementation note:
 
 ### Step 9: Closure
 
-Status: planned.
+Status: completed.
 
 Scope:
 
@@ -389,6 +389,14 @@ Scope:
 - update the MVP Work Plan to mark VS-04 completed and identify VS-05 as next;
 - update changelog;
 - do not change application behavior in closure.
+
+Step 9 implementation note:
+
+- marked VS-04 as fully completed;
+- moved this implementation plan from `plans/active/` to `plans/completed/`;
+- updated the MVP Work Plan to mark VS-04 completed while preserving VS-05 as the next vertical slice;
+- kept User Note edit/hide/archive/delete lifecycle deferred to a later slice after persistence, backend, auth and privacy decisions;
+- did not change application runtime code.
 
 ## 7. Testing Strategy
 
@@ -530,8 +538,35 @@ Rules:
 - implementation plan must be updated after every completed step;
 - closure must be a separate documentation-only step.
 
-Recommended commit message for this planning step:
+## 12. Completion Summary
 
-```text
-docs: add VS-04 implementation plan
-```
+VS-04 Sources And Notes is completed.
+
+Completed scope:
+
+- Checked Source Mark domain layer;
+- Checked Source Mark UI inside existing active Action Plan context;
+- `source_checked` History Event;
+- User Note domain layer;
+- User Note create/read UI inside existing active Action Plan History context;
+- `user_note_created` History Event;
+- User Note lifecycle gate decision: edit, hide/archive and delete deferred;
+- Demo Flow Validation.
+
+Scope boundaries preserved:
+
+- no source verification by Nova Agent;
+- no official source status;
+- no document storage;
+- no User Note edit/hide/archive/delete lifecycle;
+- no `user_note_edited`, `user_note_hidden` or `user_note_deleted`;
+- no Supabase, API handlers, auth, routing library, state manager or persistence;
+- no Dashboard, Completed Plans UI, Pattern B or Content Admin UI.
+
+Known limitations:
+
+- local React state is lost after reload;
+- no persistence/backend/auth enforcement;
+- idempotency remains local;
+- User Note lifecycle requires a later slice after privacy, retention, backend, auth and persistence decisions;
+- React internal dispatcher workaround remains test-only and is not a permanent testing strategy.
