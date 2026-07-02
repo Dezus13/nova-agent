@@ -6,6 +6,7 @@ import {
 } from "../data/contentRepository";
 import {
   USER_OPEN_QUESTION_STATUSES,
+  createCheckedSourceMark,
   createUserOpenQuestion,
   createUserOpenQuestionWithHistory,
   getAllowedUserOpenQuestionStatusTransitions,
@@ -623,5 +624,115 @@ describe("VS-03 User Open Question domain helpers", () => {
     expect(result.question).toBe(question);
     expect(result.plan).toBe(createdPlan);
     expect(result.plan.historyEvents).toHaveLength(1);
+  });
+});
+
+describe("VS-04 Checked Source Mark domain helper", () => {
+  it("creates a Checked Source Mark for an existing active Action Plan", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+
+    const mark = createCheckedSourceMark({
+      plan: createdPlan,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      operationId: "create-csm",
+      occurredAt: "2026-07-02T10:00:00.000Z",
+    });
+
+    expect(mark).toEqual({
+      id: "checked-source-mark-create-csm",
+      actionPlanId: createdPlan.actionPlan.id,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      createdAt: "2026-07-02T10:00:00.000Z",
+      createdByUser: true,
+    });
+  });
+
+  it("records a user-owned source check without Nova Agent verification fields", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+
+    const mark = createCheckedSourceMark({
+      plan: createdPlan,
+      sourceRevisionId: " source-oesterreich-anmeldung ",
+      operationId: "user-owned-check",
+      occurredAt: "2026-07-02T10:00:00.000Z",
+    });
+
+    expect(mark.createdByUser).toBe(true);
+    expect(mark.sourceRevisionId).toBe("source-oesterreich-anmeldung");
+    expect(mark).not.toHaveProperty("verified");
+    expect(mark).not.toHaveProperty("verifiedByNovaAgent");
+    expect(mark).not.toHaveProperty("officiallyConfirmed");
+    expect(mark).not.toHaveProperty("officialStatus");
+    expect(mark).not.toHaveProperty("actionCompleted");
+    expect(mark).not.toHaveProperty("acceptedByAuthority");
+    expect(mark).not.toHaveProperty("legalConfirmation");
+    expect(mark).not.toHaveProperty("medicalConfirmation");
+    expect(mark).not.toHaveProperty("taxConfirmation");
+  });
+
+  it("does not change Progress, History, Action Plan state or existing aggregate in-place", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const actionPlanBefore = createdPlan.actionPlan;
+    const progressBefore = createdPlan.progressRecords;
+    const historyBefore = createdPlan.historyEvents;
+
+    createCheckedSourceMark({
+      plan: createdPlan,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      operationId: "no-side-effects",
+      occurredAt: "2026-07-02T10:00:00.000Z",
+    });
+
+    expect(createdPlan.actionPlan).toBe(actionPlanBefore);
+    expect(createdPlan.actionPlan.state).toBe("active");
+    expect(createdPlan.progressRecords).toBe(progressBefore);
+    expect(createdPlan.progressRecords.every((progress) => progress.status === "not_started"))
+      .toBe(true);
+    expect(createdPlan.historyEvents).toBe(historyBefore);
+    expect(createdPlan.historyEvents).toHaveLength(1);
+    expect(createdPlan).toEqual({
+      actionPlan: actionPlanBefore,
+      progressRecords: progressBefore,
+      historyEvents: historyBefore,
+    });
+  });
+
+  it("does not create User Notes or History Events in Step 1", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+
+    const mark = createCheckedSourceMark({
+      plan: createdPlan,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      operationId: "no-notes",
+      occurredAt: "2026-07-02T10:00:00.000Z",
+    });
+
+    expect(mark).not.toHaveProperty("userNoteId");
+    expect(mark).not.toHaveProperty("noteText");
+    expect(mark).not.toHaveProperty("historyEventId");
+    expect(createdPlan.historyEvents).toHaveLength(1);
+    expect(createdPlan.historyEvents.map((event) => event.eventType)).not.toContain(
+      "source_checked",
+    );
+  });
+
+  it("rejects creation outside an active Action Plan", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const completedPlan = {
+      ...createdPlan,
+      actionPlan: {
+        ...createdPlan.actionPlan,
+        state: "completed" as const,
+      },
+    };
+
+    expect(() =>
+      createCheckedSourceMark({
+        plan: completedPlan,
+        sourceRevisionId: "source-oesterreich-anmeldung",
+        operationId: "completed-csm",
+        occurredAt: "2026-07-02T10:00:00.000Z",
+      }),
+    ).toThrow("Checked Source Mark can only be created inside an active Action Plan.");
   });
 });

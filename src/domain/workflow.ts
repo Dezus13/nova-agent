@@ -78,6 +78,14 @@ export interface UserOpenQuestion {
   readonly updatedAt: string;
 }
 
+export interface CheckedSourceMark {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly sourceRevisionId: string;
+  readonly createdAt: string;
+  readonly createdByUser: true;
+}
+
 export interface ActionPlanCreatedHistoryPayload {
   readonly actionPlanId: string;
   readonly scenarioVersionId: string;
@@ -212,6 +220,13 @@ export interface UpdateUserOpenQuestionStatusWithHistoryInput
 export interface UpdateUserOpenQuestionStatusWithHistoryResult {
   readonly plan: ActionPlanAggregate;
   readonly question: UserOpenQuestion;
+}
+
+export interface CreateCheckedSourceMarkInput {
+  readonly plan: ActionPlanAggregate;
+  readonly sourceRevisionId: string;
+  readonly operationId: string;
+  readonly occurredAt: string;
 }
 
 function isVs01ProgressUpdateStatus(
@@ -522,5 +537,27 @@ export function updateUserOpenQuestionStatusWithHistory(
   return {
     plan: appendHistoryEvent(input.plan, historyEvent),
     question: updatedQuestion,
+  };
+}
+
+export function createCheckedSourceMark(
+  input: CreateCheckedSourceMarkInput,
+): CheckedSourceMark {
+  if (input.plan.actionPlan.state !== "active") {
+    throw new Error("Checked Source Mark can only be created inside an active Action Plan.");
+  }
+
+  const sourceRevisionId = input.sourceRevisionId.trim();
+
+  if (!sourceRevisionId) {
+    throw new Error("Source Revision identity is required for a Checked Source Mark.");
+  }
+
+  return {
+    id: `checked-source-mark-${input.operationId}`,
+    actionPlanId: input.plan.actionPlan.id,
+    sourceRevisionId,
+    createdAt: input.occurredAt,
+    createdByUser: true,
   };
 }

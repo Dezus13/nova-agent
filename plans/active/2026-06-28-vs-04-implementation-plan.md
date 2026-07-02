@@ -199,18 +199,26 @@ Implementation must proceed in small vertical steps.
 
 ### Step 1: Checked Source Mark Domain Model And Helper
 
-Status: planned.
+Status: completed.
 
 Scope:
 
 - add local typed Checked Source Mark model;
 - add pure helper for creating a mark inside an existing active Action Plan;
 - enforce Source Revision identity;
-- enforce idempotency per Action Plan and Source Revision;
+- defer full duplicate/idempotency enforcement until Checked Source Marks are part of the local aggregate/list state;
 - reject creation without existing active Action Plan;
 - keep Progress, User Open Questions and User Notes unchanged.
 
 No UI, API, Supabase, auth, persistence, routing or document storage in this step.
+
+Step 1 implementation note:
+
+- added the local typed Checked Source Mark model with `sourceRevisionId`, using the existing seed Source identifier as the local Source Revision-compatible identifier;
+- added a pure create helper for active Action Plans only;
+- the helper does not mutate the existing Action Plan aggregate, does not change Progress, does not append History and does not create User Notes;
+- source verification, official status fields and History Events remain out of scope for this step;
+- duplicate prevention/idempotency is intentionally left for the later step that introduces Checked Source Mark list state, because the current Action Plan aggregate does not yet contain Checked Source Marks.
 
 ### Step 2: Checked Source Mark Read/Create UI Near Existing Sources
 
