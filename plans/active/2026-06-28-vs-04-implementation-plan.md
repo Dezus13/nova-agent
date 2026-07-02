@@ -135,15 +135,7 @@ In scope:
 - append-only `source_checked` History Event;
 - local User Note typed model and pure helper;
 - create/read User Note attached to an existing context History Event;
-- User Note lifecycle only if implemented as explicitly scoped sub-steps:
-  - edit;
-  - hide/archive;
-  - delete;
-- append-only User Note History Events:
-  - `user_note_created`;
-  - `user_note_edited`;
-  - `user_note_hidden`;
-  - `user_note_deleted`;
+- append-only `user_note_created` History Event;
 - existing active Action Plan only;
 - existing seed content and existing source context only;
 - existing local state only;
@@ -182,6 +174,10 @@ The following are forbidden in VS-04:
 - state manager;
 - persistence;
 - document storage;
+- User Note edit;
+- User Note hide/archive;
+- User Note delete;
+- `user_note_edited`, `user_note_hidden` and `user_note_deleted` History Events;
 - new Life Situations;
 - new Scenarios;
 - new Product Decisions;
@@ -337,22 +333,24 @@ Step 6 implementation note:
 - kept Progress, Action Plan state, User Open Questions and Checked Source Marks unchanged;
 - did not add edit/hide/archive/delete lifecycle, source/document records, document upload, Supabase, API handlers, auth, routing, state manager, persistence, Dashboard, Completed Plans, Pattern B or Content Admin.
 
-### Step 7: User Note Lifecycle
+### Step 7: User Note Lifecycle Gate
 
-Status: planned but risk-gated.
+Status: completed as deferred.
 
-Scope, if kept in VS-04:
+Decision:
 
-- edit User Note text in active Action Plan only;
-- hide/archive User Note according to TS07, TS08 and DR-07;
-- delete User Note according to TS07, TS08 and DR-07;
-- append `user_note_edited`, `user_note_hidden` and `user_note_deleted` only if the matching lifecycle action is implemented;
-- keep context History Event unchanged;
-- never expose hidden/deleted note text in normal reads.
+- defer User Note edit/hide/archive/delete lifecycle out of VS-04;
+- do not add `user_note_edited`, `user_note_hidden` or `user_note_deleted` in VS-04;
+- continue VS-04 directly to Demo Flow Validation.
 
-This step must be split into smaller sub-steps if implementation becomes large or ambiguous.
+Reason:
 
-If the lifecycle step threatens VS-04 scope, it must be deferred to a later vertical slice or a later VS-04 sub-step before code is written.
+- VS-04 MVP value is already covered by Checked Source Marks, User Note create/read and their History Events;
+- edit/hide/delete would add privacy, retention, redaction, audit trail, completed-plan behavior, API and backend persistence decisions;
+- implementing lifecycle now risks notes app, diary, document storage, CRM and task-manager drift;
+- local-only state cannot responsibly validate hide/delete semantics without persistence/auth/backend decisions.
+
+Deferred lifecycle may become a separate later vertical slice after persistence, backend, auth and privacy decisions are explicit.
 
 ### Step 8: Demo Flow Validation
 
@@ -365,7 +363,8 @@ Scope:
 - validate `source_checked`;
 - validate User Note creation attached to a context History Event;
 - validate User Note boundary copy;
-- validate User Note lifecycle only if Step 6 was implemented;
+- validate `user_note_created`;
+- validate that User Note edit/hide/archive/delete remain absent;
 - validate History boundary copy;
 - validate absence of forbidden scope.
 
@@ -399,8 +398,8 @@ VS-04 tests must cover:
 - User Note rejection when context event belongs to another Action Plan;
 - User Note is displayed as "Ваша заметка";
 - User Note is not displayed as Source, official document, answer or advice;
-- User Note lifecycle behavior only for steps that implement it;
-- User Note History Events;
+- `user_note_created` History Event;
+- absence of User Note edit/hide/archive/delete lifecycle in VS-04;
 - History remains append-only and read-only;
 - History is not source of truth;
 - no User Notes or Checked Source Marks are visible to Content Admin;
@@ -450,7 +449,7 @@ see existing Sources
 -> create a short User Note attached to a context History Event
 -> see the note as "Ваша заметка"
 -> understand the note is not a document, source or Nova Agent answer
--> see User Note History Events
+-> see `user_note_created` in internal History
 ```
 
 Completion also requires:
@@ -458,6 +457,7 @@ Completion also requires:
 - Checked Source Mark idempotency;
 - no Action Plan creation from Checked Source Mark;
 - User Note context History Event enforcement;
+- User Note lifecycle deferred out of VS-04;
 - History append-only and read-only behavior;
 - no source verification language;
 - no official status language;
@@ -486,7 +486,7 @@ Mitigation: keep notes short, contextual, attached to History Events and labeled
 
 Edit, hide and delete can expand VS-04 beyond a narrow vertical slice.
 
-Mitigation: Step 6 is risk-gated. Split it into sub-steps or defer it if implementation becomes ambiguous.
+Mitigation: Step 7 deferred User Note lifecycle to a later slice. Do not implement edit, hide, archive or delete in VS-04.
 
 ### Risk 4: History becomes current state
 
