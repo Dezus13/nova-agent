@@ -18,7 +18,8 @@ export type HistoryEventType =
   | "progress_status_changed"
   | "source_checked"
   | "user_open_question_created"
-  | "user_open_question_status_changed";
+  | "user_open_question_status_changed"
+  | "user_note_created";
 
 export type Vs01ProgressUpdateStatus = "in_progress" | "requires_check";
 
@@ -172,10 +173,26 @@ export interface SourceCheckedHistoryEvent {
   readonly payload: SourceCheckedHistoryPayload;
 }
 
+export interface UserNoteCreatedHistoryPayload {
+  readonly actionPlanId: string;
+  readonly userNoteId: string;
+  readonly contextHistoryEventId: string;
+  readonly createdAt: string;
+}
+
+export interface UserNoteCreatedHistoryEvent {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly eventType: "user_note_created";
+  readonly occurredAt: string;
+  readonly payload: UserNoteCreatedHistoryPayload;
+}
+
 export type HistoryEvent =
   | ActionPlanCreatedHistoryEvent
   | ProgressStatusChangedHistoryEvent
   | SourceCheckedHistoryEvent
+  | UserNoteCreatedHistoryEvent
   | UserOpenQuestionCreatedHistoryEvent
   | UserOpenQuestionStatusChangedHistoryEvent;
 
@@ -268,6 +285,13 @@ export interface CreateUserNoteInput {
   readonly text: string;
   readonly operationId: string;
   readonly occurredAt: string;
+}
+
+export type CreateUserNoteWithHistoryInput = CreateUserNoteInput;
+
+export interface CreateUserNoteWithHistoryResult {
+  readonly plan: ActionPlanAggregate;
+  readonly note: UserNote;
 }
 
 function isVs01ProgressUpdateStatus(
@@ -647,6 +671,10 @@ export function createUserNote(input: CreateUserNoteInput): UserNote {
     throw new Error("User Note context History Event must belong to the Action Plan.");
   }
 
+  if (contextHistoryEvent.eventType === "user_note_created") {
+    throw new Error("User Note cannot use user_note_created as its context History Event.");
+  }
+
   const text = input.text.trim();
 
   if (!text) {
@@ -660,5 +688,28 @@ export function createUserNote(input: CreateUserNoteInput): UserNote {
     text,
     createdAt: input.occurredAt,
     createdByUser: true,
+  };
+}
+
+export function createUserNoteWithHistory(
+  input: CreateUserNoteWithHistoryInput,
+): CreateUserNoteWithHistoryResult {
+  const note = createUserNote(input);
+  const historyEvent: UserNoteCreatedHistoryEvent = {
+    id: `history-${input.operationId}-user-note-created`,
+    actionPlanId: input.plan.actionPlan.id,
+    eventType: "user_note_created",
+    occurredAt: input.occurredAt,
+    payload: {
+      actionPlanId: input.plan.actionPlan.id,
+      userNoteId: note.id,
+      contextHistoryEventId: note.historyEventId,
+      createdAt: note.createdAt,
+    },
+  };
+
+  return {
+    plan: appendHistoryEvent(input.plan, historyEvent),
+    note,
   };
 }

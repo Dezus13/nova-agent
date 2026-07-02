@@ -1,7 +1,7 @@
 import { useState } from "react";
 import {
   createCheckedSourceMarkWithHistory,
-  createUserNote,
+  createUserNoteWithHistory,
   createUserOpenQuestionWithHistory,
   startActionPlan,
   type ActionPlanAggregate,
@@ -229,7 +229,7 @@ export function App({
     }
 
     const occurredAt = new Date().toISOString();
-    const note = createUserNote({
+    const result = createUserNoteWithHistory({
       plan: activePlan,
       historyEventId,
       text: noteText,
@@ -237,7 +237,8 @@ export function App({
       occurredAt,
     });
 
-    setUserNotes((currentNotes) => [...currentNotes, note]);
+    setActivePlan(result.plan);
+    setUserNotes((currentNotes) => [...currentNotes, result.note]);
     setNewUserNoteTextByHistoryEventId((currentTextById) => ({
       ...currentTextById,
       [historyEventId]: "",

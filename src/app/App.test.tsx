@@ -1422,10 +1422,19 @@ describe("App", () => {
         (progress) => progress.status === "not_started",
       ),
     ).toBe(true);
-    expect(activePlanAfterNote?.historyEvents).toBe(historyBefore);
+    expect(activePlanAfterNote?.historyEvents).not.toBe(historyBefore);
     expect(activePlanAfterNote?.historyEvents.map((event) => event.eventType)).toEqual([
       "action_plan_created",
+      "user_note_created",
     ]);
+    expect(activePlanAfterNote?.historyEvents[1]).toMatchObject({
+      eventType: "user_note_created",
+      payload: {
+        actionPlanId: actionPlan.actionPlan.id,
+        contextHistoryEventId: actionPlan.historyEvents[0]?.id,
+        userNoteId: userNotesAfterNote[0]?.id,
+      },
+    });
     expect(userOpenQuestionsAfterNote).toHaveLength(1);
     expect(userOpenQuestionsAfterNote[0]).toBe(question);
     expect(checkedSourceMarksAfterNote).toHaveLength(1);
@@ -1433,6 +1442,11 @@ describe("App", () => {
     expect(actionPlan.actionPlan).toBe(actionPlanBefore);
     expect(actionPlan.progressRecords).toBe(progressBefore);
     expect(actionPlan.historyEvents).toBe(historyBefore);
+    expect(text).toContain("Заметка добавлена вами");
+    expect(text).toContain(
+      "Внутренняя запись Nova Agent: вы добавили собственную заметку к существующему событию History.",
+    );
+    expect(text.match(/Добавить заметку/g)).toHaveLength(1);
     expect(text).not.toContain("user_note_created");
     expect(text).not.toContain("Редактировать заметку");
     expect(text).not.toContain("Скрыть заметку");

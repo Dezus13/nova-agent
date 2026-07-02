@@ -36,6 +36,7 @@ function HistoryEventItem({
   scenario: Scenario;
   scenarioVersion: PublishedScenarioVersion;
 }) {
+  const canAttachUserNote = event.eventType !== "user_note_created";
   const userNoteContext = (
     <section className="user-note-context" aria-labelledby={`notes-${event.id}`}>
       <div>
@@ -178,6 +179,29 @@ function HistoryEventItem({
     );
   }
 
+  if (event.eventType === "user_note_created") {
+    return (
+      <li className="history-event">
+        <div className="history-event-heading">
+          <div>
+            <p className="eyebrow">Ваша заметка</p>
+            <h3>Заметка добавлена вами</h3>
+          </div>
+          <time dateTime={event.occurredAt}>
+            {formatHistoryTimestamp(event.occurredAt)}
+          </time>
+        </div>
+        <p>
+          Внутренняя запись Nova Agent: вы добавили собственную заметку к
+          существующему событию History.
+        </p>
+        <p className="history-event-context">
+          Не официальный документ. Не источник. Не ответ Nova Agent.
+        </p>
+      </li>
+    );
+  }
+
   const step = scenarioVersion.steps.find(
     (candidate) => candidate.id === event.payload.versionedStepContextId,
   );
@@ -204,7 +228,7 @@ function HistoryEventItem({
     <p className="history-event-context">
       <strong>Связанный шаг:</strong> {stepLabel}
     </p>
-    {userNoteContext}
+    {canAttachUserNote ? userNoteContext : null}
   </li>
   );
 }

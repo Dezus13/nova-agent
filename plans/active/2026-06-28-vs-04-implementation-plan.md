@@ -313,7 +313,31 @@ Step 5 implementation note:
 - kept Progress, History, Action Plan state, User Open Questions and Checked Source Marks unchanged;
 - did not add edit/hide/delete lifecycle, User Note History Events, `user_note_created`, source/document records, document upload, Supabase, API handlers, auth, routing, state manager, persistence, Dashboard, Completed Plans, Pattern B or Content Admin.
 
-### Step 6: User Note Lifecycle
+### Step 6: User Note History Event
+
+Status: completed.
+
+Scope:
+
+- append `user_note_created` when a User Note is created;
+- keep base `createUserNote` as a pure helper;
+- display `user_note_created` through the existing read-only History UI;
+- keep `user_note_created` as an audit event, not as a context event for another User Note;
+- keep History internal, append-only and non-official.
+
+No edit, hide, archive, delete, separate note history UI, API, Supabase, auth, persistence, routing or document storage in this step.
+
+Step 6 implementation note:
+
+- added `user_note_created` to the local History Event type union with minimal payload: Action Plan id, User Note id, context History Event id and creation time;
+- added `createUserNoteWithHistory` so User Note creation appends one audit History Event while preserving the pure `createUserNote` helper;
+- updated local App orchestration so adding a User Note updates local note state and appends `user_note_created` to the active plan History;
+- updated the existing read-only History UI to display "Заметка добавлена вами" with boundary copy: "Не официальный документ", "Не источник" and "Не ответ Nova Agent";
+- did not show User Note create controls on the `user_note_created` audit event, so the audit event does not become a context event for another note;
+- kept Progress, Action Plan state, User Open Questions and Checked Source Marks unchanged;
+- did not add edit/hide/archive/delete lifecycle, source/document records, document upload, Supabase, API handlers, auth, routing, state manager, persistence, Dashboard, Completed Plans, Pattern B or Content Admin.
+
+### Step 7: User Note Lifecycle
 
 Status: planned but risk-gated.
 
@@ -322,26 +346,13 @@ Scope, if kept in VS-04:
 - edit User Note text in active Action Plan only;
 - hide/archive User Note according to TS07, TS08 and DR-07;
 - delete User Note according to TS07, TS08 and DR-07;
+- append `user_note_edited`, `user_note_hidden` and `user_note_deleted` only if the matching lifecycle action is implemented;
 - keep context History Event unchanged;
 - never expose hidden/deleted note text in normal reads.
 
 This step must be split into smaller sub-steps if implementation becomes large or ambiguous.
 
 If the lifecycle step threatens VS-04 scope, it must be deferred to a later vertical slice or a later VS-04 sub-step before code is written.
-
-### Step 7: User Note History Events
-
-Status: planned.
-
-Scope:
-
-- append `user_note_created` when a User Note is created;
-- append `user_note_edited` when a User Note is edited;
-- append `user_note_hidden` when a User Note is hidden;
-- append `user_note_deleted` when a User Note is deleted;
-- keep History read-only, internal and non-official.
-
-History explains what happened but does not become the mutable source of truth for the note.
 
 ### Step 8: Demo Flow Validation
 
