@@ -399,11 +399,11 @@ describe("App", () => {
     let tree = renderInteractiveApp(runtime);
     let text = getTextContent(tree);
 
-    const safetyPosition = text.indexOf("Warnings / Restrictions");
+    const safetyPosition = text.indexOf("Предупреждения и ограничения");
     const startPlanPosition = text.indexOf("Начать план");
 
     expect(text).toContain("Life Situation");
-    expect(text).toContain("Scenario");
+    expect(text).toContain("Сценарий");
     expect(text).toContain("Регистрация места жительства в Австрии");
     expect(safetyPosition).toBeGreaterThanOrEqual(0);
     expect(startPlanPosition).toBeGreaterThanOrEqual(0);
@@ -413,12 +413,12 @@ describe("App", () => {
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
-    expect(text).toContain("Return Context");
+    expect(text).toContain("Возврат к плану");
     expect(text).toContain("Продолжить активный план");
-    expect(text).toContain("Progress Summary");
+    expect(text).toContain("Сводка прогресса");
     expect(text).toContain("Главный следующий шаг");
 
-    clickButton(tree, "Продолжить active plan");
+    clickButton(tree, "Продолжить план");
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
@@ -462,13 +462,13 @@ describe("App", () => {
 
     expect(html).toContain("Nova Agent");
     expect(html).toContain("Life Situation");
-    expect(html).toContain("Scenario");
-    expect(html).toContain("Scenario Version");
+    expect(html).toContain("Сценарий");
+    expect(html).toContain("Версия сценария");
     expect(html).toContain("v1");
-    expect(html).toContain("Steps");
-    expect(html).toContain("Documents / Data Requirements");
-    expect(html).toContain("Sources");
-    expect(html).toContain("Template Open Questions");
+    expect(html).toContain("Путь пользователя");
+    expect(html).toContain("Документы и данные");
+    expect(html).toContain("Источники");
+    expect(html).toContain("Вопросы для проверки");
     expect(html).toContain("Регистрация места жительства в Австрии");
     expect(html).toContain("Официальный источник");
     expect(html).toContain("Начать план");
@@ -476,7 +476,7 @@ describe("App", () => {
 
   it("shows safety before the Scenario goal, steps, and Start Plan CTA", () => {
     const html = renderToString(<App />);
-    const safetyPosition = html.indexOf("Warnings / Restrictions");
+    const safetyPosition = html.indexOf("Предупреждения и ограничения");
     const scenarioGoalPosition = html.indexOf(
       "Помочь пользователю подготовиться к Anmeldung",
     );
@@ -502,7 +502,7 @@ describe("App", () => {
       <App initialActionPlan={createActionPlanForUi()} initialPlanOpen />,
     );
     const scenarioPosition = html.indexOf("Ваш план");
-    const versionPosition = html.indexOf("Scenario Version:");
+    const versionPosition = html.indexOf("Версия сценария:");
     const statePosition = html.indexOf("Статус плана");
     const boundaryPosition = html.indexOf(
       "Nova Agent — справочная и организационная помощь",
@@ -513,7 +513,7 @@ describe("App", () => {
     expect(html).toContain("Шаги плана");
     expect(html).toContain("Следующий шаг");
     expect(html).toContain("active");
-    expect(html).toContain("Scenario Version");
+    expect(html).toContain("Версия сценария");
     expect(html).toContain("v1");
     expect(html).toContain("Проверить, нужно ли регистрировать адрес");
     expect(html).toContain("Получить подтверждение и сохранить собственный контекст");
@@ -540,22 +540,22 @@ describe("App", () => {
       <App initialActionPlan={createReturnContextActionPlanForUi()} />,
     );
 
-    expect(html).toContain("Return Context");
+    expect(html).toContain("Возврат к плану");
     expect(html).toContain("Продолжить активный план");
-    expect(html).toContain("Есть существующий active Action Plan");
-    expect(html).toContain("Scenario Version:");
+    expect(html).toContain("Есть существующий активный план");
+    expect(html).toContain("Версия сценария:");
     expect(html).toContain("v1");
     expect(html).toContain("Состояние плана");
     expect(html).toContain("active");
-    expect(html).toContain("Progress Summary");
-    expect(html).toContain("Total steps");
-    expect(html).toContain("not_started");
-    expect(html).toContain("in_progress");
-    expect(html).toContain("requires_check");
+    expect(html).toContain("Сводка прогресса");
+    expect(html).toContain("Всего шагов");
+    expect(html).toContain("Не начато");
+    expect(html).toContain("В процессе");
+    expect(html).toContain("Требует проверки");
     expect(html).toContain("<dd>6</dd>");
     expect(html).toContain("<dd>4</dd>");
     expect(html).toContain("<dd>1</dd>");
-    expect(html.match(/Продолжить active plan/g)).toHaveLength(1);
+    expect(html.match(/Продолжить план/g)).toHaveLength(1);
     expect(html).not.toContain("completed");
     expect(html).not.toContain("%");
     expect(html).not.toContain("KPI");
@@ -582,7 +582,7 @@ describe("App", () => {
     expect(text).toContain("В процессе");
     expect(text).not.toContain("History Event");
 
-    clickButton(tree, "Открыть Step Detail");
+    clickButton(tree, "Открыть детали шага");
     tree = renderInteractiveApp(runtime, {
       initialActionPlan: createReturnContextActionPlanForUi(),
     });
@@ -608,7 +608,7 @@ describe("App", () => {
     );
     const returnNextStepText = returnText.slice(
       returnText.indexOf("Главный следующий шаг"),
-      returnText.indexOf("Открыть Step Detail"),
+      returnText.indexOf("Открыть детали шага"),
     );
     const actionPlanNextStepText = actionPlanText.slice(
       actionPlanText.indexOf("Следующий шаг"),
@@ -683,8 +683,8 @@ describe("App", () => {
     expect(html).toContain("Подходит ли мой договор жилья для Anmeldung?");
     expect(html).not.toContain("Этот вопрос относится к другому плану.");
     expect(html).toContain("Статус");
-    expect(html).toContain("open");
-    expect(html).toContain("requires_check");
+    expect(html).toContain("Открыт");
+    expect(html).toContain("Требует проверки");
     expect(html.match(/Nova Agent не отвечает на этот вопрос/g)).toHaveLength(2);
     expect(html).toContain(
       "Проверьте информацию через официальный или другой надёжный источник.",
@@ -744,7 +744,7 @@ describe("App", () => {
     expect(text).toContain("Ваш вопрос");
     expect(text).toContain("Нужно ли уточнить срок регистрации лично?");
     expect(text).toContain("Статус");
-    expect(text).toContain("open");
+    expect(text).toContain("Открыт");
     expect(text).toContain(
       "Nova Agent не отвечает на этот вопрос. Проверьте информацию через официальный или другой надёжный источник.",
     );
@@ -818,7 +818,7 @@ describe("App", () => {
       "requires_check",
     );
     expect(text).toContain("Нужно ли уточнить срок регистрации в Magistrat?");
-    expect(text).toContain("requires_check");
+    expect(text).toContain("Требует проверки");
     expect(text).toContain("Ваша отметка");
     expect(actionPlan.actionPlan).toBe(actionPlanBefore);
     expect(actionPlan.progressRecords).toBe(progressBefore);
@@ -948,7 +948,7 @@ describe("App", () => {
     expect(text).toContain(
       "Нужно ли проверить перевод справки у официального источника?",
     );
-    expect(text).toContain("open");
+    expect(text).toContain("Открыт");
     expect(findTextAreaByLabel(tree, "Новый открытый вопрос")?.props.value).toBe("");
 
     changeSelect(tree, "user-open-question-status-1", "requires_check");
@@ -961,7 +961,7 @@ describe("App", () => {
     expect(findSelectById(tree, "user-open-question-status-1")?.props.value).toBe(
       "requires_check",
     );
-    expect(text).toContain("requires_check");
+    expect(text).toContain("Требует проверки");
     expect(text).toContain("Ваша отметка");
     expect(text.match(/Не начато/g)).toHaveLength(6);
 
@@ -1142,7 +1142,7 @@ describe("App", () => {
       initialActionPlan: createReturnContextActionPlanForUi(),
     });
 
-    clickButton(tree, "Открыть History");
+    clickButton(tree, "Открыть историю");
     tree = renderInteractiveApp(runtime, {
       initialActionPlan: createReturnContextActionPlanForUi(),
     });
@@ -1161,16 +1161,16 @@ describe("App", () => {
     });
     let text = getTextContent(tree);
 
-    expect(text).toContain("Return Context");
-    expect(text).toContain("Есть существующий active Action Plan");
-    expect(text.match(/Есть существующий active Action Plan/g)).toHaveLength(1);
-    expect(text.match(/Продолжить active plan/g)).toHaveLength(1);
+    expect(text).toContain("Возврат к плану");
+    expect(text).toContain("Есть существующий активный план");
+    expect(text.match(/Есть существующий активный план/g)).toHaveLength(1);
+    expect(text.match(/Продолжить план/g)).toHaveLength(1);
     expect(text).toContain("после перезагрузки страницы сохранение плана не обещается");
-    expect(text).toContain("Progress Summary");
-    expect(text).toContain("Total steps");
-    expect(text).toContain("not_started");
-    expect(text).toContain("in_progress");
-    expect(text).toContain("requires_check");
+    expect(text).toContain("Сводка прогресса");
+    expect(text).toContain("Всего шагов");
+    expect(text).toContain("Не начато");
+    expect(text).toContain("В процессе");
+    expect(text).toContain("Требует проверки");
     expect(text).toContain("6");
     expect(text).toContain("4");
     expect(text).toContain("1");
@@ -1179,14 +1179,14 @@ describe("App", () => {
     expect(text).toContain("Проверить, нужно ли регистрировать адрес");
     expect(text).toContain("Ваша отметка");
     expect(text).toContain("В процессе");
-    expect(text).toContain("Следующий шаг рассчитывается только по Progress records");
-    expect(text).toContain("не является source of truth для текущего Progress");
+    expect(text).toContain("Следующий шаг рассчитывается только по вашим отметкам Progress");
+    expect(text).toContain("не является источником текущего состояния Progress");
     expect(text).toContain("Внутренний журнал Nova Agent");
     expect(text).toContain("Не является официальным журналом");
     expect(text).toContain("Nova Agent — справочная");
     expectVs02ForbiddenScopeAbsent(text);
 
-    clickButton(tree, "Продолжить active plan");
+    clickButton(tree, "Продолжить план");
     tree = renderInteractiveApp(runtime, {
       initialActionPlan: createVs02DemoActionPlanForUi(),
     });
@@ -1197,7 +1197,7 @@ describe("App", () => {
     expect(text).toContain("active");
     expect(text).toContain("Шаги плана");
     expect(text).toContain("Следующий шаг");
-    expect(text).toContain("Progress");
+    expect(text).toContain("Ваш прогресс");
     expect(text).toContain("Ваша отметка");
     expectVs02ForbiddenScopeAbsent(text);
 
@@ -1209,8 +1209,8 @@ describe("App", () => {
 
     expect(text).toContain("Текущее состояние шага");
     expect(text).toContain("Проверить, нужно ли регистрировать адрес");
-    expect(text).toContain("Warnings / Restrictions");
-    expect(text).toContain("Documents / Data Requirements");
+    expect(text).toContain("Предупреждения и ограничения");
+    expect(text).toContain("Документы и данные");
     expect(text).toContain("Где проверить официальный источник");
     expect(text).toContain("Ваша отметка");
     expect(text).toContain("В процессе");
@@ -1257,10 +1257,10 @@ describe("App", () => {
         initialSelectedStepId="step-prepare-meldezettel"
       />,
     );
-    const safetyPosition = html.indexOf("Warnings / Restrictions");
+    const safetyPosition = html.indexOf("Предупреждения и ограничения");
     const purposePosition = html.indexOf("Подготовить базовую форму регистрации");
-    const applicabilityPosition = html.indexOf("Applicability Conditions");
-    const requirementsPosition = html.indexOf("Documents / Data Requirements");
+    const applicabilityPosition = html.indexOf("Условия применимости");
+    const requirementsPosition = html.indexOf("Документы и данные");
     const sourcesPosition = html.indexOf("Где проверить официальный источник");
     const progressPosition = html.indexOf("Текущее состояние шага");
     const progressActionPosition = html.indexOf("Отметить: В процессе");
@@ -1317,7 +1317,7 @@ describe("App", () => {
     expect(html).toContain("События в порядке создания");
     expect(html).toContain("План создан");
     expect(html).toContain("Создание плана");
-    expect(html).toContain("Scenario Version v1");
+    expect(html).toContain("версии v1");
     expect(html).toContain('dateTime="2026-06-24T10:00:00.000Z"');
     expect(html).toContain(
       "История — внутренние события Nova Agent. Не является официальным журналом взаимодействия с органами, учреждениями или специалистами.",
@@ -1444,7 +1444,7 @@ describe("App", () => {
     expect(actionPlan.historyEvents).toBe(historyBefore);
     expect(text).toContain("Заметка добавлена вами");
     expect(text).toContain(
-      "Внутренняя запись Nova Agent: вы добавили собственную заметку к существующему событию History.",
+      "Внутренняя запись Nova Agent: вы добавили собственную заметку к существующему событию истории.",
     );
     expect(text.match(/Добавить заметку/g)).toHaveLength(1);
     expect(text).not.toContain("user_note_created");
@@ -1465,10 +1465,10 @@ describe("App", () => {
     let tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
     let text = getTextContent(tree);
 
-    expect(text).toContain("Return Context");
-    expect(text).toContain("Есть существующий active Action Plan");
+    expect(text).toContain("Возврат к плану");
+    expect(text).toContain("Есть существующий активный план");
 
-    clickButton(tree, "Продолжить active plan");
+    clickButton(tree, "Продолжить план");
     tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
     text = getTextContent(tree);
 
@@ -1551,7 +1551,7 @@ describe("App", () => {
     expect(text).toContain("Не ответ Nova Agent");
     expect(text).toContain("Заметка добавлена вами");
     expect(text).toContain(
-      "Внутренняя запись Nova Agent: вы добавили собственную заметку к существующему событию History.",
+      "Внутренняя запись Nova Agent: вы добавили собственную заметку к существующему событию истории.",
     );
     expect(findTextAreaByLabel(tree, "Новая заметка")?.props.value).toBe("");
     expect(userNotesAfterNote).toHaveLength(1);

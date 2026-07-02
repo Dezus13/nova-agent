@@ -31,10 +31,10 @@ function ScenarioPanel({
 }) {
   return (
     <section className="flow-section" aria-labelledby="scenario-title">
-      <p className="eyebrow">Scenario</p>
+      <p className="eyebrow">Сценарий</p>
       <h2 id="scenario-title">{scenario.title}</h2>
       <div className="scenario-meta">
-        <span>Scenario Version: {scenarioVersion.versionLabel}</span>
+        <span>Версия сценария: {scenarioVersion.versionLabel}</span>
         <span>Опубликованное содержание</span>
       </div>
       <p className="lead">{scenarioVersion.goal}</p>
@@ -59,7 +59,7 @@ function ApplicabilityPanel({
 }) {
   return (
     <section className="flow-section" aria-labelledby="applicability-title">
-      <p className="eyebrow">Applicability Conditions</p>
+      <p className="eyebrow">Условия применимости</p>
       <h2 id="applicability-title">Кому подходит сценарий</h2>
       <ul className="check-list">
         {scenarioVersion.applicabilityConditions.map((condition) => (
@@ -79,7 +79,7 @@ function TemplateOpenQuestionsPanel({
 }) {
   return (
     <section className="flow-section" aria-labelledby="template-questions-title">
-      <p className="eyebrow">Template Open Questions</p>
+      <p className="eyebrow">Вопросы для проверки</p>
       <h2 id="template-questions-title">Вопросы для внешней проверки</h2>
       <ol className="numbered-list">
         {scenarioVersion.templateOpenQuestions.map((question) => (
@@ -101,7 +101,7 @@ export function RequirementsPanel({
 }) {
   return (
     <section className="flow-section" aria-labelledby={`${id}-title`}>
-      <p className="eyebrow">Documents / Data Requirements</p>
+      <p className="eyebrow">Документы и данные</p>
       <h2 id={`${id}-title`}>{title}</h2>
       <div className="requirement-grid">
         {requirements.map((requirement) => (
@@ -132,7 +132,7 @@ export function SourcesPanel({
 }) {
   return (
     <section className="flow-section" aria-labelledby={`${id}-title`}>
-      <p className="eyebrow">Sources</p>
+      <p className="eyebrow">Источники</p>
       <h2 id={`${id}-title`}>Где проверить официальный источник</h2>
       <div className="source-list">
         {sources.map((source) => {
@@ -153,7 +153,7 @@ export function SourcesPanel({
                 <p className="verification-note">Проверьте актуальность требований.</p>
               ) : null}
               {onMarkSourceChecked ? (
-                <div className="boundary-box">
+                <div className="source-check-box">
                   {checkedSourceMark ? (
                     <p>
                       <strong>Отмечено вами:</strong> вы отметили, что проверили
@@ -238,7 +238,7 @@ function StepsPanel({
 }) {
   return (
     <section className="flow-section" aria-labelledby="steps-title">
-      <p className="eyebrow">Steps</p>
+      <p className="eyebrow">Путь пользователя</p>
       <h2 id="steps-title">Шаги сценария</h2>
       <div className="step-list">
         {scenarioVersion.steps.map((step) => (
@@ -255,8 +255,8 @@ function StartPlanPanel({ onStartPlan }: { onStartPlan: () => void }) {
       <p className="eyebrow">Следующий шаг</p>
       <h2 id="start-plan-title">Сохранить этот путь как свой план</h2>
       <p>
-        Создание плана сохранит выбранную Life Situation и текущую published Scenario
-        Version. Все шаги начнутся с вашей отметки <code>not_started</code>.
+        Создание плана сохранит выбранную жизненную ситуацию и текущую опубликованную
+        версию сценария. Все шаги начнутся с вашей отметки «Не начато».
       </p>
       <BoundaryNotice>
         План помогает организовать прохождение, но не подтверждает официальный статус,

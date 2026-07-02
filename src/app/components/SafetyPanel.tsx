@@ -36,20 +36,20 @@ export function SafetyPanel({
 }) {
   return (
     <section className="safety-section" aria-labelledby="safety-title">
-      <p className="eyebrow">Warnings / Restrictions</p>
+      <p className="eyebrow">Предупреждения и ограничения</p>
       <h2 id="safety-title">Важно до дальнейших действий</h2>
       <div className="safety-grid">
         <ContentList
           className="warning-panel"
           items={scenarioVersion.warnings}
           prefix="Предупреждение"
-          title="Warnings"
+          title="Предупреждения"
         />
         <ContentList
           className="restriction-panel"
           items={scenarioVersion.restrictions}
           prefix="Ограничение"
-          title="Restrictions"
+          title="Ограничения"
         />
       </div>
     </section>

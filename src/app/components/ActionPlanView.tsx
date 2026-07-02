@@ -46,10 +46,10 @@ export function ActionPlanView({
         <p className="eyebrow">Ваш план</p>
         <div className="plan-title-row">
           <h2 id="action-plan-title">{scenario.title}</h2>
-          <span>Scenario Version: {actionPlan.actionPlan.scenarioVersionLabel}</span>
+          <span>Версия сценария: {actionPlan.actionPlan.scenarioVersionLabel}</span>
         </div>
         <p className="plan-context">
-          Life Situation: {actionPlan.actionPlan.selectedLifeSituationContext.title}
+          Жизненная ситуация: {actionPlan.actionPlan.selectedLifeSituationContext.title}
         </p>
         <dl className="plan-summary">
           <div>
@@ -61,7 +61,7 @@ export function ActionPlanView({
       </header>
 
       <section className="plan-steps-section" aria-labelledby="plan-steps-title">
-        <p className="eyebrow">Progress</p>
+        <p className="eyebrow">Ваш прогресс</p>
         <h3 id="plan-steps-title">Шаги плана</h3>
         <p className="section-intro">
           Статусы ниже — ваши личные отметки в Nova Agent, а не сведения от
@@ -96,7 +96,7 @@ export function ActionPlanView({
             return (
               <article className="plan-step-row" key={step.id}>
                 <div>
-                  <p className="step-order">Step {step.order}</p>
+                  <p className="step-order">Шаг {step.order}</p>
                   <h4>{step.title}</h4>
                   <p>{step.purpose}</p>
                 </div>
@@ -123,7 +123,7 @@ export function ActionPlanView({
         />
         <div className="plan-history-link">
           <div>
-            <p className="eyebrow">History</p>
+            <p className="eyebrow">История</p>
             <h4>История плана</h4>
             <p>
               Просмотрите внутренние события Nova Agent, чтобы восстановить контекст

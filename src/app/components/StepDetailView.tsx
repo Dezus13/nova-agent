@@ -49,13 +49,13 @@ export function StepDetailView({
     <section className="plan-view" aria-labelledby="step-detail-title">
       <header className="step-detail-header">
         <p className="eyebrow">
-          Ваш план · Step {step.order} · {actionPlan.actionPlan.scenarioVersionLabel}
+          Ваш план · Шаг {step.order} · {actionPlan.actionPlan.scenarioVersionLabel}
         </p>
         <h2 id="step-detail-title">{step.title}</h2>
       </header>
 
       <section className="step-detail-safety" aria-labelledby="step-safety-title">
-        <p className="eyebrow">Warnings / Restrictions</p>
+        <p className="eyebrow">Предупреждения и ограничения</p>
         <h3 id="step-safety-title">Важно до действий по шагу</h3>
         <div className="safety-grid">
           <ContentList
@@ -80,7 +80,7 @@ export function StepDetailView({
       </section>
 
       <section className="step-context-section" aria-labelledby="step-applicability-title">
-        <p className="eyebrow">Applicability Conditions</p>
+        <p className="eyebrow">Условия применимости</p>
         <h3 id="step-applicability-title">Проверьте применимость сценария</h3>
         <ul className="check-list">
           {scenarioVersion.applicabilityConditions.map((condition) => (
@@ -94,7 +94,7 @@ export function StepDetailView({
       <RequirementsPanel
         id="plan-step-requirements"
         requirements={requirements}
-        title="Documents / Data Requirements"
+        title="Документы и данные для шага"
       />
       <SourcesPanel
         checkedSourceMarks={checkedSourceMarks}
@@ -104,7 +104,7 @@ export function StepDetailView({
       />
 
       <section className="step-progress-section" aria-labelledby="step-progress-title">
-        <p className="eyebrow">Progress</p>
+        <p className="eyebrow">Ваша отметка</p>
         <h3 id="step-progress-title">Текущее состояние шага</h3>
         <ProgressBadge progress={progress} />
         <p>

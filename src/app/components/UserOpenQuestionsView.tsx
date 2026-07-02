@@ -7,6 +7,14 @@ import {
 const userOpenQuestionBoundaryCopy =
   "Nova Agent не отвечает на этот вопрос. Проверьте информацию через официальный или другой надёжный источник.";
 
+const userOpenQuestionStatusLabels: Record<UserOpenQuestionStatus, string> = {
+  open: "Открыт",
+  requires_check: "Требует проверки",
+  awaiting_external_response: "Ожидает внешний ответ",
+  clarified_by_user: "Уточнён вами",
+  irrelevant: "Неактуален",
+};
+
 export function UserOpenQuestionsView({
   newQuestionText,
   onAddQuestion,
@@ -55,7 +63,7 @@ export function UserOpenQuestionsView({
                     <dt>Статус</dt>
                     <dd>
                       <span>Ваша отметка</span>
-                      <strong>{question.status}</strong>
+                      <strong>{userOpenQuestionStatusLabels[question.status]}</strong>
                     </dd>
                   </dl>
                   <label htmlFor={statusControlId}>Изменить статус вопроса</label>
@@ -72,7 +80,7 @@ export function UserOpenQuestionsView({
                   >
                     {statusOptions.map((status) => (
                       <option key={status} value={status}>
-                        {status}
+                        {userOpenQuestionStatusLabels[status]}
                       </option>
                     ))}
                   </select>

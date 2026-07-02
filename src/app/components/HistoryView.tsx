@@ -97,7 +97,7 @@ function HistoryEventItem({
             {formatHistoryTimestamp(event.occurredAt)}
           </time>
         </div>
-        <p>{`Создан ваш план для Scenario «${scenario.title}» на основе Scenario Version ${scenarioVersion.versionLabel}.`}</p>
+        <p>{`Создан ваш план для сценария «${scenario.title}» на основе версии ${scenarioVersion.versionLabel}.`}</p>
         {userNoteContext}
       </li>
     );
@@ -193,7 +193,7 @@ function HistoryEventItem({
         </div>
         <p>
           Внутренняя запись Nova Agent: вы добавили собственную заметку к
-          существующему событию History.
+          существующему событию истории.
         </p>
         <p className="history-event-context">
           Не официальный документ. Не источник. Не ответ Nova Agent.
@@ -225,11 +225,11 @@ function HistoryEventItem({
         </time>
       </div>
       <p>{transitionLabel}</p>
-    <p className="history-event-context">
-      <strong>Связанный шаг:</strong> {stepLabel}
-    </p>
-    {canAttachUserNote ? userNoteContext : null}
-  </li>
+      <p className="history-event-context">
+        <strong>Связанный шаг:</strong> {stepLabel}
+      </p>
+      {canAttachUserNote ? userNoteContext : null}
+    </li>
   );
 }
 
@@ -259,7 +259,7 @@ export function HistoryView({
   return (
     <section className="plan-view" aria-labelledby="history-title">
       <header className="history-header">
-        <p className="eyebrow">Ваш план · History</p>
+        <p className="eyebrow">Ваш план · История</p>
         <h2 id="history-title">История плана</h2>
         <p>{`${scenario.title} · Scenario Version ${actionPlan.actionPlan.scenarioVersionLabel}`}</p>
         <BoundaryNotice className="history-boundary">{historyBoundaryCopy}</BoundaryNotice>

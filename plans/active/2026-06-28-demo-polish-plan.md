@@ -170,6 +170,8 @@ Supabase, API, auth, persistence or Vercel config changes in this step.
 
 ### Step 2: UI Visual Polish Only
 
+Status: completed.
+
 Improve the current UI without changing product behavior.
 
 Allowed targets:
@@ -191,6 +193,17 @@ Required checks:
 - product boundary copy remains present;
 - Progress, History, UOQ, CSM and User Note behavior is unchanged;
 - no forbidden product scope appears.
+
+Step 2 implementation note:
+
+- polished the first screen into a clearer product/demo entry point;
+- replaced technical visible labels with user-facing labels while preserving
+  domain values and product meaning;
+- improved card spacing, button treatment, warnings/restrictions, sources,
+  Checked Source Marks, History Events and User Note visual separation;
+- kept boundary copy visible near risky actions;
+- did not change workflow helpers, domain logic, Progress source of truth,
+  History semantics, UOQ behavior, CSM behavior or User Note behavior.
 
 ### Step 3: README And Demo Instructions Update
 
