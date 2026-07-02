@@ -87,6 +87,15 @@ export interface CheckedSourceMark {
   readonly createdByUser: true;
 }
 
+export interface UserNote {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly historyEventId: string;
+  readonly text: string;
+  readonly createdAt: string;
+  readonly createdByUser: true;
+}
+
 export interface ActionPlanCreatedHistoryPayload {
   readonly actionPlanId: string;
   readonly scenarioVersionId: string;
@@ -251,6 +260,14 @@ export type CreateCheckedSourceMarkWithHistoryInput = CreateCheckedSourceMarkInp
 export interface CreateCheckedSourceMarkWithHistoryResult {
   readonly plan: ActionPlanAggregate;
   readonly mark: CheckedSourceMark;
+}
+
+export interface CreateUserNoteInput {
+  readonly plan: ActionPlanAggregate;
+  readonly historyEventId: string;
+  readonly text: string;
+  readonly operationId: string;
+  readonly occurredAt: string;
 }
 
 function isVs01ProgressUpdateStatus(
@@ -606,5 +623,42 @@ export function createCheckedSourceMarkWithHistory(
   return {
     plan: appendHistoryEvent(input.plan, historyEvent),
     mark,
+  };
+}
+
+export function createUserNote(input: CreateUserNoteInput): UserNote {
+  if (input.plan.actionPlan.state !== "active") {
+    throw new Error("User Note can only be created inside an active Action Plan.");
+  }
+
+  const historyEventId = input.historyEventId.trim();
+
+  if (!historyEventId) {
+    throw new Error("User Note requires a context History Event.");
+  }
+
+  const contextHistoryEvent = input.plan.historyEvents.find(
+    (event) =>
+      event.id === historyEventId &&
+      event.actionPlanId === input.plan.actionPlan.id,
+  );
+
+  if (!contextHistoryEvent) {
+    throw new Error("User Note context History Event must belong to the Action Plan.");
+  }
+
+  const text = input.text.trim();
+
+  if (!text) {
+    throw new Error("User Note text is required.");
+  }
+
+  return {
+    id: `user-note-${input.operationId}`,
+    actionPlanId: input.plan.actionPlan.id,
+    historyEventId,
+    text,
+    createdAt: input.occurredAt,
+    createdByUser: true,
   };
 }

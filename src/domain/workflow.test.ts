@@ -8,6 +8,7 @@ import {
   USER_OPEN_QUESTION_STATUSES,
   createCheckedSourceMark,
   createCheckedSourceMarkWithHistory,
+  createUserNote,
   createUserOpenQuestion,
   createUserOpenQuestionWithHistory,
   getAllowedUserOpenQuestionStatusTransitions,
@@ -785,5 +786,200 @@ describe("VS-04 Checked Source Mark domain helper", () => {
     expect(createdPlan.actionPlan).toBe(actionPlanBefore);
     expect(createdPlan.progressRecords).toBe(progressBefore);
     expect(createdPlan.historyEvents).toBe(historyBefore);
+  });
+});
+
+describe("VS-04 User Note domain helper", () => {
+  it("creates a user-owned note attached to a context History Event in an active Action Plan", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const contextHistoryEvent = createdPlan.historyEvents[0];
+
+    if (!contextHistoryEvent) {
+      throw new Error("Expected a context History Event.");
+    }
+
+    const note = createUserNote({
+      plan: createdPlan,
+      historyEventId: ` ${contextHistoryEvent.id} `,
+      text: "  Уточнить, нужен ли оригинал документа.  ",
+      operationId: "create-note",
+      occurredAt: "2026-07-02T12:00:00.000Z",
+    });
+
+    expect(note).toEqual({
+      id: "user-note-create-note",
+      actionPlanId: createdPlan.actionPlan.id,
+      historyEventId: contextHistoryEvent.id,
+      text: "Уточнить, нужен ли оригинал документа.",
+      createdAt: "2026-07-02T12:00:00.000Z",
+      createdByUser: true,
+    });
+  });
+
+  it("records user context without Nova Agent answer, source, document or official fields", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const contextHistoryEvent = createdPlan.historyEvents[0];
+
+    if (!contextHistoryEvent) {
+      throw new Error("Expected a context History Event.");
+    }
+
+    const note = createUserNote({
+      plan: createdPlan,
+      historyEventId: contextHistoryEvent.id,
+      text: "Проверить режим работы перед визитом.",
+      operationId: "boundary-note",
+      occurredAt: "2026-07-02T12:00:00.000Z",
+    });
+
+    expect(note.createdByUser).toBe(true);
+    expect(note).not.toHaveProperty("answeredByNova");
+    expect(note).not.toHaveProperty("verified");
+    expect(note).not.toHaveProperty("official");
+    expect(note).not.toHaveProperty("approved");
+    expect(note).not.toHaveProperty("accepted");
+    expect(note).not.toHaveProperty("confirmed");
+    expect(note).not.toHaveProperty("source");
+    expect(note).not.toHaveProperty("document");
+    expect(note).not.toHaveProperty("authorityStatus");
+    expect(note).not.toHaveProperty("legalStatus");
+    expect(note).not.toHaveProperty("medicalStatus");
+    expect(note).not.toHaveProperty("taxStatus");
+  });
+
+  it("does not change Progress, History, Action Plan state, UOQ or Checked Source Marks", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const contextHistoryEvent = createdPlan.historyEvents[0];
+
+    if (!contextHistoryEvent) {
+      throw new Error("Expected a context History Event.");
+    }
+
+    const actionPlanBefore = createdPlan.actionPlan;
+    const progressBefore = createdPlan.progressRecords;
+    const historyBefore = createdPlan.historyEvents;
+    const question = createUserOpenQuestion({
+      plan: createdPlan,
+      questionText: "Нужно ли идти лично?",
+      operationId: "note-side-effect-uoq",
+      occurredAt: "2026-07-02T12:00:00.000Z",
+    });
+    const checkedSourceMark = createCheckedSourceMark({
+      plan: createdPlan,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      operationId: "note-side-effect-csm",
+      occurredAt: "2026-07-02T12:00:00.000Z",
+    });
+
+    createUserNote({
+      plan: createdPlan,
+      historyEventId: contextHistoryEvent.id,
+      text: "Сохранить короткий контекст.",
+      operationId: "no-side-effects-note",
+      occurredAt: "2026-07-02T12:00:00.000Z",
+    });
+
+    expect(createdPlan.actionPlan).toBe(actionPlanBefore);
+    expect(createdPlan.actionPlan.state).toBe("active");
+    expect(createdPlan.progressRecords).toBe(progressBefore);
+    expect(createdPlan.progressRecords.every((progress) => progress.status === "not_started"))
+      .toBe(true);
+    expect(createdPlan.historyEvents).toBe(historyBefore);
+    expect(createdPlan.historyEvents).toHaveLength(1);
+    expect(createdPlan.historyEvents.map((event) => event.eventType)).not.toContain(
+      "user_note_created",
+    );
+    expect(question).toEqual({
+      id: "user-open-question-note-side-effect-uoq",
+      actionPlanId: createdPlan.actionPlan.id,
+      scenarioVersionId: createdPlan.actionPlan.scenarioVersionId,
+      questionText: "Нужно ли идти лично?",
+      status: "open",
+      context: undefined,
+      createdAt: "2026-07-02T12:00:00.000Z",
+      updatedAt: "2026-07-02T12:00:00.000Z",
+    });
+    expect(checkedSourceMark).toEqual({
+      id: "checked-source-mark-note-side-effect-csm",
+      actionPlanId: createdPlan.actionPlan.id,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      createdAt: "2026-07-02T12:00:00.000Z",
+      createdByUser: true,
+    });
+    expect(createdPlan).toEqual({
+      actionPlan: actionPlanBefore,
+      progressRecords: progressBefore,
+      historyEvents: historyBefore,
+    });
+  });
+
+  it("rejects a missing or foreign context History Event", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const otherPlan = startActionPlan({
+      ...getStartInput(),
+      operationId: "other-note-plan",
+    }).plan;
+    const otherHistoryEvent = otherPlan.historyEvents[0];
+
+    if (!otherHistoryEvent) {
+      throw new Error("Expected a foreign context History Event.");
+    }
+
+    expect(() =>
+      createUserNote({
+        plan: createdPlan,
+        historyEventId: "",
+        text: "Некоторый контекст.",
+        operationId: "missing-context-note",
+        occurredAt: "2026-07-02T12:00:00.000Z",
+      }),
+    ).toThrow("User Note requires a context History Event.");
+
+    expect(() =>
+      createUserNote({
+        plan: createdPlan,
+        historyEventId: otherHistoryEvent.id,
+        text: "Некоторый контекст.",
+        operationId: "foreign-context-note",
+        occurredAt: "2026-07-02T12:00:00.000Z",
+      }),
+    ).toThrow("User Note context History Event must belong to the Action Plan.");
+  });
+
+  it("rejects creation outside an active Action Plan and empty note text", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const contextHistoryEvent = createdPlan.historyEvents[0];
+
+    if (!contextHistoryEvent) {
+      throw new Error("Expected a context History Event.");
+    }
+
+    const completedPlan = {
+      ...createdPlan,
+      actionPlan: {
+        ...createdPlan.actionPlan,
+        state: "completed" as const,
+      },
+    };
+
+    expect(() =>
+      createUserNote({
+        plan: completedPlan,
+        historyEventId: contextHistoryEvent.id,
+        text: "Некоторый контекст.",
+        operationId: "completed-note",
+        occurredAt: "2026-07-02T12:00:00.000Z",
+      }),
+    ).toThrow("User Note can only be created inside an active Action Plan.");
+
+    expect(() =>
+      createUserNote({
+        plan: createdPlan,
+        historyEventId: contextHistoryEvent.id,
+        text: "   ",
+        operationId: "empty-note",
+        occurredAt: "2026-07-02T12:00:00.000Z",
+      }),
+    ).toThrow("User Note text is required.");
   });
 });

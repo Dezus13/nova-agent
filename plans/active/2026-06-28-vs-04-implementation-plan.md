@@ -267,17 +267,27 @@ Step 3 implementation note:
 
 ### Step 4: User Note Domain Model And Helper
 
-Status: planned.
+Status: completed.
 
 Scope:
 
-- add local typed User Note model using approved lifecycle states;
+- add local typed User Note model without edit, hide, delete or lifecycle state in this step;
 - add pure helper for creating a note attached to a context History Event;
 - enforce same Action Plan scope for note and context History Event;
 - reject notes without a valid context History Event;
 - keep User Note text as short supporting context.
 
 No UI, API, Supabase, auth, persistence, routing or document storage in this step.
+
+Step 4 implementation note:
+
+- added the local typed User Note model with `historyEventId`, `text`, `createdAt` and `createdByUser: true`;
+- added a pure `createUserNote` helper for existing active Action Plans only;
+- validated that the note context History Event belongs to the same Action Plan;
+- trimmed note text and rejected empty notes or missing/foreign context History Events;
+- kept Progress, History, Action Plan state, User Open Questions and Checked Source Marks unchanged;
+- did not add UI, edit/hide/delete lifecycle, User Note History Events, source/document records, official status fields, Supabase, API handlers, auth, routing, state manager, persistence or document storage;
+- deferred `user_note_created` History Event creation to the separate User Note History Events step.
 
 ### Step 5: User Note Create/Read UI In Active Action Plan Context
 
