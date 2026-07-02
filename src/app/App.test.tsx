@@ -1459,6 +1459,155 @@ describe("App", () => {
     expect(text).not.toContain("legal/tax/medical advice");
   });
 
+  it("passes the full VS-04 Sources And Notes demo flow through user actions", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    let tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Return Context");
+    expect(text).toContain("Есть существующий active Action Plan");
+
+    clickButton(tree, "Продолжить active plan");
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ваш план");
+    expect(text).toContain("Статус плана");
+    expect(text).toContain("active");
+
+    clickButton(tree, "Открыть следующий шаг");
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Где проверить официальный источник");
+    expect(text).toContain("Отметить как проверено мной");
+
+    clickButton(tree, "Отметить как проверено мной");
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    text = getTextContent(tree);
+
+    const activePlanAfterSourceMark = runtime.getState<ActionPlanAggregate | null>(0);
+    const userOpenQuestionsAfterSourceMark =
+      runtime.getState<readonly UserOpenQuestion[]>(4);
+    const checkedSourceMarksAfterSourceMark =
+      runtime.getState<readonly CheckedSourceMark[]>(6);
+
+    expect(text).toContain("Отмечено вами");
+    expect(text).toContain("Nova Agent не проверяет источник");
+    expect(text).toContain("Это не официальный статус");
+    expect(text).toContain("Это не подтверждение действия");
+    expect(activePlanAfterSourceMark?.actionPlan.state).toBe("active");
+    expect(
+      activePlanAfterSourceMark?.progressRecords.every(
+        (progress) => progress.status === "not_started",
+      ),
+    ).toBe(true);
+    expect(
+      activePlanAfterSourceMark?.historyEvents.map((event) => event.eventType),
+    ).toEqual(["action_plan_created", "source_checked"]);
+    expect(userOpenQuestionsAfterSourceMark).toHaveLength(0);
+    expect(checkedSourceMarksAfterSourceMark).toHaveLength(1);
+
+    clickButton(tree, "Вернуться к плану");
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("Источник отмечен вами");
+    expect(text).toContain("Внутренняя запись Nova Agent");
+    expect(text).toContain("Nova Agent не проверяет источник");
+    expect(text).toContain("Это не официальный статус");
+    expect(text).toContain("Это не подтверждение действия");
+
+    changeTextArea(
+      tree,
+      "Новая заметка",
+      "  Проверить сохранённый источник перед визитом.  ",
+    );
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+
+    expect(findTextAreaByLabel(tree, "Новая заметка")?.props.value).toBe(
+      "  Проверить сохранённый источник перед визитом.  ",
+    );
+
+    clickButton(tree, "Добавить заметку");
+    tree = renderInteractiveApp(runtime, { initialActionPlan: actionPlan });
+    text = getTextContent(tree);
+
+    const activePlanAfterNote = runtime.getState<ActionPlanAggregate | null>(0);
+    const userOpenQuestionsAfterNote =
+      runtime.getState<readonly UserOpenQuestion[]>(4);
+    const checkedSourceMarksAfterNote =
+      runtime.getState<readonly CheckedSourceMark[]>(6);
+    const userNotesAfterNote = runtime.getState<readonly UserNote[]>(7);
+
+    expect(text).toContain("Ваша заметка");
+    expect(text).toContain("Проверить сохранённый источник перед визитом.");
+    expect(text).toContain("Не официальный документ");
+    expect(text).toContain("Не источник");
+    expect(text).toContain("Не ответ Nova Agent");
+    expect(text).toContain("Заметка добавлена вами");
+    expect(text).toContain(
+      "Внутренняя запись Nova Agent: вы добавили собственную заметку к существующему событию History.",
+    );
+    expect(findTextAreaByLabel(tree, "Новая заметка")?.props.value).toBe("");
+    expect(userNotesAfterNote).toHaveLength(1);
+    expect(userNotesAfterNote[0]).toMatchObject({
+      actionPlanId: actionPlan.actionPlan.id,
+      createdByUser: true,
+      historyEventId: actionPlan.historyEvents[0]?.id,
+      text: "Проверить сохранённый источник перед визитом.",
+    });
+    expect(activePlanAfterNote?.actionPlan.state).toBe("active");
+    expect(
+      activePlanAfterNote?.progressRecords.every(
+        (progress) => progress.status === "not_started",
+      ),
+    ).toBe(true);
+    expect(
+      activePlanAfterNote?.historyEvents.map((event) => event.eventType),
+    ).toEqual(["action_plan_created", "source_checked", "user_note_created"]);
+    expect(activePlanAfterNote?.historyEvents[2]).toMatchObject({
+      eventType: "user_note_created",
+      payload: {
+        actionPlanId: actionPlan.actionPlan.id,
+        contextHistoryEventId: actionPlan.historyEvents[0]?.id,
+        userNoteId: userNotesAfterNote[0]?.id,
+      },
+    });
+    expect(userOpenQuestionsAfterNote).toHaveLength(0);
+    expect(checkedSourceMarksAfterNote).toHaveLength(1);
+    expect(text.match(/Добавить заметку/g)).toHaveLength(2);
+
+    const userNoteCreatedSection = text.slice(text.indexOf("Заметка добавлена вами"));
+
+    expect(userNoteCreatedSection).not.toContain("Добавить заметку");
+    expect(text).not.toContain("Редактировать заметку");
+    expect(text).not.toContain("Скрыть заметку");
+    expect(text).not.toContain("Архивировать заметку");
+    expect(text).not.toContain("Удалить заметку");
+    expect(text).not.toContain("Проверено Nova Agent");
+    expect(text).not.toContain("Официально подтверждено");
+    expect(text).not.toContain("Официальный статус источника");
+    expect(text).not.toContain("document storage");
+    expect(text).not.toContain("source records");
+    expect(text).not.toContain("document records");
+    expect(text).not.toContain("AI answer");
+    expect(text).not.toContain("Supabase");
+    expect(text).not.toContain("API handlers");
+    expect(text).not.toContain("auth");
+    expect(text).not.toContain("routing library");
+    expect(text).not.toContain("state manager");
+    expect(text).not.toContain("persistence");
+    expect(text).not.toContain("Dashboard");
+    expect(text).not.toContain("Completed Plans");
+    expect(text).not.toContain("Pattern B");
+    expect(text).not.toContain("Content Admin");
+  });
+
   it("shows progress history after plan creation with the linked step context", () => {
     const updatedPlan = createUpdatedActionPlanForUi();
     const planWithUnorderedHistory = {

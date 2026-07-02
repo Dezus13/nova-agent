@@ -354,7 +354,7 @@ Deferred lifecycle may become a separate later vertical slice after persistence,
 
 ### Step 8: Demo Flow Validation
 
-Status: planned.
+Status: completed.
 
 Scope:
 
@@ -367,6 +367,16 @@ Scope:
 - validate that User Note edit/hide/archive/delete remain absent;
 - validate History boundary copy;
 - validate absence of forbidden scope.
+
+Step 8 implementation note:
+
+- added one full interaction test for the VS-04 Sources And Notes flow through existing user actions;
+- validated opening an existing active Action Plan, opening Step Detail, marking a source as checked by the user, opening History, adding a User Note and seeing `user_note_created`;
+- verified boundary copy for Checked Source Marks, User Notes and History;
+- verified `user_note_created` cannot be used as a context event for another note because the audit event does not expose User Note create controls;
+- verified Progress stays unchanged, Action Plan state stays `active` and User Open Questions stay unchanged;
+- verified absence of edit/hide/archive/delete note lifecycle, source verification, official status, document storage, source/document records, AI answer, Supabase, API handlers, auth, routing, state manager, persistence, Dashboard, Completed Plans, Pattern B and Content Admin;
+- did not change application runtime code.
 
 ### Step 9: Closure
 
