@@ -1,6 +1,7 @@
 import type { PublishedScenarioVersion, Step } from "../../domain/content";
 import type {
   ActionPlanAggregate,
+  CheckedSourceMark,
   Progress,
   Vs01ProgressUpdateStatus,
 } from "../../domain/workflow";
@@ -12,13 +13,17 @@ import { ContentList } from "./SafetyPanel";
 export function StepDetailView({
   actionPlan,
   onBack,
+  onMarkSourceChecked,
   onUpdateProgress,
   progress,
   scenarioVersion,
   step,
+  checkedSourceMarks,
 }: {
   actionPlan: ActionPlanAggregate;
+  checkedSourceMarks: readonly CheckedSourceMark[];
   onBack: () => void;
+  onMarkSourceChecked: (sourceRevisionId: string) => void;
   onUpdateProgress: (
     progressId: string,
     targetStatus: Vs01ProgressUpdateStatus,
@@ -91,7 +96,12 @@ export function StepDetailView({
         requirements={requirements}
         title="Documents / Data Requirements"
       />
-      <SourcesPanel id="plan-step-sources" sources={sources} />
+      <SourcesPanel
+        checkedSourceMarks={checkedSourceMarks}
+        id="plan-step-sources"
+        onMarkSourceChecked={onMarkSourceChecked}
+        sources={sources}
+      />
 
       <section className="step-progress-section" aria-labelledby="step-progress-title">
         <p className="eyebrow">Progress</p>

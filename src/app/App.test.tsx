@@ -11,6 +11,7 @@ import {
   startActionPlan,
   updateProgressStatus,
   type ActionPlanAggregate,
+  type CheckedSourceMark,
   type UserOpenQuestion,
 } from "../domain/workflow";
 import { App } from "./App";
@@ -1016,6 +1017,106 @@ describe("App", () => {
     expect(text).not.toContain("routing library");
     expect(text).not.toContain("state manager");
     expect(text).not.toContain("persistence");
+  });
+
+  it("marks an existing source as checked by the user without workflow side effects", () => {
+    const runtime = createInteractiveRuntime();
+    const actionPlan = createActionPlanForUi();
+    const actionPlanBefore = actionPlan.actionPlan;
+    const progressBefore = actionPlan.progressRecords;
+    const historyBefore = actionPlan.historyEvents;
+    let tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialSelectedStepId: "step-check-registration-need",
+    });
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Где проверить официальный источник");
+    expect(text).toContain(
+      'oesterreich.gv.at: Anmeldung eines neuen Hauptwohnsitzes oder "Nebenwohnsitzes"',
+    );
+    expect(text).toContain("Отметить как проверено мной");
+    expect(text).toContain("Nova Agent не проверяет источник");
+    expect(text).toContain("Это не официальный статус");
+    expect(text).toContain("Это не подтверждение действия");
+    expect(text).not.toContain("Проверено Nova Agent");
+    expect(text).not.toContain("Официально подтверждено");
+    expect(text).not.toContain("Подтверждено органом");
+
+    clickButton(tree, "Отметить как проверено мной");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialSelectedStepId: "step-check-registration-need",
+    });
+    text = getTextContent(tree);
+
+    expect(text.match(/Отмечено вами/g)).toHaveLength(1);
+    expect(text).toContain("вы отметили, что проверили этот источник");
+
+    clickButton(tree, "Отметить как проверено мной");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialSelectedStepId: "step-check-registration-need",
+    });
+    text = getTextContent(tree);
+
+    const checkedSourceMarks = runtime.getState<readonly CheckedSourceMark[]>(6);
+    const activePlanAfterMark = runtime.getState<ActionPlanAggregate | null>(0);
+
+    expect(text.match(/Отмечено вами/g)).toHaveLength(1);
+    expect(checkedSourceMarks).toHaveLength(1);
+    expect(checkedSourceMarks[0]).toMatchObject({
+      actionPlanId: actionPlan.actionPlan.id,
+      createdByUser: true,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+    });
+    expect(checkedSourceMarks[0]).not.toHaveProperty("verifiedByNovaAgent");
+    expect(checkedSourceMarks[0]).not.toHaveProperty("officialStatus");
+    expect(checkedSourceMarks[0]).not.toHaveProperty("accepted");
+    expect(activePlanAfterMark?.actionPlan.state).toBe("active");
+    expect(
+      activePlanAfterMark?.progressRecords.every(
+        (progress) => progress.status === "not_started",
+      ),
+    ).toBe(true);
+    expect(
+      activePlanAfterMark?.historyEvents.map((event) => event.eventType),
+    ).toEqual(["action_plan_created"]);
+    expect(actionPlan.actionPlan).toBe(actionPlanBefore);
+    expect(actionPlan.progressRecords).toBe(progressBefore);
+    expect(actionPlan.historyEvents).toBe(historyBefore);
+    expect(text).not.toContain("User Notes");
+    expect(text).not.toContain("source_checked");
+
+    clickButton(tree, "Вернуться к плану");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialSelectedStepId: "step-check-registration-need",
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("Статус плана");
+    expect(text).toContain("active");
+    expect(text.match(/Не начато/g)).toHaveLength(6);
+
+    clickButton(tree, "Открыть историю");
+    tree = renderInteractiveApp(runtime, {
+      initialActionPlan: actionPlan,
+      initialPlanOpen: true,
+      initialSelectedStepId: "step-check-registration-need",
+    });
+    text = getTextContent(tree);
+
+    expect(text).toContain("История плана");
+    expect(text).toContain("План создан");
+    expect(text).not.toContain("source_checked");
+    expect(text).not.toContain("Источник отмечен");
+    expect(text).not.toContain("User Notes");
+    expect(text).not.toContain("Checked Source Marks");
   });
 
   it("opens History from the active-plan continuation entry", () => {

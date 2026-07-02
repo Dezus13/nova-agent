@@ -6,6 +6,7 @@ import type {
   Source,
   Step,
 } from "../../domain/content";
+import type { CheckedSourceMark } from "../../domain/workflow";
 import { LifeSituationView } from "./LifeSituationView";
 import { BoundaryNotice } from "./BoundaryNotice";
 import { SafetyPanel } from "./SafetyPanel";
@@ -119,10 +120,14 @@ export function RequirementsPanel({
 }
 
 export function SourcesPanel({
+  checkedSourceMarks = [],
   id,
+  onMarkSourceChecked,
   sources,
 }: {
+  checkedSourceMarks?: readonly CheckedSourceMark[];
   id: string;
+  onMarkSourceChecked?: (sourceRevisionId: string) => void;
   sources: readonly Source[];
 }) {
   return (
@@ -130,20 +135,47 @@ export function SourcesPanel({
       <p className="eyebrow">Sources</p>
       <h2 id={`${id}-title`}>Где проверить официальный источник</h2>
       <div className="source-list">
-        {sources.map((source) => (
-          <article className="source-card" key={source.id}>
-            <p className="tag">{sourceTypeLabels[source.type]}</p>
-            <h3>
-              <a href={source.url} rel="noreferrer" target="_blank">
-                {source.title}
-              </a>
-            </h3>
-            <p>{source.usage}</p>
-            {source.checkCurrentness ? (
-              <p className="verification-note">Проверьте актуальность требований.</p>
-            ) : null}
-          </article>
-        ))}
+        {sources.map((source) => {
+          const checkedSourceMark = checkedSourceMarks.find(
+            (mark) => mark.sourceRevisionId === source.id,
+          );
+
+          return (
+            <article className="source-card" key={source.id}>
+              <p className="tag">{sourceTypeLabels[source.type]}</p>
+              <h3>
+                <a href={source.url} rel="noreferrer" target="_blank">
+                  {source.title}
+                </a>
+              </h3>
+              <p>{source.usage}</p>
+              {source.checkCurrentness ? (
+                <p className="verification-note">Проверьте актуальность требований.</p>
+              ) : null}
+              {onMarkSourceChecked ? (
+                <div className="boundary-box">
+                  {checkedSourceMark ? (
+                    <p>
+                      <strong>Отмечено вами:</strong> вы отметили, что проверили
+                      этот источник.
+                    </p>
+                  ) : null}
+                  <p>
+                    Nova Agent не проверяет источник. Это не официальный статус.
+                    Это не подтверждение действия.
+                  </p>
+                  <button
+                    className="secondary-action"
+                    type="button"
+                    onClick={() => onMarkSourceChecked(source.id)}
+                  >
+                    Отметить как проверено мной
+                  </button>
+                </div>
+              ) : null}
+            </article>
+          );
+        })}
       </div>
     </section>
   );

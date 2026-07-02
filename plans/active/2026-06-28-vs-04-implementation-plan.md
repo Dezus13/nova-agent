@@ -222,7 +222,7 @@ Step 1 implementation note:
 
 ### Step 2: Checked Source Mark Read/Create UI Near Existing Sources
 
-Status: planned.
+Status: completed.
 
 Scope:
 
@@ -233,6 +233,15 @@ Scope:
 - do not show duplicate mark creation as a new event if mark already exists.
 
 No source verification wording, no official status wording and no Action Plan creation from source marks.
+
+Step 2 implementation note:
+
+- added local React state for Checked Source Marks inside the existing active Action Plan UI;
+- displayed the user action next to existing step sources only, not in read-only Scenario browsing;
+- used `createCheckedSourceMark` and a simple local Action Plan + Source Revision check to avoid duplicate marks;
+- displayed the required boundary copy: "Отмечено вами", "Nova Agent не проверяет источник", "Это не официальный статус" and "Это не подтверждение действия";
+- kept Progress, History, Action Plan state, User Open Questions and User Notes unchanged;
+- did not add `source_checked`, source verification, official status, uploads, document storage, Supabase, API handlers, auth, routing, state manager or persistence.
 
 ### Step 3: Checked Source Mark History Event
 

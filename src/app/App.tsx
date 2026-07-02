@@ -1,8 +1,10 @@
 import { useState } from "react";
 import {
+  createCheckedSourceMark,
   createUserOpenQuestionWithHistory,
   startActionPlan,
   type ActionPlanAggregate,
+  type CheckedSourceMark,
   type UserOpenQuestion,
   type UserOpenQuestionStatus,
   type Vs01ProgressUpdateStatus,
@@ -36,12 +38,14 @@ function getContentFlowForPlan(actionPlan: ActionPlanAggregate): SeedContentFlow
 
 export function App({
   initialActionPlan = null,
+  initialCheckedSourceMarks = [],
   initialHistoryOpen = false,
   initialPlanOpen = false,
   initialSelectedStepId = null,
   initialUserOpenQuestions = [],
 }: {
   initialActionPlan?: ActionPlanAggregate | null;
+  initialCheckedSourceMarks?: readonly CheckedSourceMark[];
   initialHistoryOpen?: boolean;
   initialPlanOpen?: boolean;
   initialSelectedStepId?: string | null;
@@ -60,6 +64,9 @@ export function App({
     readonly UserOpenQuestion[]
   >(initialUserOpenQuestions);
   const [newUserOpenQuestionText, setNewUserOpenQuestionText] = useState("");
+  const [checkedSourceMarks, setCheckedSourceMarks] = useState<
+    readonly CheckedSourceMark[]
+  >(initialCheckedSourceMarks);
 
   function handleStartPlan() {
     const result = startActionPlan({
@@ -76,6 +83,7 @@ export function App({
     setActivePlan(result.plan);
     setUserOpenQuestions([]);
     setNewUserOpenQuestionText("");
+    setCheckedSourceMarks([]);
     setSelectedStepId(null);
     setIsHistoryOpen(false);
     setIsPlanOpen(false);
@@ -163,6 +171,34 @@ export function App({
     setActivePlan(result.plan);
   }
 
+  function handleMarkSourceChecked(sourceRevisionId: string) {
+    if (!activePlan) {
+      throw new Error("An active Action Plan is required to mark a source as checked.");
+    }
+
+    setCheckedSourceMarks((currentMarks) => {
+      const existingMark = currentMarks.find(
+        (mark) =>
+          mark.actionPlanId === activePlan.actionPlan.id &&
+          mark.sourceRevisionId === sourceRevisionId,
+      );
+
+      if (existingMark) {
+        return currentMarks;
+      }
+
+      const occurredAt = new Date().toISOString();
+      const mark = createCheckedSourceMark({
+        plan: activePlan,
+        sourceRevisionId,
+        operationId: `${activePlan.actionPlan.id}-${sourceRevisionId}-${currentMarks.length + 1}`,
+        occurredAt,
+      });
+
+      return [...currentMarks, mark];
+    });
+  }
+
   const contentFlow = activePlan
     ? getContentFlowForPlan(activePlan)
     : defaultContentFlow;
@@ -175,6 +211,11 @@ export function App({
   const activePlanUserOpenQuestions = activePlan
     ? userOpenQuestions.filter(
         (question) => question.actionPlanId === activePlan.actionPlan.id,
+      )
+    : [];
+  const activePlanCheckedSourceMarks = activePlan
+    ? checkedSourceMarks.filter(
+        (mark) => mark.actionPlanId === activePlan.actionPlan.id,
       )
     : [];
 
@@ -210,7 +251,9 @@ export function App({
       ) : selectedStep && selectedProgress ? (
         <StepDetailView
           actionPlan={activePlan}
+          checkedSourceMarks={activePlanCheckedSourceMarks}
           onBack={() => setSelectedStepId(null)}
+          onMarkSourceChecked={handleMarkSourceChecked}
           onUpdateProgress={handleUpdateProgress}
           progress={selectedProgress}
           scenarioVersion={contentFlow.scenarioVersion}
