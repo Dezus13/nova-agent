@@ -86,6 +86,34 @@ function HistoryEventItem({
     );
   }
 
+  if (event.eventType === "source_checked") {
+    const source = scenarioVersion.sources.find(
+      (candidate) => candidate.id === event.payload.sourceRevisionId,
+    );
+
+    return (
+      <li className="history-event">
+        <div className="history-event-heading">
+          <div>
+            <p className="eyebrow">Отметка источника</p>
+            <h3>Источник отмечен вами</h3>
+          </div>
+          <time dateTime={event.occurredAt}>
+            {formatHistoryTimestamp(event.occurredAt)}
+          </time>
+        </div>
+        <p>
+          Внутренняя запись Nova Agent: вы отметили, что проверили источник
+          {source ? ` «${source.title}»` : ""}.
+        </p>
+        <p className="history-event-context">
+          Nova Agent не проверяет источник. Это не официальный статус. Это не
+          подтверждение действия.
+        </p>
+      </li>
+    );
+  }
+
   const step = scenarioVersion.steps.find(
     (candidate) => candidate.id === event.payload.versionedStepContextId,
   );

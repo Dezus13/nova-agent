@@ -16,6 +16,7 @@ export type ProgressStatus =
 export type HistoryEventType =
   | "action_plan_created"
   | "progress_status_changed"
+  | "source_checked"
   | "user_open_question_created"
   | "user_open_question_status_changed";
 
@@ -147,9 +148,25 @@ export interface UserOpenQuestionStatusChangedHistoryEvent {
   readonly payload: UserOpenQuestionStatusChangedHistoryPayload;
 }
 
+export interface SourceCheckedHistoryPayload {
+  readonly actionPlanId: string;
+  readonly sourceRevisionId: string;
+  readonly checkedSourceMarkId: string;
+  readonly createdAt: string;
+}
+
+export interface SourceCheckedHistoryEvent {
+  readonly id: string;
+  readonly actionPlanId: string;
+  readonly eventType: "source_checked";
+  readonly occurredAt: string;
+  readonly payload: SourceCheckedHistoryPayload;
+}
+
 export type HistoryEvent =
   | ActionPlanCreatedHistoryEvent
   | ProgressStatusChangedHistoryEvent
+  | SourceCheckedHistoryEvent
   | UserOpenQuestionCreatedHistoryEvent
   | UserOpenQuestionStatusChangedHistoryEvent;
 
@@ -227,6 +244,13 @@ export interface CreateCheckedSourceMarkInput {
   readonly sourceRevisionId: string;
   readonly operationId: string;
   readonly occurredAt: string;
+}
+
+export type CreateCheckedSourceMarkWithHistoryInput = CreateCheckedSourceMarkInput;
+
+export interface CreateCheckedSourceMarkWithHistoryResult {
+  readonly plan: ActionPlanAggregate;
+  readonly mark: CheckedSourceMark;
 }
 
 function isVs01ProgressUpdateStatus(
@@ -559,5 +583,28 @@ export function createCheckedSourceMark(
     sourceRevisionId,
     createdAt: input.occurredAt,
     createdByUser: true,
+  };
+}
+
+export function createCheckedSourceMarkWithHistory(
+  input: CreateCheckedSourceMarkWithHistoryInput,
+): CreateCheckedSourceMarkWithHistoryResult {
+  const mark = createCheckedSourceMark(input);
+  const historyEvent: SourceCheckedHistoryEvent = {
+    id: `history-${input.operationId}-source-checked`,
+    actionPlanId: input.plan.actionPlan.id,
+    eventType: "source_checked",
+    occurredAt: input.occurredAt,
+    payload: {
+      actionPlanId: input.plan.actionPlan.id,
+      sourceRevisionId: mark.sourceRevisionId,
+      checkedSourceMarkId: mark.id,
+      createdAt: mark.createdAt,
+    },
+  };
+
+  return {
+    plan: appendHistoryEvent(input.plan, historyEvent),
+    mark,
   };
 }

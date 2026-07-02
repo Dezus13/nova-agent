@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  createCheckedSourceMark,
+  createCheckedSourceMarkWithHistory,
   createUserOpenQuestionWithHistory,
   startActionPlan,
   type ActionPlanAggregate,
@@ -188,14 +188,16 @@ export function App({
       }
 
       const occurredAt = new Date().toISOString();
-      const mark = createCheckedSourceMark({
+      const result = createCheckedSourceMarkWithHistory({
         plan: activePlan,
         sourceRevisionId,
         operationId: `${activePlan.actionPlan.id}-${sourceRevisionId}-${currentMarks.length + 1}`,
         occurredAt,
       });
 
-      return [...currentMarks, mark];
+      setActivePlan(result.plan);
+
+      return [...currentMarks, result.mark];
     });
   }
 

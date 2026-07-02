@@ -245,7 +245,7 @@ Step 2 implementation note:
 
 ### Step 3: Checked Source Mark History Event
 
-Status: planned.
+Status: completed.
 
 Scope:
 
@@ -255,6 +255,15 @@ Scope:
 - keep History internal, append-only and non-official.
 
 No separate Source History and no editable History.
+
+Step 3 implementation note:
+
+- added `source_checked` to the local History Event type union with minimal payload: Action Plan, Source Revision-compatible identifier, Checked Source Mark id and creation time;
+- added `createCheckedSourceMarkWithHistory` so creating a new Checked Source Mark appends one internal History Event while preserving the pure `createCheckedSourceMark` helper;
+- updated local App orchestration so a repeated Action Plan + Source Revision mark returns the existing local mark state and does not append another `source_checked` event;
+- extended the existing read-only History UI to display the event as "Источник отмечен вами" with boundary copy: "Nova Agent не проверяет источник", "Это не официальный статус" and "Это не подтверждение действия";
+- kept Progress, Action Plan state, User Open Questions and User Notes unchanged;
+- did not add source verification, official status, uploads, document storage, Supabase, API handlers, auth, routing, state manager or persistence.
 
 ### Step 4: User Note Domain Model And Helper
 

@@ -1019,7 +1019,7 @@ describe("App", () => {
     expect(text).not.toContain("persistence");
   });
 
-  it("marks an existing source as checked by the user without workflow side effects", () => {
+  it("marks an existing source as checked by the user and records internal History once", () => {
     const runtime = createInteractiveRuntime();
     const actionPlan = createActionPlanForUi();
     const actionPlanBefore = actionPlan.actionPlan;
@@ -1065,6 +1065,8 @@ describe("App", () => {
 
     const checkedSourceMarks = runtime.getState<readonly CheckedSourceMark[]>(6);
     const activePlanAfterMark = runtime.getState<ActionPlanAggregate | null>(0);
+    const userOpenQuestionsAfterMark =
+      runtime.getState<readonly UserOpenQuestion[]>(4);
 
     expect(text.match(/Отмечено вами/g)).toHaveLength(1);
     expect(checkedSourceMarks).toHaveLength(1);
@@ -1084,12 +1086,20 @@ describe("App", () => {
     ).toBe(true);
     expect(
       activePlanAfterMark?.historyEvents.map((event) => event.eventType),
-    ).toEqual(["action_plan_created"]);
+    ).toEqual(["action_plan_created", "source_checked"]);
+    expect(activePlanAfterMark?.historyEvents[1]).toMatchObject({
+      eventType: "source_checked",
+      payload: {
+        actionPlanId: actionPlan.actionPlan.id,
+        checkedSourceMarkId: checkedSourceMarks[0]?.id,
+        sourceRevisionId: "source-oesterreich-anmeldung",
+      },
+    });
+    expect(userOpenQuestionsAfterMark).toHaveLength(0);
     expect(actionPlan.actionPlan).toBe(actionPlanBefore);
     expect(actionPlan.progressRecords).toBe(progressBefore);
     expect(actionPlan.historyEvents).toBe(historyBefore);
     expect(text).not.toContain("User Notes");
-    expect(text).not.toContain("source_checked");
 
     clickButton(tree, "Вернуться к плану");
     tree = renderInteractiveApp(runtime, {
@@ -1113,8 +1123,14 @@ describe("App", () => {
 
     expect(text).toContain("История плана");
     expect(text).toContain("План создан");
-    expect(text).not.toContain("source_checked");
-    expect(text).not.toContain("Источник отмечен");
+    expect(text).toContain("Источник отмечен вами");
+    expect(text).toContain("Внутренняя запись Nova Agent");
+    expect(text).toContain("Nova Agent не проверяет источник");
+    expect(text).toContain("Это не официальный статус");
+    expect(text).toContain("Это не подтверждение действия");
+    expect(text).not.toContain("Проверено Nova Agent");
+    expect(text).not.toContain("Официально подтверждено");
+    expect(text).not.toContain("Подтверждено органом");
     expect(text).not.toContain("User Notes");
     expect(text).not.toContain("Checked Source Marks");
   });

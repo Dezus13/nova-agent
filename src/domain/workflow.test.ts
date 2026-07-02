@@ -7,6 +7,7 @@ import {
 import {
   USER_OPEN_QUESTION_STATUSES,
   createCheckedSourceMark,
+  createCheckedSourceMarkWithHistory,
   createUserOpenQuestion,
   createUserOpenQuestionWithHistory,
   getAllowedUserOpenQuestionStatusTransitions,
@@ -734,5 +735,55 @@ describe("VS-04 Checked Source Mark domain helper", () => {
         occurredAt: "2026-07-02T10:00:00.000Z",
       }),
     ).toThrow("Checked Source Mark can only be created inside an active Action Plan.");
+  });
+
+  it("creates source_checked as an append-only History Event without workflow side effects", () => {
+    const createdPlan = startActionPlan(getStartInput()).plan;
+    const actionPlanBefore = createdPlan.actionPlan;
+    const progressBefore = createdPlan.progressRecords;
+    const historyBefore = createdPlan.historyEvents;
+
+    const result = createCheckedSourceMarkWithHistory({
+      plan: createdPlan,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      operationId: "source-history",
+      occurredAt: "2026-07-02T11:00:00.000Z",
+    });
+
+    expect(result.mark).toEqual({
+      id: "checked-source-mark-source-history",
+      actionPlanId: createdPlan.actionPlan.id,
+      sourceRevisionId: "source-oesterreich-anmeldung",
+      createdAt: "2026-07-02T11:00:00.000Z",
+      createdByUser: true,
+    });
+    expect(result.plan.actionPlan).toBe(actionPlanBefore);
+    expect(result.plan.actionPlan.state).toBe("active");
+    expect(result.plan.progressRecords).toBe(progressBefore);
+    expect(result.plan.progressRecords.every((progress) => progress.status === "not_started"))
+      .toBe(true);
+    expect(result.plan.historyEvents).not.toBe(historyBefore);
+    expect(result.plan.historyEvents.map((event) => event.eventType)).toEqual([
+      "action_plan_created",
+      "source_checked",
+    ]);
+    expect(result.plan.historyEvents[1]).toEqual({
+      id: "history-source-history-source-checked",
+      actionPlanId: createdPlan.actionPlan.id,
+      eventType: "source_checked",
+      occurredAt: "2026-07-02T11:00:00.000Z",
+      payload: {
+        actionPlanId: createdPlan.actionPlan.id,
+        sourceRevisionId: "source-oesterreich-anmeldung",
+        checkedSourceMarkId: "checked-source-mark-source-history",
+        createdAt: "2026-07-02T11:00:00.000Z",
+      },
+    });
+    expect(result.mark).not.toHaveProperty("userNoteId");
+    expect(result.mark).not.toHaveProperty("verifiedByNovaAgent");
+    expect(result.mark).not.toHaveProperty("officialStatus");
+    expect(createdPlan.actionPlan).toBe(actionPlanBefore);
+    expect(createdPlan.progressRecords).toBe(progressBefore);
+    expect(createdPlan.historyEvents).toBe(historyBefore);
   });
 });
