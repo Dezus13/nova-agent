@@ -207,6 +207,8 @@ Step 2 implementation note:
 
 ### Step 3: README And Demo Instructions Update
 
+Status: completed.
+
 Update README as a developer/demo entry point.
 
 README should explain:
@@ -219,6 +221,20 @@ README should explain:
 - reload loses state until persistence work is implemented.
 
 README must not become a replacement for Product Specs.
+
+Step 3 implementation note:
+
+- updated README to describe Nova Agent, the online Vercel demo URL, current
+  VS-01 through VS-04 completion state, Demo Polish Step 1 completion and the
+  current MVP demo feature set;
+- documented local run commands and build/test commands from `package.json`;
+- documented demo limitations: local-only state, reload state loss, no
+  Supabase, no auth and no persistence;
+- preserved product boundaries around official status, action confirmation,
+  source verification, User Notes and legal/tax/medical advice;
+- did not change application code, specs, Product Principles, Technical
+  Architecture, package configuration, Supabase, API, auth, routing, state
+  manager or persistence behavior.
 
 ### Step 4: Local Demo Smoke Test
 
