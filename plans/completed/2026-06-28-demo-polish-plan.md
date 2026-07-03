@@ -161,12 +161,20 @@ decision record before implementation.
 
 ### Step 1: Demo Polish Plan Creation
 
-Status: in progress.
+Status: completed.
 
 Create this active plan and update changelog only.
 
 No application code, README, specs, Product Principles, Technical Architecture,
 Supabase, API, auth, persistence or Vercel config changes in this step.
+
+Step 1 implementation note:
+
+- created this active Demo Polish Plan;
+- limited Demo Polish to visual, copy, layout, README/demo instructions and
+  smoke-test preparation;
+- did not change application code, specs, Product Principles, Technical
+  Architecture, Supabase, API, auth, persistence or Vercel config.
 
 ### Step 2: UI Visual Polish Only
 
@@ -238,6 +246,8 @@ Step 3 implementation note:
 
 ### Step 4: Local Demo Smoke Test
 
+Status: completed.
+
 Run the local demo flow after UI polish:
 
 - open app locally;
@@ -258,7 +268,17 @@ Required commands:
 - `npm run build`;
 - `git diff --check`.
 
+Step 4 implementation note:
+
+- local checks passed: `npm run typecheck`, `npm run lint`, `npm test` and
+  `npm run build`;
+- local dev server opened the app at `http://localhost:5174/`;
+- automated interaction tests cover the VS-01 through VS-04 demo flows;
+- no repository files were changed during local smoke validation.
+
 ### Step 5: Vercel Demo Smoke Test
+
+Status: completed.
 
 Run the same smoke flow on the Vercel deployment URL.
 
@@ -270,7 +290,17 @@ Confirm:
 - reload loses state as expected for the static demo;
 - demo instructions match observed behavior.
 
+Step 5 implementation note:
+
+- production URL `https://nova-agent-teal.vercel.app/` returned HTTP 200;
+- production JavaScript and CSS assets returned HTTP 200;
+- production bundle includes the current polished UI and boundary-copy strings;
+- README URL matches the working Vercel URL;
+- static local-only state remains an explicit demo limitation.
+
 ### Step 6: Demo Polish Closure
+
+Status: completed.
 
 Close this plan only after:
 
@@ -284,7 +314,44 @@ Close this plan only after:
 
 Move this plan to `plans/completed/` only when fully closed.
 
-## 8. Testing Strategy
+Step 6 implementation note:
+
+- Demo Polish is completed;
+- UI polish is complete;
+- README/demo instructions are updated;
+- local smoke test passed;
+- Vercel smoke test passed;
+- demo is ready at `https://nova-agent-teal.vercel.app/`;
+- product logic was not changed;
+- no Supabase, API, auth, routing, state manager, persistence, dashboard,
+  completed plans management, Content Admin or document storage was added.
+
+## 8. Completion Summary
+
+Demo Polish is officially completed.
+
+Completed outcomes:
+
+- UI became more demo/product-oriented without changing product logic;
+- README explains the current MVP demo state, online URL, local-only limitation,
+  local run commands and build/test commands;
+- local checks passed;
+- local smoke passed;
+- Vercel smoke passed;
+- demo is ready to show through `https://nova-agent-teal.vercel.app/`;
+- product boundaries remain visible;
+- no new product functionality was added.
+
+Known limitations:
+
+- state remains local-only;
+- reload can lose user-owned runtime state;
+- Supabase is not connected;
+- auth is not implemented;
+- persistence is not implemented;
+- this is an MVP demo, not production SaaS.
+
+## 9. Testing Strategy
 
 Demo Polish must keep the existing automated baseline green:
 
@@ -308,7 +375,7 @@ The existing React internal dispatcher workaround remains test-only. Demo Polish
 must not expand it into runtime code or treat it as a permanent testing
 strategy.
 
-## 9. Completion Criteria
+## 10. Completion Criteria
 
 Demo Polish is complete when:
 
@@ -323,7 +390,7 @@ Demo Polish is complete when:
 - no Supabase, API, auth, routing, state manager, persistence, dashboard,
   completed plans management, Content Admin or document storage is added.
 
-## 10. Risks
+## 11. Risks
 
 ### Risk 1: Product Logic Drift
 
@@ -364,7 +431,7 @@ README currently risks lagging behind the implemented VS-04 demo.
 Control: update README in a dedicated polish step without moving Product Specs
 into README.
 
-## 11. Commit Discipline
+## 12. Commit Discipline
 
 Keep Demo Polish commits small and reviewed.
 
