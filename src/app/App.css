@@ -92,6 +92,78 @@ a:hover {
   box-shadow: 0 10px 26px rgb(30 42 35 / 7%);
 }
 
+.agentic-shell {
+  display: grid;
+  gap: 18px;
+}
+
+.agentic-shell-copy,
+.agentic-command-panel,
+.agentic-summary {
+  background: #fffdf8;
+  border: 1px solid #d8d3c5;
+  border-radius: 8px;
+  box-shadow: 0 10px 26px rgb(30 42 35 / 7%);
+  padding: 24px;
+}
+
+.agentic-shell h2,
+.agentic-summary h3 {
+  letter-spacing: 0;
+  line-height: 1.12;
+  margin: 0 0 12px;
+}
+
+.agentic-shell h2 {
+  font-size: 34px;
+}
+
+.agentic-command-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.agentic-command-panel label {
+  color: #315e5b;
+  font-weight: 700;
+}
+
+.agentic-input {
+  background: #ffffff;
+  border: 1px solid #9ab4a8;
+  border-radius: 8px;
+  color: #17211b;
+  min-height: 48px;
+  padding: 11px 14px;
+}
+
+.agentic-input:focus-visible {
+  outline: 3px solid #d8a841;
+  outline-offset: 3px;
+}
+
+.agentic-example {
+  justify-self: start;
+}
+
+.agentic-boundary {
+  background: #eef6f2;
+  border: 1px solid #9ab4a8;
+  border-radius: 8px;
+  color: #405047;
+  margin-top: 16px;
+  padding: 14px;
+}
+
+.agentic-boundary p,
+.agentic-summary p {
+  margin: 8px 0 0;
+}
+
+.agentic-summary {
+  border-color: #315e5b;
+}
+
 .definition-grid,
 .scenario-meta,
 .safety-grid,
@@ -584,6 +656,9 @@ dd {
   }
 
   .page-header,
+  .agentic-shell-copy,
+  .agentic-command-panel,
+  .agentic-summary,
   .flow-section,
   .safety-section,
   .plan-header,

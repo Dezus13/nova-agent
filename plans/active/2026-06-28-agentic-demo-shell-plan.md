@@ -218,7 +218,7 @@ remain local UI behavior and not domain logic.
 
 ### Step 1: Agentic Demo Shell Plan Creation
 
-Status: in progress.
+Status: completed.
 
 Create this active plan and update changelog only.
 
@@ -227,6 +227,8 @@ OpenAI, Supabase, API, auth, routing, state manager or persistence changes in
 this step.
 
 ### Step 2: Agentic Demo Shell UI
+
+Status: completed.
 
 Add the first demo shell screen before the existing scenario.
 
@@ -245,7 +247,10 @@ Required UI:
 - input or command box;
 - example prompt;
 - CTA: "Построить план";
-- demo-only summary: "Понял ситуацию";
+- demo-only summary: "Понял ситуацию для демо";
+- boundary summary: "На основе текущего демонстрационного сценария Nova Agent
+  откроет готовый план.";
+- boundary summary: "Nova Agent не создаёт новые сценарии в этой версии.";
 - transition to the current existing scenario / Action Plan flow.
 
 Required boundary copy:
@@ -257,6 +262,18 @@ Required boundary copy:
 
 No domain helpers, content repository, workflow behavior, Progress, History,
 UOQ, CSM or User Note behavior may change.
+
+Implementation note:
+
+- Added a UI-only Agentic Demo Shell before the existing `ScenarioView`;
+- any non-empty prompt stays mapped to the current seed scenario and existing
+  Action Plan flow;
+- empty input does not open the workflow;
+- the shell uses local UI state only;
+- domain helpers, content repository, Progress, History, UOQ, Checked Source
+  Marks and User Note behavior were not changed;
+- no OpenAI API, Supabase, auth, routing, state manager or persistence was
+  added.
 
 ### Step 3: README / Demo Instructions Update
 

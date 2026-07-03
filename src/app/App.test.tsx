@@ -16,6 +16,7 @@ import {
   type UserOpenQuestion,
 } from "../domain/workflow";
 import { App } from "./App";
+import { agenticDemoExamplePrompt } from "./components/AgenticDemoShell";
 
 type HookDispatcher = {
   useState<State>(
@@ -219,6 +220,38 @@ function changeTextArea(tree: readonly TestTree[], label: string, value: string)
   });
 }
 
+function findInputByLabel(tree: readonly TestTree[], label: string): HostNode | null {
+  return findHostNode(
+    tree,
+    (node) => node.type === "input" && node.props["aria-label"] === label,
+  );
+}
+
+function changeInput(tree: readonly TestTree[], label: string, value: string) {
+  const input = findInputByLabel(tree, label);
+
+  expect(input).not.toBeNull();
+  expect(typeof input?.props.onChange).toBe("function");
+
+  (input?.props.onChange as (event: { target: { value: string } }) => void)({
+    target: { value },
+  });
+}
+
+function openScenarioFromAgenticShell(
+  runtime: ReturnType<typeof createInteractiveRuntime>,
+) {
+  let tree = renderInteractiveApp(runtime);
+
+  changeInput(tree, "Пример задачи", agenticDemoExamplePrompt);
+  tree = renderInteractiveApp(runtime);
+  clickButton(tree, "Построить план");
+  tree = renderInteractiveApp(runtime);
+  clickButton(tree, "Открыть план");
+
+  return renderInteractiveApp(runtime);
+}
+
 function findSelectById(tree: readonly TestTree[], id: string): HostNode | null {
   return findHostNode(
     tree,
@@ -394,9 +427,68 @@ function createUserOpenQuestionsForUi(
 }
 
 describe("App", () => {
-  it("passes the full VS-01 demo flow through user actions", () => {
+  it("shows the Agentic Demo Shell before the existing workflow", () => {
     const runtime = createInteractiveRuntime();
     let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Что вам нужно решить?");
+    expect(text).toContain(
+      "Опишите задачу, и Nova Agent покажет демонстрационный путь на основе текущего сценария.",
+    );
+    expect(findInputByLabel(tree, "Пример задачи")).not.toBeNull();
+    expect(text).toContain(agenticDemoExamplePrompt);
+    expect(text).toContain("Построить план");
+    expect(text).toContain("пример задачи");
+    expect(text).toContain("текущего демонстрационного сценария");
+    expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
+    expect(text).not.toContain("Начать план");
+    expect(text).not.toContain("OpenAI");
+    expect(text).not.toContain("Supabase");
+    expect(text).not.toContain("API");
+    expect(text).not.toContain("auth");
+    expect(text).not.toContain("persistence");
+
+    clickButton(tree, "Построить план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Что вам нужно решить?");
+    expect(text).not.toContain("Понял ситуацию для демо");
+    expect(text).not.toContain("Начать план");
+
+    clickButton(tree, agenticDemoExamplePrompt);
+    tree = renderInteractiveApp(runtime);
+
+    expect(findInputByLabel(tree, "Пример задачи")?.props.value).toBe(
+      agenticDemoExamplePrompt,
+    );
+
+    clickButton(tree, "Построить план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Понял ситуацию для демо");
+    expect(text).toContain(
+      "На основе текущего демонстрационного сценария Nova Agent откроет готовый план.",
+    );
+    expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
+    expect(text).toContain("Открыть план");
+    expect(text).not.toContain("Начать план");
+
+    clickButton(tree, "Открыть план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Life Situation");
+    expect(text).toContain("Сценарий");
+    expect(text).toContain("Регистрация места жительства в Австрии");
+    expect(text).toContain("Начать план");
+  });
+
+  it("passes the full VS-01 demo flow through user actions", () => {
+    const runtime = createInteractiveRuntime();
+    let tree = openScenarioFromAgenticShell(runtime);
     let text = getTextContent(tree);
 
     const safetyPosition = text.indexOf("Предупреждения и ограничения");
@@ -458,30 +550,32 @@ describe("App", () => {
   });
 
   it("renders the VS-01 content read flow from the seed content", () => {
-    const html = renderToString(<App />);
+    const runtime = createInteractiveRuntime();
+    const text = getTextContent(openScenarioFromAgenticShell(runtime));
 
-    expect(html).toContain("Nova Agent");
-    expect(html).toContain("Life Situation");
-    expect(html).toContain("Сценарий");
-    expect(html).toContain("Версия сценария");
-    expect(html).toContain("v1");
-    expect(html).toContain("Путь пользователя");
-    expect(html).toContain("Документы и данные");
-    expect(html).toContain("Источники");
-    expect(html).toContain("Вопросы для проверки");
-    expect(html).toContain("Регистрация места жительства в Австрии");
-    expect(html).toContain("Официальный источник");
-    expect(html).toContain("Начать план");
+    expect(text).toContain("Nova Agent");
+    expect(text).toContain("Life Situation");
+    expect(text).toContain("Сценарий");
+    expect(text).toContain("Версия сценария");
+    expect(text).toContain("v1");
+    expect(text).toContain("Путь пользователя");
+    expect(text).toContain("Документы и данные");
+    expect(text).toContain("Источники");
+    expect(text).toContain("Вопросы для проверки");
+    expect(text).toContain("Регистрация места жительства в Австрии");
+    expect(text).toContain("Официальный источник");
+    expect(text).toContain("Начать план");
   });
 
   it("shows safety before the Scenario goal, steps, and Start Plan CTA", () => {
-    const html = renderToString(<App />);
-    const safetyPosition = html.indexOf("Предупреждения и ограничения");
-    const scenarioGoalPosition = html.indexOf(
+    const runtime = createInteractiveRuntime();
+    const text = getTextContent(openScenarioFromAgenticShell(runtime));
+    const safetyPosition = text.indexOf("Предупреждения и ограничения");
+    const scenarioGoalPosition = text.indexOf(
       "Помочь пользователю подготовиться к Anmeldung",
     );
-    const stepsPosition = html.indexOf("Шаги сценария");
-    const startPlanPosition = html.indexOf("Начать план");
+    const stepsPosition = text.indexOf("Шаги сценария");
+    const startPlanPosition = text.indexOf("Начать план");
 
     expect(safetyPosition).toBeGreaterThanOrEqual(0);
     expect(scenarioGoalPosition).toBeGreaterThanOrEqual(0);
@@ -490,9 +584,9 @@ describe("App", () => {
     expect(safetyPosition).toBeLessThan(scenarioGoalPosition);
     expect(scenarioGoalPosition).toBeLessThan(stepsPosition);
     expect(stepsPosition).toBeLessThan(startPlanPosition);
-    expect(html.indexOf("Предупреждение")).toBeLessThan(stepsPosition);
-    expect(html.indexOf("Ограничение")).toBeLessThan(stepsPosition);
-    expect(html.indexOf("Где проверить официальный источник")).toBeLessThan(
+    expect(text.indexOf("Предупреждение")).toBeLessThan(stepsPosition);
+    expect(text.indexOf("Ограничение")).toBeLessThan(stepsPosition);
+    expect(text.indexOf("Где проверить официальный источник")).toBeLessThan(
       startPlanPosition,
     );
   });

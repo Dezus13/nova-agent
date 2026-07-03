@@ -19,6 +19,10 @@ import {
   type SeedContentFlow,
 } from "../data/contentRepository";
 import { ActionPlanView } from "./components/ActionPlanView";
+import {
+  AgenticDemoShell,
+  agenticDemoExamplePrompt,
+} from "./components/AgenticDemoShell";
 import { HistoryView } from "./components/HistoryView";
 import { ReturnContextView } from "./components/ReturnContextView";
 import { ScenarioView } from "./components/ScenarioView";
@@ -74,6 +78,29 @@ export function App({
   const [userNotes, setUserNotes] = useState<readonly UserNote[]>(initialUserNotes);
   const [newUserNoteTextByHistoryEventId, setNewUserNoteTextByHistoryEventId] =
     useState<Record<string, string>>({});
+  const [demoPrompt, setDemoPrompt] = useState("");
+  const [hasSubmittedDemoPrompt, setHasSubmittedDemoPrompt] = useState(false);
+  const [isDemoWorkflowOpen, setIsDemoWorkflowOpen] = useState(
+    Boolean(initialActionPlan),
+  );
+
+  function handleExamplePromptSelect() {
+    setDemoPrompt(agenticDemoExamplePrompt);
+    setHasSubmittedDemoPrompt(false);
+  }
+
+  function handleSubmitDemoPrompt() {
+    if (!demoPrompt.trim()) {
+      setHasSubmittedDemoPrompt(false);
+      return;
+    }
+
+    setHasSubmittedDemoPrompt(true);
+  }
+
+  function handleOpenDemoWorkflow() {
+    setIsDemoWorkflowOpen(true);
+  }
 
   function handleStartPlan() {
     const result = startActionPlan({
@@ -284,7 +311,19 @@ export function App({
         </p>
       </header>
 
-      {!activePlan ? (
+      {!activePlan && !isDemoWorkflowOpen ? (
+        <AgenticDemoShell
+          demoPrompt={demoPrompt}
+          hasSubmittedDemoPrompt={hasSubmittedDemoPrompt}
+          onDemoPromptChange={(prompt) => {
+            setDemoPrompt(prompt);
+            setHasSubmittedDemoPrompt(false);
+          }}
+          onExamplePromptSelect={handleExamplePromptSelect}
+          onOpenWorkflow={handleOpenDemoWorkflow}
+          onSubmitDemoPrompt={handleSubmitDemoPrompt}
+        />
+      ) : !activePlan ? (
         <ScenarioView
           lifeSituation={contentFlow.lifeSituation}
           onStartPlan={handleStartPlan}
