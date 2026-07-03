@@ -8,6 +8,10 @@ start an Action Plan, mark their own progress, keep return context, review
 internal history, track open questions, mark sources they checked themselves and
 add short user-owned notes.
 
+The current demo starts with an Agentic Demo Shell: a demo-only first layer where
+the user enters a sample task, sees a short demo summary and then opens the
+existing scenario workflow.
+
 Nova Agent does not replace official authorities, institutions, lawyers, tax
 advisors, doctors, insurance consultants or other specialists.
 
@@ -20,10 +24,40 @@ The current MVP demo is available at:
 The Vercel deployment works as a static Vite demo. State is local-only, so data
 can be lost after reload.
 
+## Agentic Demo Shell
+
+The demo now begins with an AI-product-style first screen.
+
+The shell is demo-only:
+
+- the user enters or selects a sample task;
+- Nova Agent shows a demo-only summary;
+- the app then opens the existing workflow;
+- the mapping is deterministic:
+
+```text
+any non-empty prompt
+-> current seed scenario
+-> existing Action Plan flow
+```
+
+The shell is based on the current demonstration scenario. Nova Agent does not
+create new scenarios in this version.
+
+Not implemented in this demo shell:
+
+- real AI;
+- OpenAI API;
+- real intent recognition;
+- universal scenario search;
+- scenario generation;
+- production assistant behavior.
+
 ## What Works In The Demo
 
 The demo currently includes:
 
+- Agentic Demo Shell;
 - Life Situation;
 - Scenario;
 - Action Plan;
@@ -41,6 +75,7 @@ Current implementation state:
 - VS-03 completed;
 - VS-04 completed;
 - Demo Polish Step 1 completed;
+- Agentic Demo Shell Step 1 completed;
 - Vercel deploy works.
 
 ## Product Boundaries
@@ -92,15 +127,16 @@ npm run test:watch
 
 ## Next Stage
 
-The next planned work is demo readiness and online-demo foundation work:
+The next planned work is Agentic Demo Shell smoke validation and online-demo
+foundation work:
 
-- finish Demo Polish documentation and smoke-test steps;
+- finish Agentic Demo Shell smoke-test and closure steps;
 - keep the Vercel static demo aligned with README instructions;
 - prepare Supabase minimal persistence only after the Auth / Ownership Decision
   Gate from the MVP Online Demo Plan.
 
-Supabase, auth, API handlers, routing, state manager and persistence are not
-part of the current static demo.
+OpenAI, Supabase, auth, API handlers, routing, state manager and persistence are
+not part of the current static demo.
 
 ## Repository Structure
 
@@ -132,5 +168,6 @@ changelog/
 - `docs/specs/технические/`
 - `plans/active/2026-06-21-mvp-work-plan.md`
 - `plans/active/2026-06-28-mvp-online-demo-plan.md`
-- `plans/active/2026-06-28-demo-polish-plan.md`
+- `plans/active/2026-06-28-agentic-demo-shell-plan.md`
+- `plans/completed/2026-06-28-demo-polish-plan.md`
 - `plans/completed/`

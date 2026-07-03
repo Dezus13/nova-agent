@@ -277,6 +277,8 @@ Implementation note:
 
 ### Step 3: README / Demo Instructions Update
 
+Status: completed.
+
 Update README only if needed to explain the new shell honestly.
 
 README must say:
@@ -287,6 +289,22 @@ README must say:
 - there is no OpenAI API;
 - state remains local-only;
 - reload can lose state.
+
+Implementation note:
+
+- Updated README to describe the Agentic Demo Shell as a demo-only first layer;
+- documented the sample-task flow, demo-only summary and transition to the
+  existing workflow;
+- documented deterministic mapping from any non-empty prompt to the current
+  seed scenario and existing Action Plan flow;
+- documented that real AI, OpenAI API, real intent recognition, universal
+  scenario search, scenario generation and production assistant behavior are
+  not implemented;
+- preserved online demo URL and local-only limitations: reload state loss, no
+  Supabase, no auth and no persistence;
+- did not change application code, tests, package configuration, specs, Product
+  Principles, Technical Architecture, AGENTS.md, OpenAI, Supabase, auth,
+  routing, persistence, workflow helpers or content repository behavior.
 
 ### Step 4: Local Smoke Test
 
