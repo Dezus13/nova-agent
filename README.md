@@ -19,7 +19,7 @@ advisors, doctors, insurance consultants or other specialists.
 
 The current MVP demo is available at:
 
-<https://nova-agent-teal.vercel.app/>
+<https://nova-agent-demo.vercel.app/>
 
 The Vercel deployment works as a static Vite demo. State is local-only, so data
 can be lost after reload.

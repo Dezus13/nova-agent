@@ -263,6 +263,7 @@ Run local checks before deploy:
 
 Deploy static demo and run smoke checklist on deployment URL:
 
+- current static demo URL: `https://nova-agent-demo.vercel.app/`;
 - app opens;
 - start Action Plan;
 - update Progress;

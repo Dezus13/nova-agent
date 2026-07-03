@@ -292,7 +292,9 @@ Confirm:
 
 Step 5 implementation note:
 
-- production URL `https://nova-agent-teal.vercel.app/` returned HTTP 200;
+- old Vercel project / outdated deployment
+  `https://nova-agent-teal.vercel.app/` returned HTTP 200 at the time of the
+  Demo Polish smoke test; do not use it for the current demo;
 - production JavaScript and CSS assets returned HTTP 200;
 - production bundle includes the current polished UI and boundary-copy strings;
 - README URL matches the working Vercel URL;
@@ -321,7 +323,9 @@ Step 6 implementation note:
 - README/demo instructions are updated;
 - local smoke test passed;
 - Vercel smoke test passed;
-- demo is ready at `https://nova-agent-teal.vercel.app/`;
+- demo was ready at old Vercel project / outdated deployment
+  `https://nova-agent-teal.vercel.app/` at the time of Demo Polish closure; do
+  not use it for the current demo;
 - product logic was not changed;
 - no Supabase, API, auth, routing, state manager, persistence, dashboard,
   completed plans management, Content Admin or document storage was added.
@@ -338,7 +342,9 @@ Completed outcomes:
 - local checks passed;
 - local smoke passed;
 - Vercel smoke passed;
-- demo is ready to show through `https://nova-agent-teal.vercel.app/`;
+- demo was ready to show through old Vercel project / outdated deployment
+  `https://nova-agent-teal.vercel.app/` at the time of Demo Polish closure; do
+  not use it for the current demo;
 - product boundaries remain visible;
 - no new product functionality was added.
 

@@ -57,7 +57,7 @@ The current Vercel demo is ready:
 - VS-03 completed;
 - VS-04 completed;
 - Demo Polish completed;
-- production URL: `https://nova-agent-teal.vercel.app/`;
+- production URL: `https://nova-agent-demo.vercel.app/`;
 - app state is local-only;
 - no Supabase client exists;
 - no API layer exists;
