@@ -237,7 +237,7 @@ Smoke validation must cover both local and production demo:
 
 ### Step 1: Plan Creation
 
-Status: in progress.
+Status: completed.
 
 Create this active plan and update changelog only.
 
@@ -275,33 +275,101 @@ Implementation note:
 
 ### Step 3: README / Demo Instructions
 
-Status: pending.
+Status: completed.
 
 Update README only if needed after implementation to avoid overpromising real
 AI, OpenAI integration or scenario generation.
 
+Implementation note:
+
+- README update was not required for this step because the existing README
+  already documents the demo-only shell, deterministic mapping, no real AI /
+  OpenAI integration and current production URL.
+
 ### Step 4: Local Smoke Validation
 
-Status: pending.
+Status: completed.
 
 Run automated checks and local smoke flow.
 
+Implementation note:
+
+- Local smoke PASSED;
+- automated checks passed: `npm run typecheck`, `npm run lint`, `npm test`,
+  `npm run build`;
+- first screen showed Nova Agent, AI-assistant positioning, large life-task
+  textarea, CTA and required demo boundaries;
+- empty input did not open workflow or show fake success;
+- non-empty input showed assistant-like demo response;
+- existing workflow remained accessible, including Life Situation, Scenario,
+  Action Plan / Steps, Progress, History, User Open Questions, Checked Source
+  Marks and User Notes.
+
 ### Step 5: Production Smoke Validation
 
-Status: pending.
+Status: completed.
 
 Validate the production demo URL after deployment:
 
 `https://nova-agent-demo.vercel.app/`
 
+Implementation note:
+
+- Production deploy PASSED;
+- Project: `usman20us-projects/nova-agent-demo`;
+- Production alias: `https://nova-agent-demo.vercel.app/`;
+- Status: Ready;
+- production smoke PASSED;
+- HTTP 200 confirmed;
+- first screen showed Nova Agent, AI-assistant positioning, life-task textarea,
+  CTA and required boundary copy;
+- empty input did not open workflow or show fake success;
+- non-empty input showed assistant-like demo response without real AI/OpenAI,
+  official verification or external action claims;
+- "Открыть план действий" opened the existing workflow;
+- existing workflow was verified, including Life Situation, Scenario, Steps /
+  active plan flow, Progress, History, User Open Questions, Checked Source Marks
+  and User Notes;
+- non-blocking note: exact heading "План действий" is not a literal DOM heading
+  in the polished UI, but Action Plan / Steps flow is reachable and verified.
+
 ### Step 6: Closure
 
-Status: pending.
+Status: completed.
 
 Close the plan only after implementation, README/docs update if needed, local
 smoke, production smoke, changelog update and scope audit are complete.
 
 Move this plan to `plans/completed/` only when fully closed.
+
+Implementation note:
+
+- AI Demo Presentation Layer is closed as completed;
+- current production URL: `https://nova-agent-demo.vercel.app/`;
+- production demo now has AI-assistant presentation while remaining demo-only;
+- no real AI/OpenAI was added;
+- no Supabase, API, auth, routing, state manager or persistence was added;
+- no domain logic, workflow helpers, content repository, Progress, History,
+  User Open Questions, Checked Source Marks or User Notes behavior changed.
+
+## 10. Completion Summary
+
+AI Demo Presentation Layer is completed.
+
+Completed outcomes:
+
+- plan created;
+- UI presentation layer implemented;
+- first screen now presents Nova Agent as an AI-assistant-style demo;
+- large life-task textarea and assistant-like demo response are available;
+- demo-only boundaries remain visible;
+- local smoke PASSED;
+- production deploy PASSED;
+- production smoke PASSED on `https://nova-agent-demo.vercel.app/`;
+- existing workflow remains available;
+- no real AI/OpenAI, backend API, Supabase, auth, persistence, routing changes,
+  new domain logic, scenario generator, source verification, document upload,
+  dashboard or CRM/task-manager behavior was added.
 
 ## 11. Risks
 
