@@ -212,6 +212,7 @@ a:hover {
 }
 
 .agentic-command-panel {
+  box-sizing: border-box;
   display: grid;
   gap: 14px;
   margin: 0 auto;
@@ -273,6 +274,7 @@ a:hover {
 
 .agentic-summary {
   border-color: #315e5b;
+  box-sizing: border-box;
   display: grid;
   gap: 12px;
   margin: 0 auto;

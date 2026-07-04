@@ -379,3 +379,29 @@ This stage can be closed when:
 - production smoke passes on `https://nova-agent-demo.vercel.app/`;
 - no OpenAI, backend API, Supabase, auth, persistence or domain logic changes
   are added.
+
+## 14. Progress
+
+### Step 1: UI Implementation — COMPLETED
+
+Voice-first first screen implemented. Tests updated. Local and production smoke
+PASSED. Production deployed to `https://nova-agent-demo.vercel.app/`.
+
+### Step 2: Mobile Overflow Fix — COMPLETED
+
+Production visual smoke (headless Playwright, 390×844) found horizontal overflow
+of 24px on the first screen: `.agentic-command-panel` width 400px on a 390px
+viewport.
+
+Root cause: `width: 100%` uses `box-sizing: content-box` by default, so padding
+(18px × 2) and border (1px × 2) added to the content width, pushing total to
+400px.
+
+Fix: added `box-sizing: border-box` to `.agentic-command-panel` and
+`.agentic-summary` in `src/app/App.css`.
+
+Local smoke after fix (headless Playwright, 390×844):
+- `scrollWidth 390 = clientWidth 390`, `maxScrollX 0`;
+- no overflow offenders;
+- desktop and mobile layout unchanged;
+- voice CTA, text fallback and workflow reachable.
