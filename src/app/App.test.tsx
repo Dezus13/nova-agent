@@ -220,30 +220,12 @@ function changeTextArea(tree: readonly TestTree[], label: string, value: string)
   });
 }
 
-function findInputByLabel(tree: readonly TestTree[], label: string): HostNode | null {
-  return findHostNode(
-    tree,
-    (node) => node.type === "input" && node.props["aria-label"] === label,
-  );
-}
-
-function changeInput(tree: readonly TestTree[], label: string, value: string) {
-  const input = findInputByLabel(tree, label);
-
-  expect(input).not.toBeNull();
-  expect(typeof input?.props.onChange).toBe("function");
-
-  (input?.props.onChange as (event: { target: { value: string } }) => void)({
-    target: { value },
-  });
-}
-
 function openScenarioFromAgenticShell(
   runtime: ReturnType<typeof createInteractiveRuntime>,
 ) {
   let tree = renderInteractiveApp(runtime);
 
-  changeInput(tree, "Пример задачи", agenticDemoExamplePrompt);
+  changeTextArea(tree, "Жизненная задача", agenticDemoExamplePrompt);
   tree = renderInteractiveApp(runtime);
   clickButton(tree, "Построить план");
   tree = renderInteractiveApp(runtime);
@@ -434,16 +416,23 @@ describe("App", () => {
 
     expect(text).toContain("Что вам нужно решить?");
     expect(text).toContain(
-      "Опишите задачу, и Nova Agent покажет демонстрационный путь на основе текущего сценария.",
+      "AI-ассистент для жизненных ситуаций",
     );
-    expect(findInputByLabel(tree, "Пример задачи")).not.toBeNull();
+    expect(text).toContain(
+      "Расскажите, что нужно решить. Nova Agent разложит ситуацию на понятный план действий.",
+    );
+    expect(findTextAreaByLabel(tree, "Жизненная задача")).not.toBeNull();
     expect(text).toContain(agenticDemoExamplePrompt);
     expect(text).toContain("Построить план");
-    expect(text).toContain("пример задачи");
-    expect(text).toContain("текущего демонстрационного сценария");
+    expect(text).toContain("Демо-режим");
+    expect(text).toContain("Жизненная задача");
+    expect(text).toContain("текущем демонстрационном сценарии");
     expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
+    expect(text).toContain("Без real AI/OpenAI в этой версии");
+    expect(text).toContain(
+      "Не является юридическим, медицинским или налоговым консультантом.",
+    );
     expect(text).not.toContain("Начать план");
-    expect(text).not.toContain("OpenAI");
     expect(text).not.toContain("Supabase");
     expect(text).not.toContain("API");
     expect(text).not.toContain("auth");
@@ -460,7 +449,7 @@ describe("App", () => {
     clickButton(tree, agenticDemoExamplePrompt);
     tree = renderInteractiveApp(runtime);
 
-    expect(findInputByLabel(tree, "Пример задачи")?.props.value).toBe(
+    expect(findTextAreaByLabel(tree, "Жизненная задача")?.props.value).toBe(
       agenticDemoExamplePrompt,
     );
 
@@ -469,14 +458,18 @@ describe("App", () => {
     text = getTextContent(tree);
 
     expect(text).toContain("Понял ситуацию для демо");
+    expect(text).toContain("AI-like demo response");
     expect(text).toContain(
-      "На основе текущего демонстрационного сценария Nova Agent откроет готовый план.",
+      "Вы хотите разобраться с жизненной задачей и увидеть понятную последовательность действий.",
+    );
+    expect(text).toContain(
+      "На основе текущего демонстрационного сценария Nova Agent откроет готовый план действий.",
     );
     expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
-    expect(text).toContain("Открыть план");
+    expect(text).toContain("Открыть план действий");
     expect(text).not.toContain("Начать план");
 
-    clickButton(tree, "Открыть план");
+    clickButton(tree, "Открыть план действий");
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 

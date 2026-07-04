@@ -247,7 +247,7 @@ work in this step.
 
 ### Step 2: UI Presentation Layer
 
-Status: pending.
+Status: completed.
 
 Implement visual/copy/presentation changes only.
 
@@ -258,6 +258,20 @@ Expected focus:
 - AI-like demo response block;
 - clearer transition to existing workflow;
 - visible demo-only boundary copy.
+
+Implementation note:
+
+- Updated the existing Agentic Demo Shell presentation to feel more like an
+  AI-assistant entry point;
+- added assistant-style headline/copy, larger life-task textarea, stronger
+  demo boundary block and AI-like demo response card;
+- preserved deterministic mapping to the current seed scenario and existing
+  Action Plan workflow;
+- preserved boundary copy: demo-only, current demonstration scenario, no new
+  scenarios, no real AI/OpenAI and not legal/medical/tax advice;
+- updated interaction tests only for visible copy / structure;
+- did not change domain logic, workflow helpers, content repository, Progress,
+  History, User Open Questions, Checked Source Marks or User Notes behavior.
 
 ### Step 3: README / Demo Instructions
 
