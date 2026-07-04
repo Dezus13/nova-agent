@@ -308,6 +308,8 @@ Implementation note:
 
 ### Step 4: Local Smoke Test
 
+Status: completed.
+
 Run:
 
 - `npm run typecheck`;
@@ -330,7 +332,19 @@ Smoke flow:
 - mark source as checked by user;
 - add User Note.
 
+Implementation note:
+
+- Local checks and smoke validation passed during Agentic Demo Shell validation;
+- the shell opens first, empty input stays on the shell and non-empty prompt
+  shows the demo-only summary;
+- "Открыть план" opens the existing scenario / Action Plan flow;
+- existing VS-01 through VS-04 workflow behavior remains available;
+- product logic, domain helpers, content repository, Progress, History, UOQ,
+  Checked Source Marks and User Note behavior were not changed.
+
 ### Step 5: Vercel Smoke Test
+
+Status: completed.
 
 After deployment, verify:
 
@@ -340,7 +354,22 @@ After deployment, verify:
 - old VS-01 through VS-04 behavior still works;
 - shell copy does not imply real AI, OpenAI, persistence or official status.
 
+Implementation note:
+
+- Production smoke validation passed for
+  `https://nova-agent-demo.vercel.app/`;
+- production URL opens without 404, 500 or blank page;
+- Agentic Demo Shell appears first;
+- non-empty prompt shows the demo-only summary;
+- "Открыть план" opens the existing workflow;
+- the existing workflow remains available, including Life Situation, Scenario,
+  Action Plan / Steps, Progress, History, User Open Questions, Checked Source
+  Marks and User Notes;
+- READY FOR AGENTIC DEMO: YES.
+
 ### Step 6: Closure
+
+Status: completed.
 
 Close this plan only after:
 
@@ -352,6 +381,18 @@ Close this plan only after:
 - changelog is updated.
 
 Move this plan to `plans/completed/` only when fully closed.
+
+Implementation note:
+
+- Agentic Demo Shell is closed as completed;
+- the current production demo URL is
+  `https://nova-agent-demo.vercel.app/`;
+- README and active online-demo documentation point to the current production
+  URL;
+- the old `https://nova-agent-teal.vercel.app/` deployment is historical /
+  outdated and is not the current demo URL;
+- real AI, OpenAI API, Supabase, auth, routing, state manager, persistence,
+  scenario generation and new domain logic were not added.
 
 ## 9. Testing Strategy
 
@@ -389,6 +430,22 @@ Agentic Demo Shell is complete when:
 - README and changelog reflect the shell honestly;
 - no Supabase, API, auth, routing, state manager, persistence, dashboard,
   completed plans management, Content Admin or document storage is added.
+
+Completion status: completed.
+
+Completed outcomes:
+
+- demo-only Agentic Demo Shell first screen added;
+- deterministic mapping preserved: any non-empty prompt opens the current seed
+  scenario and existing Action Plan flow;
+- README/demo instructions updated;
+- production smoke validation passed;
+- production demo ready at `https://nova-agent-demo.vercel.app/`;
+- old `https://nova-agent-teal.vercel.app/` deployment is historical /
+  outdated and not the current demo URL;
+- no real AI, OpenAI API, Supabase, auth, routing, persistence, new domain
+  logic, dashboard, CRM/task-manager behavior or document storage was added;
+- product logic and existing workflow behavior remained unchanged.
 
 ## 11. Risks
 
