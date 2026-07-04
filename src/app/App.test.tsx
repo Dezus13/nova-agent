@@ -414,24 +414,29 @@ describe("App", () => {
     let tree = renderInteractiveApp(runtime);
     let text = getTextContent(tree);
 
-    expect(text).toContain("Что вам нужно решить?");
+    expect(text).toContain("Nova Agent");
+    expect(text).toContain("Скажите, что нужно решить");
+    expect(text).toContain("AI-ассистент для жизненных ситуаций");
     expect(text).toContain(
-      "AI-ассистент для жизненных ситуаций",
+      "Nova Agent разложит жизненную ситуацию на понятный план действий.",
     );
-    expect(text).toContain(
-      "Расскажите, что нужно решить. Nova Agent разложит ситуацию на понятный план действий.",
-    );
+    expect(text).toContain("Демо голосового режима");
+    expect(text).toContain("или напишите задачу вручную");
     expect(findTextAreaByLabel(tree, "Жизненная задача")).not.toBeNull();
     expect(text).toContain(agenticDemoExamplePrompt);
     expect(text).toContain("Построить план");
     expect(text).toContain("Демо-режим");
     expect(text).toContain("Жизненная задача");
+    expect(text).toContain("Голос не записывается в этой версии");
     expect(text).toContain("текущем демонстрационном сценарии");
     expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
-    expect(text).toContain("Без real AI/OpenAI в этой версии");
+    expect(text).toContain("Без real AI/OpenAI");
     expect(text).toContain(
       "Не является юридическим, медицинским или налоговым консультантом.",
     );
+    expect(text).not.toContain("слушает");
+    expect(text).not.toContain("идёт запись");
+    expect(text).not.toContain("микрофон включён");
     expect(text).not.toContain("Начать план");
     expect(text).not.toContain("Supabase");
     expect(text).not.toContain("API");
@@ -442,8 +447,8 @@ describe("App", () => {
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
-    expect(text).toContain("Что вам нужно решить?");
-    expect(text).not.toContain("Понял ситуацию для демо");
+    expect(text).toContain("Скажите, что нужно решить");
+    expect(text).not.toContain("Я понял ситуацию для демо");
     expect(text).not.toContain("Начать план");
 
     clickButton(tree, agenticDemoExamplePrompt);
@@ -457,17 +462,55 @@ describe("App", () => {
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
-    expect(text).toContain("Понял ситуацию для демо");
-    expect(text).toContain("AI-like demo response");
+    expect(text).toContain("Я понял ситуацию для демо");
+    expect(text).toContain("demo assistant response");
     expect(text).toContain(
-      "Вы хотите разобраться с жизненной задачей и увидеть понятную последовательность действий.",
+      "Сейчас открою понятный план действий на основе текущего демонстрационного сценария.",
     );
     expect(text).toContain(
-      "На основе текущего демонстрационного сценария Nova Agent откроет готовый план действий.",
+      "Это демонстрационный ответ: без real AI/OpenAI, без записи голоса и без подтверждения официального статуса.",
     );
     expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
     expect(text).toContain("Открыть план действий");
     expect(text).not.toContain("Начать план");
+
+    clickButton(tree, "Открыть план действий");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Life Situation");
+    expect(text).toContain("Сценарий");
+    expect(text).toContain("Регистрация места жительства в Австрии");
+    expect(text).toContain("Начать план");
+  });
+
+  it("shows a voice-first demo response without recording voice", () => {
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    expect(text).toContain("Демо голосового режима");
+    expect(text).toContain("Голос не записывается в этой версии");
+
+    clickButton(tree, "Демо голосового режима");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Я понял ситуацию для демо");
+    expect(text).toContain(
+      "Сейчас открою понятный план действий на основе текущего демонстрационного сценария.",
+    );
+    expect(text).toContain(
+      "Это демонстрационный ответ: без real AI/OpenAI, без записи голоса и без подтверждения официального статуса.",
+    );
+    expect(text).toContain(
+      "Nova Agent не создаёт новые сценарии в этой версии и не выполняет внешние действия.",
+    );
+    expect(text).toContain("Открыть план действий");
+    expect(text).not.toContain("Начать план");
+    expect(text).not.toContain("OpenAI API");
+    expect(text).not.toContain("microphone permission");
+    expect(text).not.toContain("идёт запись");
 
     clickButton(tree, "Открыть план действий");
     tree = renderInteractiveApp(runtime);

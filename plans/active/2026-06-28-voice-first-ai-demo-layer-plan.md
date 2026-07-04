@@ -351,8 +351,15 @@ and existing Action Plan workflow.
 
 ## 12. Step Plan
 
-1. Voice-First AI Demo Layer plan creation.
-2. UI implementation with Option A unless audit changes the decision.
+1. Voice-First AI Demo Layer plan creation. Completed.
+2. UI implementation with Option A. Implemented for audit:
+   - first screen changed from website/form feel to voice-first assistant feel;
+   - voice/orb visual element added as presentation only;
+   - `Демо голосового режима` CTA shows assistant-style demo response;
+   - text fallback remains available;
+   - no microphone permission, speech recognition, recording timer, listening
+     state or fake waveform added;
+   - existing Action Plan workflow remains unchanged.
 3. Local smoke validation.
 4. Production deploy after explicit instruction.
 5. Production smoke validation.

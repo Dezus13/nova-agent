@@ -31,6 +31,10 @@ a:hover {
   padding: 32px 20px 64px;
 }
 
+.app-shell:has(.agentic-shell) .page-header {
+  display: none;
+}
+
 .page-header {
   background: #173d3f;
   border: 1px solid #244f4d;
@@ -94,7 +98,9 @@ a:hover {
 
 .agentic-shell {
   display: grid;
-  gap: 20px;
+  gap: 16px;
+  min-height: calc(100vh - 96px);
+  place-content: center;
 }
 
 .agentic-hero,
@@ -109,13 +115,15 @@ a:hover {
 
 .agentic-hero {
   background:
-    linear-gradient(135deg, rgb(23 61 63 / 96%), rgb(44 79 70 / 94%)),
+    radial-gradient(circle at 72% 44%, rgb(240 197 107 / 22%), transparent 32%),
+    linear-gradient(135deg, rgb(15 38 42 / 98%), rgb(35 72 65 / 95%)),
     #173d3f;
   color: #ffffff;
   display: grid;
-  gap: 22px;
-  grid-template-columns: minmax(0, 1.3fr) minmax(280px, 0.7fr);
-  padding: 34px;
+  gap: 28px;
+  grid-template-columns: minmax(0, 0.85fr) minmax(280px, 1fr);
+  min-height: 420px;
+  padding: 42px;
 }
 
 .agentic-hero .eyebrow {
@@ -123,10 +131,17 @@ a:hover {
 }
 
 .agentic-product-name {
-  color: #dbe8e5;
-  font-size: 18px;
+  color: #ffffff;
+  font-size: 26px;
   font-weight: 800;
-  margin: 0 0 10px;
+  margin: 0 0 8px;
+}
+
+.agentic-assistant-label {
+  color: #dbe8e5;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0 0 24px;
 }
 
 .agentic-shell h2,
@@ -137,8 +152,8 @@ a:hover {
 }
 
 .agentic-shell h2 {
-  font-size: 48px;
-  max-width: 760px;
+  font-size: 56px;
+  max-width: 620px;
 }
 
 .agentic-shell-copy .lead {
@@ -147,9 +162,61 @@ a:hover {
   margin-bottom: 0;
 }
 
+.agentic-voice-intro {
+  align-self: center;
+}
+
+.agentic-voice-stage {
+  align-self: center;
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  text-align: center;
+}
+
+.agentic-voice-stage p {
+  color: #dbe8e5;
+  margin: 0;
+  max-width: 360px;
+}
+
+.agentic-orb {
+  align-items: center;
+  aspect-ratio: 1;
+  background:
+    radial-gradient(circle at 50% 42%, #fff7dc 0 11%, transparent 12%),
+    radial-gradient(circle, rgb(240 197 107 / 92%) 0 32%, rgb(83 139 123 / 55%) 52%, rgb(255 255 255 / 8%) 70%);
+  border: 1px solid rgb(255 255 255 / 34%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 0 18px rgb(255 255 255 / 5%),
+    0 24px 70px rgb(0 0 0 / 28%);
+  display: flex;
+  justify-content: center;
+  max-width: 310px;
+  min-width: 220px;
+  width: min(44vw, 310px);
+}
+
+.agentic-orb span {
+  background: rgb(255 255 255 / 62%);
+  border-radius: 50%;
+  box-shadow: 0 0 36px rgb(255 255 255 / 72%);
+  display: block;
+  height: 28%;
+  width: 28%;
+}
+
+.agentic-voice-action {
+  min-width: 220px;
+}
+
 .agentic-command-panel {
   display: grid;
   gap: 14px;
+  margin: 0 auto;
+  max-width: 760px;
+  width: 100%;
 }
 
 .agentic-command-panel label {
@@ -179,17 +246,19 @@ a:hover {
 }
 
 .agentic-boundary {
-  align-self: start;
-  background: rgb(255 253 248 / 10%);
-  border: 1px solid rgb(255 255 255 / 28%);
+  background: #f5f0e3;
+  border: 1px solid #d8c995;
   border-radius: 8px;
-  color: #edf6f3;
+  color: #4f4634;
+  display: grid;
+  gap: 8px 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   padding: 16px;
 }
 
 .agentic-boundary p,
 .agentic-summary p {
-  margin: 8px 0 0;
+  margin: 0;
 }
 
 .agentic-boundary-title,
@@ -206,6 +275,9 @@ a:hover {
   border-color: #315e5b;
   display: grid;
   gap: 12px;
+  margin: 0 auto;
+  max-width: 760px;
+  width: 100%;
 }
 
 .agentic-summary h3 {
@@ -734,6 +806,7 @@ dd {
   }
 
   .agentic-hero,
+  .agentic-boundary,
   .agentic-response-grid {
     grid-template-columns: 1fr;
   }

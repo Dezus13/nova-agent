@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 export const agenticDemoExamplePrompt =
   "Мне нужно зарегистрировать место жительства в Австрии";
 
@@ -16,38 +18,63 @@ export function AgenticDemoShell({
   onOpenWorkflow: () => void;
   onSubmitDemoPrompt: () => void;
 }) {
+  const [hasStartedVoiceDemo, setHasStartedVoiceDemo] = useState(false);
+  const shouldShowDemoResponse = hasSubmittedDemoPrompt || hasStartedVoiceDemo;
+
   return (
     <section className="agentic-shell" aria-labelledby="agentic-shell-title">
       <div className="agentic-hero">
-        <div className="agentic-shell-copy">
-          <p className="eyebrow">Демо-режим</p>
+        <div className="agentic-shell-copy agentic-voice-intro">
           <p className="agentic-product-name">Nova Agent</p>
-          <h2 id="agentic-shell-title">AI-ассистент для жизненных ситуаций</h2>
+          <p className="agentic-assistant-label">
+            AI-ассистент для жизненных ситуаций
+          </p>
+          <h2 id="agentic-shell-title">Скажите, что нужно решить</h2>
           <p className="lead">
-            Расскажите, что нужно решить. Nova Agent разложит ситуацию на
-            понятный план действий.
+            Nova Agent разложит жизненную ситуацию на понятный план действий.
           </p>
         </div>
 
-        <div className="agentic-boundary" aria-label="Ограничения демо">
-          <p className="agentic-boundary-title">Честные границы демо</p>
-          <p>Ответ строится на текущем демонстрационном сценарии.</p>
-          <p>Nova Agent не создаёт новые сценарии в этой версии.</p>
-          <p>Без real AI/OpenAI в этой версии.</p>
-          <p>Не является юридическим, медицинским или налоговым консультантом.</p>
+        <div className="agentic-voice-stage" aria-label="Voice-first demo layer">
+          <div className="agentic-orb" aria-hidden="true">
+            <span />
+          </div>
+          <button
+            className="primary-action agentic-voice-action"
+            onClick={() => setHasStartedVoiceDemo(true)}
+            type="button"
+          >
+            Демо голосового режима
+          </button>
+          <p>
+            Голосовой режим показан как demo interaction. Голос не записывается
+            в этой версии.
+          </p>
         </div>
+      </div>
+
+      <div className="agentic-boundary" aria-label="Ограничения демо">
+        <p className="agentic-boundary-title">Демо-режим</p>
+        <p>Голос не записывается в этой версии.</p>
+        <p>Ответ строится на текущем демонстрационном сценарии.</p>
+        <p>Без real AI/OpenAI.</p>
+        <p>Nova Agent не создаёт новые сценарии в этой версии.</p>
+        <p>Не является юридическим, медицинским или налоговым консультантом.</p>
       </div>
 
       <div className="agentic-command-panel">
         <div>
-          <p className="eyebrow">Что вам нужно решить?</p>
+          <p className="eyebrow">или напишите задачу вручную</p>
           <label htmlFor="agentic-demo-prompt">Жизненная задача</label>
         </div>
         <textarea
           aria-label="Жизненная задача"
           className="agentic-input"
           id="agentic-demo-prompt"
-          onChange={(event) => onDemoPromptChange(event.target.value)}
+          onChange={(event) => {
+            setHasStartedVoiceDemo(false);
+            onDemoPromptChange(event.target.value);
+          }}
           placeholder="Например: мне нужно оформить документы после рождения детей"
           rows={4}
           value={demoPrompt}
@@ -57,27 +84,33 @@ export function AgenticDemoShell({
         </p>
         <button
           className="secondary-action agentic-example"
-          onClick={onExamplePromptSelect}
+          onClick={() => {
+            setHasStartedVoiceDemo(false);
+            onExamplePromptSelect();
+          }}
           type="button"
         >
           {agenticDemoExamplePrompt}
         </button>
         <button
           className="primary-action"
-          onClick={onSubmitDemoPrompt}
+          onClick={() => {
+            setHasStartedVoiceDemo(false);
+            onSubmitDemoPrompt();
+          }}
           type="button"
         >
           Построить план
         </button>
       </div>
 
-      {hasSubmittedDemoPrompt ? (
+      {shouldShowDemoResponse ? (
         <div className="agentic-summary" role="status">
-          <p className="eyebrow">AI-like demo response</p>
-          <h3>Понял ситуацию для демо</h3>
+          <p className="eyebrow">demo assistant response</p>
+          <h3>Я понял ситуацию для демо</h3>
           <p>
-            Вы хотите разобраться с жизненной задачей и увидеть понятную
-            последовательность действий.
+            Сейчас открою понятный план действий на основе текущего
+            демонстрационного сценария.
           </p>
           <div className="agentic-response-grid">
             <div>
@@ -90,12 +123,12 @@ export function AgenticDemoShell({
             </div>
           </div>
           <p>
-            На основе текущего демонстрационного сценария Nova Agent откроет
-            готовый план действий.
+            Это демонстрационный ответ: без real AI/OpenAI, без записи голоса и
+            без подтверждения официального статуса.
           </p>
           <p>
-            Nova Agent не создаёт новые сценарии в этой версии и не подтверждает
-            официальный статус.
+            Nova Agent не создаёт новые сценарии в этой версии и не выполняет
+            внешние действия.
           </p>
           <button
             className="primary-action"
