@@ -41,7 +41,14 @@ function getSpeechRecognitionConstructor() {
   return speechGlobal.SpeechRecognition ?? speechGlobal.webkitSpeechRecognition;
 }
 
-function getVoiceStatusMessage(voiceInputState: VoiceInputState) {
+function getVoiceStatusMessage(
+  voiceInputState: VoiceInputState,
+  voiceInputError: string | null,
+) {
+  const errorLabel = voiceInputError
+    ? `Ошибка голосового ввода: ${voiceInputError}.`
+    : "Ошибка голосового ввода.";
+
   switch (voiceInputState) {
     case "requesting":
       return "Браузер может запросить доступ к микрофону.";
@@ -52,9 +59,13 @@ function getVoiceStatusMessage(voiceInputState: VoiceInputState) {
     case "unsupported":
       return "Голосовой ввод недоступен в этом браузере. Напишите задачу вручную.";
     case "denied":
-      return "Доступ к микрофону не получен. Можно написать задачу вручную.";
+      return `${errorLabel} Доступ к микрофону не получен. Можно написать задачу вручную.`;
     case "error":
-      return "Не удалось распознать речь. Можно попробовать ещё раз или написать задачу вручную.";
+      if (voiceInputError === "audio-capture") {
+        return `${errorLabel} Проверьте доступ Chrome к микрофону. Можно написать задачу вручную.`;
+      }
+
+      return `${errorLabel} Не удалось распознать речь. Можно попробовать ещё раз или написать задачу вручную.`;
     case "idle":
       return "Голосовой ввод работает в браузере, если он поддерживается.";
   }
@@ -78,11 +89,13 @@ export function AgenticDemoShell({
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
   const [voiceInputState, setVoiceInputState] =
     useState<VoiceInputState>("idle");
+  const [voiceInputError, setVoiceInputError] = useState<string | null>(null);
   const shouldShowDemoResponse =
     hasSubmittedDemoPrompt || voiceInputState === "result";
 
   const resetVoiceInputState = () => {
     setVoiceInputState("idle");
+    setVoiceInputError(null);
   };
 
   const detachRecognitionCallbacks = (recognition: BrowserSpeechRecognition) => {
@@ -127,6 +140,7 @@ export function AgenticDemoShell({
       return;
     }
 
+    setVoiceInputError(null);
     const SpeechRecognitionConstructor = getSpeechRecognitionConstructor();
 
     if (!SpeechRecognitionConstructor) {
@@ -155,6 +169,7 @@ export function AgenticDemoShell({
       const transcript = event.results[0]?.[0]?.transcript.trim() ?? "";
 
       if (!transcript) {
+        setVoiceInputError("empty-transcript");
         setVoiceInputState("error");
         return;
       }
@@ -166,6 +181,9 @@ export function AgenticDemoShell({
       if (!clearActiveRecognition(recognition)) {
         return;
       }
+
+      const errorCode = event.error || "unknown";
+      setVoiceInputError(errorCode);
 
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
         setVoiceInputState("denied");
@@ -179,13 +197,8 @@ export function AgenticDemoShell({
         return;
       }
 
-      setVoiceInputState((previousState) => {
-        if (previousState === "requesting" || previousState === "listening") {
-          return "error";
-        }
-
-        return previousState;
-      });
+      setVoiceInputError("ended-without-result");
+      setVoiceInputState("error");
     };
 
     recognitionRef.current = recognition;
@@ -195,6 +208,7 @@ export function AgenticDemoShell({
       recognition.start();
     } catch {
       clearActiveRecognition(recognition);
+      setVoiceInputError("start-failed");
       setVoiceInputState("denied");
     }
   };
@@ -225,7 +239,7 @@ export function AgenticDemoShell({
             Говорить
           </button>
           <p className="agentic-voice-kicker">Демо голосового режима</p>
-          <p>{getVoiceStatusMessage(voiceInputState)}</p>
+          <p>{getVoiceStatusMessage(voiceInputState, voiceInputError)}</p>
         </div>
       </div>
 

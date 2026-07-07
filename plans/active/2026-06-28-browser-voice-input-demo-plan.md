@@ -302,3 +302,12 @@ Controls:
 - Guarded recognition callbacks so stale sessions cannot update UI state after cleanup or after another session has cleared the active ref.
 - Added tests for repeated voice click prevention and unmount cleanup.
 - Kept the scope limited to the Agentic Demo Shell and tests; domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence and production deployment were not changed.
+
+## Step 1 Diagnostic Fix Notes
+
+- Added user-visible speech recognition error codes so manual Chrome smoke can identify why voice input fails.
+- `not-allowed` and `service-not-allowed` now show the concrete error code together with the microphone-denied fallback.
+- `audio-capture` now shows the concrete error code and asks the user to check Chrome microphone access.
+- Other errors such as `no-speech`, `network` or unknown errors show the concrete error code with the manual-input fallback.
+- Added tests for `not-allowed`, `audio-capture` and `no-speech` diagnostic copy while preserving manual fallback.
+- Did not change domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence, scenario generation, official verification or production deployment behavior.

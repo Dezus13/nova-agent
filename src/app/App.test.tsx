@@ -801,8 +801,56 @@ describe("App", () => {
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
+    expect(text).toContain("Ошибка голосового ввода: not-allowed.");
     expect(text).toContain(
       "Доступ к микрофону не получен. Можно написать задачу вручную.",
+    );
+    expect(text).not.toContain("Я понял ситуацию для демо");
+
+    changeTextArea(tree, "Жизненная задача", agenticDemoExamplePrompt);
+    tree = renderInteractiveApp(runtime);
+    clickButton(tree, "Построить план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Я понял ситуацию для демо");
+    expect(text).toContain("Открыть план действий");
+  });
+
+  it("shows audio capture diagnostic when Chrome cannot access a microphone", () => {
+    const recognitionInstances: TestSpeechRecognition[] = [];
+
+    speechRecognitionGlobal().SpeechRecognition = class
+      implements TestSpeechRecognition
+    {
+      continuous = true;
+      interimResults = true;
+      lang = "";
+      maxAlternatives = 0;
+      onend: (() => void) | null = null;
+      onerror: ((event: { error?: string }) => void) | null = null;
+      onresult: ((event: TestSpeechRecognitionEvent) => void) | null = null;
+      onstart: (() => void) | null = null;
+
+      constructor() {
+        recognitionInstances.push(this);
+      }
+
+      start() {}
+    };
+
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    clickButton(tree, "Говорить");
+    recognitionInstances[0]?.onerror?.({ error: "audio-capture" });
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Ошибка голосового ввода: audio-capture.");
+    expect(text).toContain(
+      "Проверьте доступ Chrome к микрофону. Можно написать задачу вручную.",
     );
     expect(text).not.toContain("Я понял ситуацию для демо");
 
@@ -847,6 +895,7 @@ describe("App", () => {
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
+    expect(text).toContain("Ошибка голосового ввода: no-speech.");
     expect(text).toContain(
       "Не удалось распознать речь. Можно попробовать ещё раз или написать задачу вручную.",
     );
