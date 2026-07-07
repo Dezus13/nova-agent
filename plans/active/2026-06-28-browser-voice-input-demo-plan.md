@@ -277,7 +277,7 @@ Controls:
 
 1. Browser Voice Input Demo Plan creation. Completed.
 2. UI implementation with Web Speech API feature detection and fallback. Completed in Step 1.
-3. Local automated checks and manual smoke.
+3. Local automated checks and manual smoke. Completed: local real Chrome voice smoke passed.
 4. Production deploy.
 5. Production smoke.
 6. Closure.
@@ -311,3 +311,14 @@ Controls:
 - Other errors such as `no-speech`, `network` or unknown errors show the concrete error code with the manual-input fallback.
 - Added tests for `not-allowed`, `audio-capture` and `no-speech` diagnostic copy while preserving manual fallback.
 - Did not change domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence, scenario generation, official verification or production deployment behavior.
+
+## Step 2 Local Real Chrome Voice Smoke
+
+- Local real Chrome voice smoke: PASSED.
+- User manually verified that clicking `Говорить` starts browser speech recognition.
+- Speech recognition produced transcript: `ich muss Antrag stellen für neugeborene Kinder`.
+- Transcript filled the task textarea automatically.
+- Demo assistant response appeared after recognized speech.
+- Manual fallback remains available.
+- Production deploy and production smoke are still pending.
+- Did not change application code, domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence or production deployment behavior.
