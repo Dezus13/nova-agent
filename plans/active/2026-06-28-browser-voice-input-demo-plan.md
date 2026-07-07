@@ -278,9 +278,10 @@ Controls:
 1. Browser Voice Input Demo Plan creation. Completed.
 2. UI implementation with Web Speech API feature detection and fallback. Completed in Step 1.
 3. Local automated checks and manual smoke. Completed: local real Chrome voice smoke passed.
-4. Production deploy.
-5. Production smoke.
-6. Closure.
+4. Voice flow improvement after production feedback. Completed in Step 3; production deploy pending.
+5. Production deploy.
+6. Production smoke.
+7. Closure.
 
 ## Step 1 Implementation Notes
 
@@ -322,3 +323,16 @@ Controls:
 - Manual fallback remains available.
 - Production deploy and production smoke are still pending.
 - Did not change application code, domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence or production deployment behavior.
+
+## Step 3 Voice Flow Improvement Notes
+
+- Improved the browser voice result flow so a successful final transcript immediately shows the demo assistant response and `Открыть план действий` CTA.
+- Kept the textarea as editable transcript/fallback, but removed the need to click `Построить план` after a successful voice result.
+- Enabled interim speech recognition results so partial browser transcripts can fill the textarea while the session is still listening.
+- Accumulated final transcript chunks before showing the assistant response.
+- Added fallback for empty or incomplete voice results:
+  - `Не удалось полностью распознать речь. Можно попробовать ещё раз или написать задачу вручную.`
+- Kept the workflow navigation explicit: voice result does not automatically open the workflow without the `Открыть план действий` CTA.
+- Preserved manual text fallback, unsupported-browser fallback, permission-denied diagnostics, cleanup and repeated-click guard.
+- Did not add OpenAI, backend API, Supabase, auth, persistence, external search/integrations, scenario generation, official verification, external actions or domain/workflow logic changes.
+- Production deploy and production smoke are still pending for this improvement.

@@ -20,7 +20,12 @@ type BrowserSpeechRecognition = {
 type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
 
 type SpeechRecognitionResultEventLike = {
-  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+  resultIndex?: number;
+  results: ArrayLike<
+    ArrayLike<{ transcript: string }> & {
+      isFinal?: boolean;
+    }
+  >;
 };
 
 type VoiceInputState =
@@ -65,6 +70,14 @@ function getVoiceStatusMessage(
         return `${errorLabel} Проверьте доступ Chrome к микрофону. Можно написать задачу вручную.`;
       }
 
+      if (
+        voiceInputError === "empty-transcript" ||
+        voiceInputError === "ended-without-result" ||
+        voiceInputError === "incomplete-transcript"
+      ) {
+        return `${errorLabel} Не удалось полностью распознать речь. Можно попробовать ещё раз или написать задачу вручную.`;
+      }
+
       return `${errorLabel} Не удалось распознать речь. Можно попробовать ещё раз или написать задачу вручную.`;
     case "idle":
       return "Голосовой ввод работает в браузере, если он поддерживается.";
@@ -87,6 +100,8 @@ export function AgenticDemoShell({
   onSubmitDemoPrompt: () => void;
 }) {
   const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const finalTranscriptPartsRef = useRef<string[]>([]);
+  const visibleVoiceTranscriptRef = useRef("");
   const [voiceInputState, setVoiceInputState] =
     useState<VoiceInputState>("idle");
   const [voiceInputError, setVoiceInputError] = useState<string | null>(null);
@@ -94,6 +109,8 @@ export function AgenticDemoShell({
     hasSubmittedDemoPrompt || voiceInputState === "result";
 
   const resetVoiceInputState = () => {
+    finalTranscriptPartsRef.current = [];
+    visibleVoiceTranscriptRef.current = "";
     setVoiceInputState("idle");
     setVoiceInputError(null);
   };
@@ -140,6 +157,8 @@ export function AgenticDemoShell({
       return;
     }
 
+    finalTranscriptPartsRef.current = [];
+    visibleVoiceTranscriptRef.current = "";
     setVoiceInputError(null);
     const SpeechRecognitionConstructor = getSpeechRecognitionConstructor();
 
@@ -151,7 +170,7 @@ export function AgenticDemoShell({
     const recognition = new SpeechRecognitionConstructor();
 
     recognition.lang = globalThis.navigator?.language || "ru-RU";
-    recognition.interimResults = false;
+    recognition.interimResults = true;
     recognition.continuous = false;
     recognition.maxAlternatives = 1;
     recognition.onstart = () => {
@@ -162,19 +181,62 @@ export function AgenticDemoShell({
       setVoiceInputState("listening");
     };
     recognition.onresult = (event) => {
-      if (!clearActiveRecognition(recognition)) {
+      if (recognitionRef.current !== recognition) {
         return;
       }
 
-      const transcript = event.results[0]?.[0]?.transcript.trim() ?? "";
+      const interimTranscriptParts: string[] = [];
+      let hasFinalTranscript = false;
+      const startIndex = event.resultIndex ?? 0;
 
-      if (!transcript) {
+      for (let index = startIndex; index < event.results.length; index += 1) {
+        const result = event.results[index];
+        const transcript = result?.[0]?.transcript.trim() ?? "";
+        const isFinalResult = result?.isFinal ?? true;
+
+        if (isFinalResult) {
+          hasFinalTranscript = true;
+        }
+
+        if (!transcript) {
+          continue;
+        }
+
+        if (isFinalResult) {
+          finalTranscriptPartsRef.current.push(transcript);
+        } else {
+          interimTranscriptParts.push(transcript);
+        }
+      }
+
+      const finalTranscript = finalTranscriptPartsRef.current.join(" ").trim();
+      const visibleTranscript = [finalTranscript, ...interimTranscriptParts]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+
+      if (visibleTranscript) {
+        visibleVoiceTranscriptRef.current = visibleTranscript;
+        onDemoPromptChange(visibleTranscript);
+      }
+
+      if (!hasFinalTranscript) {
+        return;
+      }
+
+      if (!finalTranscript) {
+        clearActiveRecognition(recognition);
+        finalTranscriptPartsRef.current = [];
+        visibleVoiceTranscriptRef.current = "";
         setVoiceInputError("empty-transcript");
         setVoiceInputState("error");
         return;
       }
 
-      onDemoPromptChange(transcript);
+      clearActiveRecognition(recognition);
+      finalTranscriptPartsRef.current = [];
+      visibleVoiceTranscriptRef.current = "";
+      onDemoPromptChange(finalTranscript);
       setVoiceInputState("result");
     };
     recognition.onerror = (event) => {
@@ -183,6 +245,8 @@ export function AgenticDemoShell({
       }
 
       const errorCode = event.error || "unknown";
+      finalTranscriptPartsRef.current = [];
+      visibleVoiceTranscriptRef.current = "";
       setVoiceInputError(errorCode);
 
       if (event.error === "not-allowed" || event.error === "service-not-allowed") {
@@ -197,7 +261,12 @@ export function AgenticDemoShell({
         return;
       }
 
-      setVoiceInputError("ended-without-result");
+      const hasPartialTranscript = visibleVoiceTranscriptRef.current.trim();
+      finalTranscriptPartsRef.current = [];
+      visibleVoiceTranscriptRef.current = "";
+      setVoiceInputError(
+        hasPartialTranscript ? "incomplete-transcript" : "ended-without-result",
+      );
       setVoiceInputState("error");
     };
 
@@ -298,10 +367,10 @@ export function AgenticDemoShell({
       {shouldShowDemoResponse ? (
         <div className="agentic-summary" role="status">
           <p className="eyebrow">demo assistant response</p>
-          <h3>Я понял ситуацию для демо</h3>
+          <h3>Я понял задачу</h3>
           <p>
-            Сейчас открою понятный план действий на основе текущего
-            демонстрационного сценария.
+            Сейчас открою демонстрационный план действий на основе текущего
+            сценария.
           </p>
           <div className="agentic-response-grid">
             <div>
