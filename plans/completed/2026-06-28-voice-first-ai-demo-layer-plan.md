@@ -360,10 +360,10 @@ and existing Action Plan workflow.
    - no microphone permission, speech recognition, recording timer, listening
      state or fake waveform added;
    - existing Action Plan workflow remains unchanged.
-3. Local smoke validation.
-4. Production deploy after explicit instruction.
-5. Production smoke validation.
-6. Closure.
+3. Local smoke validation. Completed.
+4. Production deploy after explicit instruction. Completed.
+5. Production smoke validation. Completed.
+6. Closure. Completed.
 
 ## 13. Completion Criteria
 
@@ -405,3 +405,51 @@ Local smoke after fix (headless Playwright, 390×844):
 - no overflow offenders;
 - desktop and mobile layout unchanged;
 - voice CTA, text fallback and workflow reachable.
+
+### Closure — COMPLETED
+
+Voice-First AI Demo Layer is completed.
+
+Production deploy PASSED:
+
+- project: `nova-agent-demo`;
+- production deployment:
+  `https://nova-agent-demo-efo1d2kvl-usman20us-projects.vercel.app`;
+- final production URL:
+  `https://nova-agent-demo.vercel.app/`;
+- Vercel status: READY.
+
+Production visual smoke PASSED:
+
+- desktop viewport `1440x900`: PASSED;
+- mobile viewport `390x844`: PASSED;
+- first screen shows Nova Agent, `Скажите, что нужно решить`, central voice/orb,
+  `Демо голосового режима`, text fallback, textarea and `Построить план`;
+- first screen no longer feels like a generic website/form;
+- voice CTA shows assistant-like demo response;
+- `Открыть план действий` opens the existing workflow;
+- existing workflow verified: Life Situation, Scenario, Steps / active plan,
+  Progress, History, User Open Questions, Checked Source Marks and User Notes.
+
+Mobile overflow fix verified on production:
+
+- first screen: `documentElement 390/390`, `body 390/390`;
+- response state: `documentElement 390/390`, `body 390/390`;
+- workflow after opening plan: `documentElement 390/390`, `body 390/390`;
+- overflow offenders count: `0`;
+- `.agentic-command-panel` stays inside the viewport;
+- `.agentic-summary` stays inside the viewport.
+
+Screenshots were produced during smoke in `/tmp/nova-agent-production-smoke/`
+and were not added to the repository.
+
+Final boundaries:
+
+- no real AI/OpenAI added;
+- no real microphone permission added;
+- no browser speech recognition added;
+- no Supabase/API/auth/persistence added;
+- no scenario generator added;
+- no source verification added;
+- no document upload added;
+- no domain logic changes.
