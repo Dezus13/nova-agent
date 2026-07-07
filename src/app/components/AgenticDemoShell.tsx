@@ -1,7 +1,64 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export const agenticDemoExamplePrompt =
   "Мне нужно зарегистрировать место жительства в Австрии";
+
+type BrowserSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onend: (() => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onresult: ((event: SpeechRecognitionResultEventLike) => void) | null;
+  onstart: (() => void) | null;
+  abort?: () => void;
+  start: () => void;
+  stop?: () => void;
+};
+
+type BrowserSpeechRecognitionConstructor = new () => BrowserSpeechRecognition;
+
+type SpeechRecognitionResultEventLike = {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+};
+
+type VoiceInputState =
+  | "denied"
+  | "error"
+  | "idle"
+  | "listening"
+  | "requesting"
+  | "result"
+  | "unsupported";
+
+function getSpeechRecognitionConstructor() {
+  const speechGlobal = globalThis as typeof globalThis & {
+    SpeechRecognition?: BrowserSpeechRecognitionConstructor;
+    webkitSpeechRecognition?: BrowserSpeechRecognitionConstructor;
+  };
+
+  return speechGlobal.SpeechRecognition ?? speechGlobal.webkitSpeechRecognition;
+}
+
+function getVoiceStatusMessage(voiceInputState: VoiceInputState) {
+  switch (voiceInputState) {
+    case "requesting":
+      return "Браузер может запросить доступ к микрофону.";
+    case "listening":
+      return "Слушаю... скажите, что нужно решить.";
+    case "result":
+      return "Распознанный текст добавлен в задачу.";
+    case "unsupported":
+      return "Голосовой ввод недоступен в этом браузере. Напишите задачу вручную.";
+    case "denied":
+      return "Доступ к микрофону не получен. Можно написать задачу вручную.";
+    case "error":
+      return "Не удалось распознать речь. Можно попробовать ещё раз или написать задачу вручную.";
+    case "idle":
+      return "Голосовой ввод работает в браузере, если он поддерживается.";
+  }
+}
 
 export function AgenticDemoShell({
   demoPrompt,
@@ -18,8 +75,129 @@ export function AgenticDemoShell({
   onOpenWorkflow: () => void;
   onSubmitDemoPrompt: () => void;
 }) {
-  const [hasStartedVoiceDemo, setHasStartedVoiceDemo] = useState(false);
-  const shouldShowDemoResponse = hasSubmittedDemoPrompt || hasStartedVoiceDemo;
+  const recognitionRef = useRef<BrowserSpeechRecognition | null>(null);
+  const [voiceInputState, setVoiceInputState] =
+    useState<VoiceInputState>("idle");
+  const shouldShowDemoResponse =
+    hasSubmittedDemoPrompt || voiceInputState === "result";
+
+  const resetVoiceInputState = () => {
+    setVoiceInputState("idle");
+  };
+
+  const detachRecognitionCallbacks = (recognition: BrowserSpeechRecognition) => {
+    recognition.onend = null;
+    recognition.onerror = null;
+    recognition.onresult = null;
+    recognition.onstart = null;
+  };
+
+  const clearActiveRecognition = (recognition: BrowserSpeechRecognition) => {
+    if (recognitionRef.current !== recognition) {
+      return false;
+    }
+
+    recognitionRef.current = null;
+    detachRecognitionCallbacks(recognition);
+    return true;
+  };
+
+  useEffect(() => {
+    return () => {
+      const recognition = recognitionRef.current;
+
+      if (!recognition) {
+        return;
+      }
+
+      recognitionRef.current = null;
+      detachRecognitionCallbacks(recognition);
+
+      if (recognition.abort) {
+        recognition.abort();
+        return;
+      }
+
+      recognition.stop?.();
+    };
+  }, []);
+
+  const startVoiceInput = () => {
+    if (recognitionRef.current) {
+      return;
+    }
+
+    const SpeechRecognitionConstructor = getSpeechRecognitionConstructor();
+
+    if (!SpeechRecognitionConstructor) {
+      setVoiceInputState("unsupported");
+      return;
+    }
+
+    const recognition = new SpeechRecognitionConstructor();
+
+    recognition.lang = globalThis.navigator?.language || "ru-RU";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    recognition.onstart = () => {
+      if (recognitionRef.current !== recognition) {
+        return;
+      }
+
+      setVoiceInputState("listening");
+    };
+    recognition.onresult = (event) => {
+      if (!clearActiveRecognition(recognition)) {
+        return;
+      }
+
+      const transcript = event.results[0]?.[0]?.transcript.trim() ?? "";
+
+      if (!transcript) {
+        setVoiceInputState("error");
+        return;
+      }
+
+      onDemoPromptChange(transcript);
+      setVoiceInputState("result");
+    };
+    recognition.onerror = (event) => {
+      if (!clearActiveRecognition(recognition)) {
+        return;
+      }
+
+      if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+        setVoiceInputState("denied");
+        return;
+      }
+
+      setVoiceInputState("error");
+    };
+    recognition.onend = () => {
+      if (!clearActiveRecognition(recognition)) {
+        return;
+      }
+
+      setVoiceInputState((previousState) => {
+        if (previousState === "requesting" || previousState === "listening") {
+          return "error";
+        }
+
+        return previousState;
+      });
+    };
+
+    recognitionRef.current = recognition;
+    setVoiceInputState("requesting");
+
+    try {
+      recognition.start();
+    } catch {
+      clearActiveRecognition(recognition);
+      setVoiceInputState("denied");
+    }
+  };
 
   return (
     <section className="agentic-shell" aria-labelledby="agentic-shell-title">
@@ -41,21 +219,20 @@ export function AgenticDemoShell({
           </div>
           <button
             className="primary-action agentic-voice-action"
-            onClick={() => setHasStartedVoiceDemo(true)}
+            onClick={startVoiceInput}
             type="button"
           >
-            Демо голосового режима
+            Говорить
           </button>
-          <p>
-            Голосовой режим показан как demo interaction. Голос не записывается
-            в этой версии.
-          </p>
+          <p className="agentic-voice-kicker">Демо голосового режима</p>
+          <p>{getVoiceStatusMessage(voiceInputState)}</p>
         </div>
       </div>
 
       <div className="agentic-boundary" aria-label="Ограничения демо">
         <p className="agentic-boundary-title">Демо-режим</p>
-        <p>Голос не записывается в этой версии.</p>
+        <p>Голос используется только для ввода текста в этом демо.</p>
+        <p>Голосовой ввод работает в браузере, если он поддерживается.</p>
         <p>Ответ строится на текущем демонстрационном сценарии.</p>
         <p>Без real AI/OpenAI.</p>
         <p>Nova Agent не создаёт новые сценарии в этой версии.</p>
@@ -72,7 +249,7 @@ export function AgenticDemoShell({
           className="agentic-input"
           id="agentic-demo-prompt"
           onChange={(event) => {
-            setHasStartedVoiceDemo(false);
+            resetVoiceInputState();
             onDemoPromptChange(event.target.value);
           }}
           placeholder="Например: мне нужно оформить документы после рождения детей"
@@ -85,7 +262,7 @@ export function AgenticDemoShell({
         <button
           className="secondary-action agentic-example"
           onClick={() => {
-            setHasStartedVoiceDemo(false);
+            resetVoiceInputState();
             onExamplePromptSelect();
           }}
           type="button"
@@ -95,7 +272,7 @@ export function AgenticDemoShell({
         <button
           className="primary-action"
           onClick={() => {
-            setHasStartedVoiceDemo(false);
+            resetVoiceInputState();
             onSubmitDemoPrompt();
           }}
           type="button"
@@ -123,8 +300,8 @@ export function AgenticDemoShell({
             </div>
           </div>
           <p>
-            Это демонстрационный ответ: без real AI/OpenAI, без записи голоса и
-            без подтверждения официального статуса.
+            Это демонстрационный ответ: без real AI/OpenAI, без подтверждения
+            официального статуса и без внешних действий.
           </p>
           <p>
             Nova Agent не создаёт новые сценарии в этой версии и не выполняет

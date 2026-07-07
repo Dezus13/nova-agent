@@ -211,6 +211,11 @@ a:hover {
   min-width: 220px;
 }
 
+.agentic-voice-kicker {
+  color: #f0c56b;
+  font-weight: 700;
+}
+
 .agentic-command-panel {
   box-sizing: border-box;
   display: grid;

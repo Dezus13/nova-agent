@@ -275,9 +275,30 @@ Controls:
 
 ## Step Plan
 
-1. Browser Voice Input Demo Plan creation.
-2. UI implementation with Web Speech API feature detection and fallback.
+1. Browser Voice Input Demo Plan creation. Completed.
+2. UI implementation with Web Speech API feature detection and fallback. Completed in Step 1.
 3. Local automated checks and manual smoke.
 4. Production deploy.
 5. Production smoke.
 6. Closure.
+
+## Step 1 Implementation Notes
+
+- Added browser-side speech-to-text demo behavior to the existing Agentic Demo Shell.
+- Used feature detection for `SpeechRecognition` / `webkitSpeechRecognition`.
+- Added UI states for unsupported browser, requesting permission, listening, result received, permission denied and no-speech/error fallback.
+- Replaced the visual-only voice boundary `Голос не записывается в этой версии` with honest browser voice input copy:
+  - `Голос используется только для ввода текста в этом демо.`
+  - `Голосовой ввод работает в браузере, если он поддерживается.`
+- Kept the existing deterministic demo flow: recognized or typed non-empty text opens the existing assistant-like response and current Action Plan workflow.
+- Added tests for unsupported browser fallback, supported speech recognition mock result, permission denied fallback, no-speech fallback, manual input and existing workflow reachability.
+- Did not add OpenAI API, backend API, Supabase, auth, persistence, package changes, scenario generation, official verification, external actions or domain/workflow logic changes.
+
+## Step 1 Robustness Fix Notes
+
+- Fixed the active recognition lifecycle by storing the current browser speech recognition instance in a React ref.
+- Prevented repeated voice clicks from starting parallel recognition sessions while one session is active.
+- Added unmount cleanup that removes recognition callbacks and calls `abort()` when available, with `stop()` as fallback.
+- Guarded recognition callbacks so stale sessions cannot update UI state after cleanup or after another session has cleared the active ref.
+- Added tests for repeated voice click prevention and unmount cleanup.
+- Kept the scope limited to the Agentic Demo Shell and tests; domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence and production deployment were not changed.

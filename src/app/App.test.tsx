@@ -1,6 +1,6 @@
 import React, { type ReactElement, type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import {
   findSeedScenarioById,
   findSeedScenarioVersionById,
@@ -19,6 +19,11 @@ import { App } from "./App";
 import { agenticDemoExamplePrompt } from "./components/AgenticDemoShell";
 
 type HookDispatcher = {
+  useEffect(
+    effect: () => (() => void) | undefined,
+    deps?: readonly unknown[],
+  ): void;
+  useRef<Value>(initialValue: Value): { current: Value };
   useState<State>(
     initialState: State | (() => State),
   ): [State, (nextState: State | ((previousState: State) => State)) => void];
@@ -42,11 +47,73 @@ type HostNode = {
 
 type TestTree = HostNode | number | string;
 
+type TestSpeechRecognitionEvent = {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+};
+
+type TestSpeechRecognition = {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives: number;
+  onend: (() => void) | null;
+  onerror: ((event: { error?: string }) => void) | null;
+  onresult: ((event: TestSpeechRecognitionEvent) => void) | null;
+  onstart: (() => void) | null;
+  abort?: () => void;
+  start: () => void;
+  stop?: () => void;
+};
+
+type TestSpeechRecognitionConstructor = new () => TestSpeechRecognition;
+
+type TestSpeechRecognitionGlobal = typeof globalThis & {
+  SpeechRecognition?: TestSpeechRecognitionConstructor;
+  webkitSpeechRecognition?: TestSpeechRecognitionConstructor;
+};
+
+function speechRecognitionGlobal() {
+  return globalThis as TestSpeechRecognitionGlobal;
+}
+
 function createInteractiveRuntime() {
   const stateSlots: unknown[] = [];
   let stateSlotIndex = 0;
 
   const dispatcher: HookDispatcher = {
+    useEffect(effect: () => (() => void) | undefined, deps?: readonly unknown[]) {
+      const slotIndex = stateSlotIndex;
+      stateSlotIndex += 1;
+      const previousEffect = stateSlots[slotIndex] as
+        | { cleanup?: () => void; deps?: readonly unknown[] }
+        | undefined;
+      const shouldRunEffect =
+        !previousEffect ||
+        !deps ||
+        !previousEffect.deps ||
+        deps.length !== previousEffect.deps.length ||
+        deps.some((dependency, index) => dependency !== previousEffect.deps?.[index]);
+
+      if (!shouldRunEffect) {
+        return;
+      }
+
+      previousEffect?.cleanup?.();
+      stateSlots[slotIndex] = {
+        cleanup: effect(),
+        deps,
+      };
+    },
+    useRef<Value>(initialValue: Value) {
+      const slotIndex = stateSlotIndex;
+      stateSlotIndex += 1;
+
+      if (!(slotIndex in stateSlots)) {
+        stateSlots[slotIndex] = { current: initialValue };
+      }
+
+      return stateSlots[slotIndex] as { current: Value };
+    },
     useState<State>(initialState: State | (() => State)) {
       const slotIndex = stateSlotIndex;
       stateSlotIndex += 1;
@@ -74,6 +141,13 @@ function createInteractiveRuntime() {
     dispatcher,
     getState<State>(slotIndex: number) {
       return stateSlots[slotIndex] as State;
+    },
+    cleanupEffects() {
+      for (const slot of stateSlots) {
+        const effectSlot = slot as { cleanup?: () => void } | undefined;
+
+        effectSlot?.cleanup?.();
+      }
     },
     resetRender() {
       stateSlotIndex = 0;
@@ -408,6 +482,11 @@ function createUserOpenQuestionsForUi(
   ];
 }
 
+afterEach(() => {
+  delete speechRecognitionGlobal().SpeechRecognition;
+  delete speechRecognitionGlobal().webkitSpeechRecognition;
+});
+
 describe("App", () => {
   it("shows the Agentic Demo Shell before the existing workflow", () => {
     const runtime = createInteractiveRuntime();
@@ -421,13 +500,18 @@ describe("App", () => {
       "Nova Agent разложит жизненную ситуацию на понятный план действий.",
     );
     expect(text).toContain("Демо голосового режима");
+    expect(text).toContain("Говорить");
     expect(text).toContain("или напишите задачу вручную");
     expect(findTextAreaByLabel(tree, "Жизненная задача")).not.toBeNull();
     expect(text).toContain(agenticDemoExamplePrompt);
     expect(text).toContain("Построить план");
     expect(text).toContain("Демо-режим");
     expect(text).toContain("Жизненная задача");
-    expect(text).toContain("Голос не записывается в этой версии");
+    expect(text).toContain("Голос используется только для ввода текста в этом демо.");
+    expect(text).toContain(
+      "Голосовой ввод работает в браузере, если он поддерживается.",
+    );
+    expect(text).not.toContain("Голос не записывается в этой версии");
     expect(text).toContain("текущем демонстрационном сценарии");
     expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
     expect(text).toContain("Без real AI/OpenAI");
@@ -468,7 +552,7 @@ describe("App", () => {
       "Сейчас открою понятный план действий на основе текущего демонстрационного сценария.",
     );
     expect(text).toContain(
-      "Это демонстрационный ответ: без real AI/OpenAI, без записи голоса и без подтверждения официального статуса.",
+      "Это демонстрационный ответ: без real AI/OpenAI, без подтверждения официального статуса и без внешних действий.",
     );
     expect(text).toContain("Nova Agent не создаёт новые сценарии в этой версии");
     expect(text).toContain("Открыть план действий");
@@ -484,15 +568,29 @@ describe("App", () => {
     expect(text).toContain("Начать план");
   });
 
-  it("shows a voice-first demo response without recording voice", () => {
+  it("shows unsupported-browser fallback while manual input still works", () => {
     const runtime = createInteractiveRuntime();
     let tree = renderInteractiveApp(runtime);
     let text = getTextContent(tree);
 
     expect(text).toContain("Демо голосового режима");
-    expect(text).toContain("Голос не записывается в этой версии");
+    expect(text).toContain("Говорить");
+    expect(text).toContain("Голос используется только для ввода текста в этом демо.");
+    expect(text).not.toContain("Голос не записывается в этой версии");
 
-    clickButton(tree, "Демо голосового режима");
+    clickButton(tree, "Говорить");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain(
+      "Голосовой ввод недоступен в этом браузере. Напишите задачу вручную.",
+    );
+    expect(text).not.toContain("Я понял ситуацию для демо");
+    expect(text).not.toContain("Открыть план действий");
+
+    changeTextArea(tree, "Жизненная задача", agenticDemoExamplePrompt);
+    tree = renderInteractiveApp(runtime);
+    clickButton(tree, "Построить план");
     tree = renderInteractiveApp(runtime);
     text = getTextContent(tree);
 
@@ -501,7 +599,7 @@ describe("App", () => {
       "Сейчас открою понятный план действий на основе текущего демонстрационного сценария.",
     );
     expect(text).toContain(
-      "Это демонстрационный ответ: без real AI/OpenAI, без записи голоса и без подтверждения официального статуса.",
+      "Это демонстрационный ответ: без real AI/OpenAI, без подтверждения официального статуса и без внешних действий.",
     );
     expect(text).toContain(
       "Nova Agent не создаёт новые сценарии в этой версии и не выполняет внешние действия.",
@@ -509,7 +607,6 @@ describe("App", () => {
     expect(text).toContain("Открыть план действий");
     expect(text).not.toContain("Начать план");
     expect(text).not.toContain("OpenAI API");
-    expect(text).not.toContain("microphone permission");
     expect(text).not.toContain("идёт запись");
 
     clickButton(tree, "Открыть план действий");
@@ -520,6 +617,241 @@ describe("App", () => {
     expect(text).toContain("Сценарий");
     expect(text).toContain("Регистрация места жительства в Австрии");
     expect(text).toContain("Начать план");
+  });
+
+  it("uses browser speech recognition to fill the task input and open workflow", () => {
+    const recognitionInstances: TestSpeechRecognition[] = [];
+    let startCallCount = 0;
+
+    speechRecognitionGlobal().webkitSpeechRecognition = class
+      implements TestSpeechRecognition
+    {
+      continuous = true;
+      interimResults = true;
+      lang = "";
+      maxAlternatives = 0;
+      onend: (() => void) | null = null;
+      onerror: ((event: { error?: string }) => void) | null = null;
+      onresult: ((event: TestSpeechRecognitionEvent) => void) | null = null;
+      onstart: (() => void) | null = null;
+
+      constructor() {
+        recognitionInstances.push(this);
+      }
+
+      start() {
+        startCallCount += 1;
+      }
+    };
+
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    clickButton(tree, "Говорить");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(recognitionInstances).toHaveLength(1);
+    expect(startCallCount).toBe(1);
+    expect(recognitionInstances[0]?.continuous).toBe(false);
+    expect(recognitionInstances[0]?.interimResults).toBe(false);
+    expect(recognitionInstances[0]?.maxAlternatives).toBe(1);
+    expect(text).toContain("Браузер может запросить доступ к микрофону.");
+
+    recognitionInstances[0]?.onstart?.();
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Слушаю... скажите, что нужно решить.");
+
+    recognitionInstances[0]?.onresult?.({
+      results: [[{ transcript: "Мне нужно зарегистрироваться по адресу" }]],
+    });
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(findTextAreaByLabel(tree, "Жизненная задача")?.props.value).toBe(
+      "Мне нужно зарегистрироваться по адресу",
+    );
+    expect(text).toContain("Распознанный текст добавлен в задачу.");
+    expect(text).toContain("Я понял ситуацию для демо");
+    expect(text).toContain("Открыть план действий");
+    expect(text).not.toContain("OpenAI API");
+
+    clickButton(tree, "Открыть план действий");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Life Situation");
+    expect(text).toContain("Сценарий");
+    expect(text).toContain("Регистрация места жительства в Австрии");
+    expect(text).toContain("Начать план");
+  });
+
+  it("does not start a second speech recognition session while one is active", () => {
+    const recognitionInstances: TestSpeechRecognition[] = [];
+    let startCallCount = 0;
+
+    speechRecognitionGlobal().webkitSpeechRecognition = class
+      implements TestSpeechRecognition
+    {
+      continuous = true;
+      interimResults = true;
+      lang = "";
+      maxAlternatives = 0;
+      onend: (() => void) | null = null;
+      onerror: ((event: { error?: string }) => void) | null = null;
+      onresult: ((event: TestSpeechRecognitionEvent) => void) | null = null;
+      onstart: (() => void) | null = null;
+
+      constructor() {
+        recognitionInstances.push(this);
+      }
+
+      start() {
+        startCallCount += 1;
+      }
+    };
+
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+
+    clickButton(tree, "Говорить");
+    tree = renderInteractiveApp(runtime);
+    clickButton(tree, "Говорить");
+
+    expect(recognitionInstances).toHaveLength(1);
+    expect(startCallCount).toBe(1);
+  });
+
+  it("aborts active speech recognition and removes callbacks on unmount", () => {
+    const recognitionInstances: TestSpeechRecognition[] = [];
+    let abortCallCount = 0;
+
+    speechRecognitionGlobal().SpeechRecognition = class
+      implements TestSpeechRecognition
+    {
+      continuous = true;
+      interimResults = true;
+      lang = "";
+      maxAlternatives = 0;
+      onend: (() => void) | null = null;
+      onerror: ((event: { error?: string }) => void) | null = null;
+      onresult: ((event: TestSpeechRecognitionEvent) => void) | null = null;
+      onstart: (() => void) | null = null;
+
+      constructor() {
+        recognitionInstances.push(this);
+      }
+
+      abort() {
+        abortCallCount += 1;
+      }
+
+      start() {}
+    };
+
+    const runtime = createInteractiveRuntime();
+    const tree = renderInteractiveApp(runtime);
+
+    clickButton(tree, "Говорить");
+    runtime.cleanupEffects();
+
+    expect(abortCallCount).toBe(1);
+    expect(recognitionInstances[0]?.onend).toBeNull();
+    expect(recognitionInstances[0]?.onerror).toBeNull();
+    expect(recognitionInstances[0]?.onresult).toBeNull();
+    expect(recognitionInstances[0]?.onstart).toBeNull();
+    expect(() => {
+      recognitionInstances[0]?.onresult?.({
+        results: [[{ transcript: "Поздний результат после unmount" }]],
+      });
+    }).not.toThrow();
+  });
+
+  it("shows permission denied fallback while manual input still works", () => {
+    const recognitionInstances: TestSpeechRecognition[] = [];
+
+    speechRecognitionGlobal().SpeechRecognition = class
+      implements TestSpeechRecognition
+    {
+      continuous = true;
+      interimResults = true;
+      lang = "";
+      maxAlternatives = 0;
+      onend: (() => void) | null = null;
+      onerror: ((event: { error?: string }) => void) | null = null;
+      onresult: ((event: TestSpeechRecognitionEvent) => void) | null = null;
+      onstart: (() => void) | null = null;
+
+      constructor() {
+        recognitionInstances.push(this);
+      }
+
+      start() {}
+    };
+
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    clickButton(tree, "Говорить");
+    recognitionInstances[0]?.onerror?.({ error: "not-allowed" });
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain(
+      "Доступ к микрофону не получен. Можно написать задачу вручную.",
+    );
+    expect(text).not.toContain("Я понял ситуацию для демо");
+
+    changeTextArea(tree, "Жизненная задача", agenticDemoExamplePrompt);
+    tree = renderInteractiveApp(runtime);
+    clickButton(tree, "Построить план");
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain("Я понял ситуацию для демо");
+    expect(text).toContain("Открыть план действий");
+  });
+
+  it("shows a soft fallback when speech is not recognized", () => {
+    const recognitionInstances: TestSpeechRecognition[] = [];
+
+    speechRecognitionGlobal().SpeechRecognition = class
+      implements TestSpeechRecognition
+    {
+      continuous = true;
+      interimResults = true;
+      lang = "";
+      maxAlternatives = 0;
+      onend: (() => void) | null = null;
+      onerror: ((event: { error?: string }) => void) | null = null;
+      onresult: ((event: TestSpeechRecognitionEvent) => void) | null = null;
+      onstart: (() => void) | null = null;
+
+      constructor() {
+        recognitionInstances.push(this);
+      }
+
+      start() {}
+    };
+
+    const runtime = createInteractiveRuntime();
+    let tree = renderInteractiveApp(runtime);
+    let text = getTextContent(tree);
+
+    clickButton(tree, "Говорить");
+    recognitionInstances[0]?.onerror?.({ error: "no-speech" });
+    tree = renderInteractiveApp(runtime);
+    text = getTextContent(tree);
+
+    expect(text).toContain(
+      "Не удалось распознать речь. Можно попробовать ещё раз или написать задачу вручную.",
+    );
+    expect(text).not.toContain("Я понял ситуацию для демо");
+    expect(text).not.toContain("Открыть план действий");
   });
 
   it("passes the full VS-01 demo flow through user actions", () => {
