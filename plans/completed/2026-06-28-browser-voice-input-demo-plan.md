@@ -2,12 +2,13 @@
 
 ## Status
 
-- Status: Active plan.
+- Status: Completed.
 - Created: 2026-06-28.
+- Closed: 2026-07-09.
 - Current production demo: [https://nova-agent-demo.vercel.app/](https://nova-agent-demo.vercel.app/).
 - Previous completed layer: Voice-First AI Demo Layer.
 
-This plan starts the next demo step only. It does not implement code, add dependencies, change production, or close the plan.
+This plan added browser-side speech-to-text to the existing demo shell and is now closed after local and production smoke validation. It did not add real AI, OpenAI integration, backend API, Supabase, auth, persistence, package changes or new domain/workflow logic.
 
 ## Problem
 
@@ -278,11 +279,11 @@ Controls:
 1. Browser Voice Input Demo Plan creation. Completed.
 2. UI implementation with Web Speech API feature detection and fallback. Completed in Step 1.
 3. Local automated checks and manual smoke. Completed: local real Chrome voice smoke passed.
-4. Voice flow improvement after production feedback. Completed in Step 3; production deploy pending.
+4. Voice flow improvement after production feedback. Completed in Step 3.
 5. Local real Chrome auto-submit smoke. Completed: local real Chrome voice auto-submit smoke passed.
-6. Production deploy.
-7. Production smoke.
-8. Closure.
+6. Production deploy. Completed.
+7. Production smoke. Completed: production real voice auto-submit smoke passed.
+8. Closure. Completed.
 
 ## Step 1 Implementation Notes
 
@@ -322,7 +323,7 @@ Controls:
 - Transcript filled the task textarea automatically.
 - Demo assistant response appeared after recognized speech.
 - Manual fallback remains available.
-- Production deploy and production smoke are still pending.
+- Production deploy and production smoke were pending at this step and are now completed in the closure below.
 - Did not change application code, domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence or production deployment behavior.
 
 ## Step 3 Voice Flow Improvement Notes
@@ -336,7 +337,7 @@ Controls:
 - Kept the workflow navigation explicit: voice result does not automatically open the workflow without the `Открыть план действий` CTA.
 - Preserved manual text fallback, unsupported-browser fallback, permission-denied diagnostics, cleanup and repeated-click guard.
 - Did not add OpenAI, backend API, Supabase, auth, persistence, external search/integrations, scenario generation, official verification, external actions or domain/workflow logic changes.
-- Production deploy and production smoke are still pending for this improvement.
+- Production deploy and production smoke were pending for this improvement and are now completed in the closure below.
 
 ## Step 4 Local Real Chrome Auto-Submit Smoke
 
@@ -346,5 +347,17 @@ Controls:
 - Demo assistant response auto-appeared after the voice result.
 - CTA `Открыть план действий` auto-appeared after the voice result.
 - User did not need to click `Построить план` after voice result.
-- Production deploy and production smoke are still pending.
+- Production deploy and production smoke were pending at this step and are now completed in the closure below.
 - Did not change application code, domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence or production deployment behavior.
+
+## Closure Note
+
+- Browser Voice Input Demo closed after production deploy and production real voice auto-submit smoke passed.
+- Final production URL: [https://nova-agent-demo.vercel.app/](https://nova-agent-demo.vercel.app/).
+- Local real Chrome voice smoke: PASSED.
+- Local real Chrome voice auto-submit smoke: PASSED.
+- Production deploy: PASSED.
+- Production real voice auto-submit smoke: PASSED.
+- Production behavior confirmed by user: voice transcript fills the textarea, demo assistant response appears automatically, `Открыть план действий` appears automatically and the workflow opens without requiring `Построить план` after voice result.
+- The completed scope remains browser speech-to-text plus the existing deterministic demo workflow.
+- No real AI/OpenAI, backend API, Supabase, auth, persistence, package changes, scenario generation, apartment search, external links/actions or domain/workflow logic changes were added.
