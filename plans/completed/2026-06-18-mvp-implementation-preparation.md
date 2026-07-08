@@ -109,3 +109,10 @@ TS07 является операционным аналогом TS06 для ст
 - **MVP Seed Content Plan создан: 2026-06-22.** `plans/active/2026-06-22-mvp-seed-content-plan.md` создан. Документ определяет первый seed content для VS-01: "Регистрация места жительства в Австрии", без изменения TS01-TS08, UI-01 или DR-01-DR-09.
 - **Docs navigation audit выполнен: 2026-06-23.** Проверены `AGENTS.md`, `docs/глобальная-спецификация.md`, `docs/roadmap.md` и `docs/specs/*` на отсутствующие пути, исчезнувшие runbook-документы и устаревшие навигационные указания. В UI-01 исправлена диапазонная ссылка на функциональные specs.
 - README Navigation Polish: ожидает стабилизации структуры.
+
+## Closure Note
+
+- Closed during submission cleanup on 2026-06-28 because the preparation work is completed-looking and no longer needs to remain in `plans/active`.
+- Evidence: TS07, UI-01, DR-01-DR-09, TS08, Product Principles, MVP Work Plan and MVP Seed Content Plan were all created and recorded in the status section.
+- This closure only moves the plan from `plans/active` to `plans/completed` and records its completed status.
+- No application code, product logic, Supabase runtime connection, package configuration, specs or README content were changed.

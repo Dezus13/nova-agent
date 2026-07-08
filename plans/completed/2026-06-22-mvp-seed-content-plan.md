@@ -341,3 +341,10 @@ VS-01 демонстрация должна использовать этот se
 8. Документ не ушёл в реализацию: нет API endpoints, SQL/RLS, кода, UI-компонентов, fixtures или миграций.
 9. Документ готов к аудиту как первый MVP Seed Content Plan.
 10. Изменённые файлы в рамках задачи: `plans/active/2026-06-22-mvp-seed-content-plan.md`, связанные active plans для статуса, `changelog/2026-06-22.md`.
+
+## Closure Note
+
+- Closed during submission cleanup on 2026-06-28 because the seed content work is completed-looking and already serves the current demo scenario.
+- Evidence: the plan defines the first MVP seed scenario, its steps, documents/data requirements, sources, open questions, demo flow mapping, acceptance criteria and self-audit.
+- This closure only moves the plan from `plans/active` to `plans/completed` and records its completed status.
+- No application code, product logic, Supabase runtime connection, package configuration, specs or README content were changed.
