@@ -279,9 +279,10 @@ Controls:
 2. UI implementation with Web Speech API feature detection and fallback. Completed in Step 1.
 3. Local automated checks and manual smoke. Completed: local real Chrome voice smoke passed.
 4. Voice flow improvement after production feedback. Completed in Step 3; production deploy pending.
-5. Production deploy.
-6. Production smoke.
-7. Closure.
+5. Local real Chrome auto-submit smoke. Completed: local real Chrome voice auto-submit smoke passed.
+6. Production deploy.
+7. Production smoke.
+8. Closure.
 
 ## Step 1 Implementation Notes
 
@@ -336,3 +337,14 @@ Controls:
 - Preserved manual text fallback, unsupported-browser fallback, permission-denied diagnostics, cleanup and repeated-click guard.
 - Did not add OpenAI, backend API, Supabase, auth, persistence, external search/integrations, scenario generation, official verification, external actions or domain/workflow logic changes.
 - Production deploy and production smoke are still pending for this improvement.
+
+## Step 4 Local Real Chrome Auto-Submit Smoke
+
+- Local real Chrome voice smoke after auto-submit fix: PASSED.
+- User manually verified on commit `f5b9581 fix: auto-submit browser voice transcript`.
+- User clicked `Говорить`, spoke a phrase and the transcript filled the textarea automatically.
+- Demo assistant response auto-appeared after the voice result.
+- CTA `Открыть план действий` auto-appeared after the voice result.
+- User did not need to click `Построить план` after voice result.
+- Production deploy and production smoke are still pending.
+- Did not change application code, domain/workflow logic, package configuration, backend/API/Supabase/auth/persistence or production deployment behavior.
