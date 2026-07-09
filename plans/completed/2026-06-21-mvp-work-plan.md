@@ -12,16 +12,17 @@
 Сначала пользовательская ценность, потом полнота системы.
 ```
 
-## Current Submission Status
+## Closure Note
 
-This file remains active as the umbrella MVP roadmap/work plan.
+Closed for the current submission baseline.
 
 Current status:
 
 - VS-01, VS-02, VS-03 and VS-04 are completed in separate completed plans;
 - Demo Polish, Agentic Demo Shell, AI Demo Presentation Layer, Voice-First AI Demo Layer and Browser Voice Input Demo are completed in separate completed plans;
-- this plan remains active for future MVP phases and is not a submission blocker;
-- no code, runtime Supabase integration, auth, persistence or product logic is introduced by this status note.
+- remaining future MVP work is tracked in `docs/roadmap.md` and future plans, not as current active implementation work;
+- this closure is for repository submission hygiene and does not mark future MVP work as implemented;
+- no code changes, runtime Supabase integration, auth, persistence or product logic changes are introduced by this closure note.
 
 ## 2. Источники истины
 

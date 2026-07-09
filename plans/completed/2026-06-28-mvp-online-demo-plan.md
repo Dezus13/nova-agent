@@ -17,17 +17,20 @@ roles, states, API contracts, persistence model or product scope.
 No application code, dependencies, env files, Supabase code or Vercel config are
 introduced by this planning step.
 
-## Current Submission Status
+## Closure Note
 
-This file remains active as the future online/persistence roadmap.
+Closed for the current submission baseline.
 
 Current status:
 
 - the static/voice production demo is online at `https://nova-agent-demo.vercel.app/`;
+- Browser Voice Input Demo is completed and verified in `plans/completed/2026-06-28-browser-voice-input-demo-plan.md`;
 - Supabase readiness handoff exists in `.env.example` and `docs/supabase-local-connection.md`;
-- runtime Supabase persistence, auth, API/backend and real data storage are intentionally pending;
-- this plan remains active for future online/persistence work and is not a submission blocker;
-- no code, runtime Supabase integration, auth, persistence or product logic is introduced by this status note.
+- the first documented Supabase table for the handoff is `action_plans`;
+- runtime Supabase persistence, auth, API/backend and real data storage are intentionally not implemented yet;
+- future online/persistence work remains roadmap/future scope, not current active implementation work;
+- this closure is for repository submission hygiene and does not mark future Supabase runtime work as implemented;
+- no code changes, runtime Supabase integration, auth, persistence or product logic changes are introduced by this closure note.
 
 ## 2. Sources of Truth
 
