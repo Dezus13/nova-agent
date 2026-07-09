@@ -17,6 +17,18 @@ roles, states, API contracts, persistence model or product scope.
 No application code, dependencies, env files, Supabase code or Vercel config are
 introduced by this planning step.
 
+## Current Submission Status
+
+This file remains active as the future online/persistence roadmap.
+
+Current status:
+
+- the static/voice production demo is online at `https://nova-agent-demo.vercel.app/`;
+- Supabase readiness handoff exists in `.env.example` and `docs/supabase-local-connection.md`;
+- runtime Supabase persistence, auth, API/backend and real data storage are intentionally pending;
+- this plan remains active for future online/persistence work and is not a submission blocker;
+- no code, runtime Supabase integration, auth, persistence or product logic is introduced by this status note.
+
 ## 2. Sources of Truth
 
 - `AGENTS.md`;

@@ -12,6 +12,17 @@
 Сначала пользовательская ценность, потом полнота системы.
 ```
 
+## Current Submission Status
+
+This file remains active as the umbrella MVP roadmap/work plan.
+
+Current status:
+
+- VS-01, VS-02, VS-03 and VS-04 are completed in separate completed plans;
+- Demo Polish, Agentic Demo Shell, AI Demo Presentation Layer, Voice-First AI Demo Layer and Browser Voice Input Demo are completed in separate completed plans;
+- this plan remains active for future MVP phases and is not a submission blocker;
+- no code, runtime Supabase integration, auth, persistence or product logic is introduced by this status note.
+
 ## 2. Источники истины
 
 План основан на следующих источниках:

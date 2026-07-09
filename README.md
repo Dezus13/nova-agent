@@ -103,6 +103,19 @@ Current limitations:
 - auth is not implemented yet;
 - persistence is not implemented yet.
 
+## Supabase Readiness
+
+Supabase readiness is documented for future handoff:
+
+- `.env.example` contains only placeholder frontend variables;
+- `docs/supabase-local-connection.md` explains local env setup and the remote
+  Supabase database boundary;
+- first documented table: `action_plans`.
+
+`.env.local` is local-only and must not be committed. Real keys, passwords and
+service role keys do not belong in this repository. Runtime Supabase persistence
+is not implemented yet.
+
 ## Run Locally
 
 ```bash
